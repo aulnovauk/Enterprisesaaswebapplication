@@ -7,6 +7,7 @@ import { Badge } from "../components/ui/badge";
 import { Label } from "../components/ui/label";
 import { Progress } from "../components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Textarea } from "../components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -29,6 +30,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogDescription,
+  DialogFooter,
 } from "../components/ui/dialog";
 import {
   Upload,
@@ -45,2096 +47,2092 @@ import {
   FileCheck,
   History,
   Eye,
-  Plus,
-  LayoutGrid,
-  List,
-  Zap,
-  Activity,
-  TrendingUp,
-  TrendingDown,
+  Database,
   Calendar,
   Filter,
   Search,
-  MoreVertical,
-  RefreshCw,
+  RotateCcw,
+  X as XIcon,
   AlertTriangle,
   Info,
-  ChevronRight,
   Edit3,
+  ChevronRight,
+  FileUp,
+  CheckCircle2,
+  Ban,
+  Unlock,
+  FileImage,
+  GitCompare,
+  ShieldCheck,
+  UserCheck,
   MessageSquare,
-  BarChart3,
-  Check,
-  Sparkles,
-  Database,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus,
-  ChevronDown,
-  ChevronLeft,
-  Settings,
-  Users,
-  PlayCircle,
-  PauseCircle,
-  MapPin,
+  TrendingUp,
+  ArrowRight,
+  HelpCircle,
+  Zap,
   Building2,
-  Layers,
-  Target,
-  DollarSign,
-  Percent,
-  SlidersHorizontal,
+  MapPin,
+  Trash2,
+  Plus,
   Copy,
-  X,
-  Lightbulb,
-  BookOpen,
-  Maximize2,
-  Minimize2,
+  ExternalLink,
 } from "lucide-react";
 import { Separator } from "../components/ui/separator";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { toast } from "sonner";
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip as RechartsTooltip, 
-  ResponsiveContainer, 
-  BarChart, 
-  Bar, 
-  LineChart, 
-  Line,
-  ComposedChart,
-  Legend
-} from "recharts";
 import { Checkbox } from "../components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../components/ui/tooltip";
 
-// Enhanced Mock Data
+// Mock Data
 const financialYears = ["FY 2025-26", "FY 2024-25", "FY 2023-24"];
 const months = [
   "April", "May", "June", "July", "August", "September",
   "October", "November", "December", "January", "February", "March"
 ];
+const states = ["Maharashtra", "Tamil Nadu", "Rajasthan", "Gujarat", "Karnataka", "Andhra Pradesh"];
+const vendors = ["SolarCo India", "SunPower Tech", "Green Energy Ltd", "TechSolar Pvt", "Mega Solar Inc"];
+const ppaTypes = ["Long Term (25Y)", "Medium Term (15Y)", "Short Term (5Y)"];
 
-const states = ["All States", "Rajasthan", "Maharashtra", "Andhra Pradesh", "Gujarat", "Karnataka", "Tamil Nadu"];
-
-// Enhanced plant data with more details
-const plants = [
-  { 
-    id: "PLT-001", 
-    name: "Jodhpur Solar Park A", 
-    capacity: "50 MW", 
-    state: "Rajasthan",
-    district: "Jodhpur",
-    cluster: "North-1",
+// JMR Repository Mock Data
+const jmrRecords = [
+  {
+    id: "JMR-2026-02-001",
+    fy: "FY 2025-26",
+    month: "February",
+    plant: "Jodhpur Solar Park A",
     vendor: "SolarCo India",
-    status: "completed",
-    completeness: 100,
-    quality: 98,
-    lastUpdated: "2 hours ago",
+    grossGeneration: 4520,
+    revenue: 42.85,
+    approvalStatus: "approved",
+    lockStatus: true,
+    version: 2,
+    pdfUploaded: true,
     submittedBy: "Rajesh Kumar",
-    reviewedBy: "Priya Sharma",
-    trend: "up",
-    trendValue: 2.4,
-    cuf: 22.4,
-    generation: 4520,
-    isActive: true,
+    approvedBy: "Priya Sharma",
+    submittedDate: "2026-03-01",
+    approvedDate: "2026-03-02",
   },
-  { 
-    id: "PLT-002", 
-    name: "Sangli Solar Farm", 
-    capacity: "25 MW", 
-    state: "Maharashtra",
-    district: "Sangli",
-    cluster: "West-2",
+  {
+    id: "JMR-2026-02-002",
+    fy: "FY 2025-26",
+    month: "February",
+    plant: "Sangli Solar Farm",
     vendor: "SunPower Tech",
-    status: "pending-review",
-    completeness: 100,
-    quality: 95,
-    lastUpdated: "5 hours ago",
+    grossGeneration: 2150,
+    revenue: 20.42,
+    approvalStatus: "pending",
+    lockStatus: false,
+    version: 1,
+    pdfUploaded: true,
     submittedBy: "Amit Desai",
-    reviewedBy: "Pending",
-    trend: "down",
-    trendValue: -1.2,
-    cuf: 21.8,
-    generation: 2150,
-    isActive: true,
+    approvedBy: "—",
+    submittedDate: "2026-03-01",
+    approvedDate: "—",
   },
-  { 
-    id: "PLT-003", 
-    name: "Anantapur PV Plant", 
-    capacity: "100 MW", 
-    state: "Andhra Pradesh",
-    district: "Anantapur",
-    cluster: "South-1",
+  {
+    id: "JMR-2026-02-003",
+    fy: "FY 2025-26",
+    month: "February",
+    plant: "Anantapur PV Plant",
     vendor: "Green Energy Ltd",
-    status: "draft",
-    completeness: 65,
-    quality: 72,
-    lastUpdated: "1 day ago",
+    grossGeneration: 8900,
+    revenue: 84.55,
+    approvalStatus: "draft",
+    lockStatus: false,
+    version: 1,
+    pdfUploaded: false,
     submittedBy: "Venkat Rao",
-    reviewedBy: "—",
-    trend: "neutral",
-    trendValue: 0,
-    cuf: 20.5,
-    generation: 8900,
-    isActive: true,
+    approvedBy: "—",
+    submittedDate: "—",
+    approvedDate: "—",
   },
-  { 
-    id: "PLT-004", 
-    name: "Kutch Solar Station", 
-    capacity: "75 MW", 
-    state: "Gujarat",
-    district: "Kutch",
-    cluster: "West-1",
+  {
+    id: "JMR-2026-01-001",
+    fy: "FY 2025-26",
+    month: "January",
+    plant: "Kutch Solar Station",
     vendor: "TechSolar Pvt",
-    status: "not-started",
-    completeness: 0,
-    quality: 0,
-    lastUpdated: "—",
-    submittedBy: "—",
-    reviewedBy: "—",
-    trend: "neutral",
-    trendValue: 0,
-    cuf: 0,
-    generation: 0,
-    isActive: false,
+    grossGeneration: 6750,
+    revenue: 64.12,
+    approvalStatus: "rejected",
+    lockStatus: false,
+    version: 3,
+    pdfUploaded: true,
+    submittedBy: "Sunil Patel",
+    approvedBy: "—",
+    submittedDate: "2026-02-01",
+    approvedDate: "—",
   },
-  { 
-    id: "PLT-005", 
-    name: "Pavagada Solar Park", 
-    capacity: "150 MW", 
-    state: "Karnataka",
-    district: "Pavagada",
-    cluster: "South-2",
+  {
+    id: "JMR-2026-01-002",
+    fy: "FY 2025-26",
+    month: "January",
+    plant: "Pavagada Solar Park",
     vendor: "Mega Solar Inc",
-    status: "completed",
-    completeness: 100,
-    quality: 100,
-    lastUpdated: "3 hours ago",
-    submittedBy: "Lakshmi Narayanan",
-    reviewedBy: "Suresh Iyer",
-    trend: "up",
-    trendValue: 5.2,
-    cuf: 23.8,
-    generation: 15500,
-    isActive: true,
-  },
-  { 
-    id: "PLT-006", 
-    name: "Bhadla Solar Park", 
-    capacity: "200 MW", 
-    state: "Rajasthan",
-    district: "Jodhpur",
-    cluster: "North-1",
-    vendor: "Adani Solar",
-    status: "pending-review",
-    completeness: 100,
-    quality: 92,
-    lastUpdated: "4 hours ago",
-    submittedBy: "Anil Mehra",
-    reviewedBy: "Pending",
-    trend: "up",
-    trendValue: 3.1,
-    cuf: 24.2,
-    generation: 21000,
-    isActive: true,
-  },
-  { 
-    id: "PLT-007", 
-    name: "Rewa Solar Plant", 
-    capacity: "80 MW", 
-    state: "Madhya Pradesh",
-    district: "Rewa",
-    cluster: "Central-1",
-    vendor: "Mahindra Susten",
-    status: "draft",
-    completeness: 45,
-    quality: 68,
-    lastUpdated: "2 days ago",
-    submittedBy: "Manish Tiwari",
-    reviewedBy: "—",
-    trend: "down",
-    trendValue: -2.8,
-    cuf: 19.8,
-    generation: 6850,
-    isActive: true,
+    grossGeneration: 15500,
+    revenue: 147.25,
+    approvalStatus: "approved",
+    lockStatus: true,
+    version: 1,
+    pdfUploaded: true,
+    submittedBy: "Lakshmi N",
+    approvedBy: "Suresh Iyer",
+    submittedDate: "2026-02-01",
+    approvedDate: "2026-02-03",
   },
 ];
 
-// Historical comparison data
-const historicalData = [
-  { month: "Oct", actual: 4520, target: 4700, cuf: 22.8, generation: 58500 },
-  { month: "Nov", actual: 4485, target: 4700, cuf: 22.4, generation: 57200 },
-  { month: "Dec", actual: 4650, target: 4700, cuf: 23.1, generation: 59100 },
-  { month: "Jan", actual: 4580, target: 4700, cuf: 22.7, generation: 58000 },
-  { month: "Feb", actual: 4485, target: 4700, cuf: 22.4, generation: 57000 },
-];
-
-// Workflow stages
-const workflowStages = [
-  { id: 1, name: "Data Entry", status: "completed", user: "Rajesh Kumar", date: "Feb 28, 10:30", duration: "2h 15m" },
-  { id: 2, name: "Technical Review", status: "current", user: "Priya Sharma", date: "In Progress", duration: "—" },
-  { id: 3, name: "Commercial Review", status: "pending", user: "—", date: "—", duration: "—" },
-  { id: 4, name: "Final Approval", status: "pending", user: "—", date: "—", duration: "—" },
-  { id: 5, name: "Lock & Archive", status: "pending", user: "—", date: "—", duration: "—" },
+// Audit Trail Mock Data
+const auditRecords = [
+  {
+    versionNo: 2,
+    modifiedBy: "Priya Sharma",
+    role: "Checker",
+    timestamp: "2026-03-02 14:30:45",
+    fieldsChanged: ["Approval Status", "Lock Status"],
+    changeSummary: "Approved and locked JMR record",
+    approvalStatus: "Approved",
+    ipAddress: "192.168.1.105",
+  },
+  {
+    versionNo: 1,
+    modifiedBy: "Rajesh Kumar",
+    role: "Maker",
+    timestamp: "2026-03-01 10:15:22",
+    fieldsChanged: ["Gross Generation", "Net Export", "Revenue"],
+    changeSummary: "Initial JMR data entry",
+    approvalStatus: "Submitted",
+    ipAddress: "192.168.1.102",
+  },
 ];
 
 const getStatusConfig = (status: string) => {
   switch (status) {
-    case "completed":
-      return { label: "Approved & Locked", color: "bg-emerald-600 text-white border-emerald-600", icon: CheckCircle, dotColor: "bg-emerald-500" };
-    case "pending-review":
-      return { label: "Pending Review", color: "bg-amber-600 text-white border-amber-600", icon: Clock, dotColor: "bg-amber-500" };
+    case "approved":
+      return {
+        label: "Approved",
+        variant: "default" as const,
+        className: "bg-emerald-600 text-white hover:bg-emerald-700",
+        icon: CheckCircle,
+      };
+    case "pending":
+      return {
+        label: "Pending Review",
+        variant: "default" as const,
+        className: "bg-amber-600 text-white hover:bg-amber-700",
+        icon: Clock,
+      };
     case "draft":
-      return { label: "Draft", color: "bg-blue-600 text-white border-blue-600", icon: FileText, dotColor: "bg-blue-500" };
-    case "not-started":
-      return { label: "Not Started", color: "bg-slate-400 text-white border-slate-400", icon: Minus, dotColor: "bg-slate-400" };
+      return {
+        label: "Draft",
+        variant: "outline" as const,
+        className: "border-blue-600 text-blue-600",
+        icon: FileText,
+      };
+    case "rejected":
+      return {
+        label: "Rejected",
+        variant: "default" as const,
+        className: "bg-rose-600 text-white hover:bg-rose-700",
+        icon: XCircle,
+      };
+    case "locked":
+      return {
+        label: "Locked",
+        variant: "default" as const,
+        className: "bg-slate-600 text-white hover:bg-slate-700",
+        icon: Lock,
+      };
     default:
-      return { label: "Unknown", color: "bg-gray-500 text-white border-gray-500", icon: AlertCircle, dotColor: "bg-gray-400" };
+      return {
+        label: status,
+        variant: "outline" as const,
+        className: "",
+        icon: FileText,
+      };
   }
 };
 
-type ViewMode = "dashboard" | "entry" | "review" | "analytics";
-
 export function JMRDataManagement() {
+  const [activeTab, setActiveTab] = useState("manual-entry");
   const [selectedFY, setSelectedFY] = useState("FY 2025-26");
   const [selectedMonth, setSelectedMonth] = useState("February");
-  const [selectedPlant, setSelectedPlant] = useState<typeof plants[0] | null>(null);
-  const [selectedPlants, setSelectedPlants] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>("dashboard");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [stateFilter, setStateFilter] = useState("All States");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [showAIPanel, setShowAIPanel] = useState(true);
-  const [csvDialogOpen, setCsvDialogOpen] = useState(false);
+  const [selectedState, setSelectedState] = useState("Maharashtra");
+  const [selectedVendor, setSelectedVendor] = useState("All Vendors");
+  const [selectedPPAType, setSelectedPPAType] = useState("All PPA Types");
+  const [showWorkflowPanel, setShowWorkflowPanel] = useState(true);
   const [entryStep, setEntryStep] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  // Form data state
-  const [formData, setFormData] = useState({
-    grossGeneration: "4520.5",
-    netExport: "4485.2",
+  // Form State - Plant Metadata
+  const [plantMetadata, setPlantMetadata] = useState({
+    state: "Maharashtra",
+    district: "Sangli",
+    plantName: "Sangli Solar Farm",
+    capacity: "25",
+    cod: "2024-04-15",
+    vendor: "SunPower Tech",
+    procurer: "EESL",
+    contractType: "Domestic",
+    ppaType: "Long Term (25Y)",
+  });
+
+  // Form State - Operational Parameters
+  const [operationalData, setOperationalData] = useState({
+    grossGeneration: "2150.5",
+    netExportEnergy: "2120.3",
+    importUnits: "5.2",
     gridAvailability: "98.5",
     plantAvailability: "97.8",
     curtailmentUnits: "12.3",
+    solarDowntimeHours: "8.5",
+    gridDowntimeHours: "15.2",
+    preventiveMaintenanceHours: "8.0",
     breakdownHours: "12.5",
-    pmHours: "8.0",
-    contractualTarget: "4700",
-    revenue: "42.85",
+    transmissionLineLoss: "1.8",
+    reactivePowerWithdrawal: "45.2",
   });
 
-  const prevMonthData = {
-    grossGeneration: "4550.2",
-    netExport: "4510.8",
-    gridAvailability: "97.2",
-    plantAvailability: "96.5",
-    cuf: "23.1",
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData({ ...formData, [field]: value });
-  };
-
-  const auxiliaryConsumption = formData.grossGeneration && formData.netExport 
-    ? (parseFloat(formData.grossGeneration) - parseFloat(formData.netExport)).toFixed(2)
-    : "—";
-
-  const targetAchievement = formData.netExport && formData.contractualTarget 
-    ? ((parseFloat(formData.netExport) / parseFloat(formData.contractualTarget)) * 100).toFixed(2)
-    : "—";
-
-  const cuf = "22.4";
-  const pr = "78.6";
-
-  // Advanced filtering
-  const filteredPlants = plants.filter(plant => {
-    const matchesSearch = plant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      plant.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      plant.district.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesState = stateFilter === "All States" || plant.state === stateFilter;
-    
-    const matchesStatus = statusFilter === "all" || plant.status === statusFilter;
-
-    return matchesSearch && matchesState && matchesStatus;
+  // Form State - Commercial Parameters
+  const [commercialData, setCommercialData] = useState({
+    contractualTarget: "2200",
+    revenueRealized: "20.42",
+    omDeviationAmount: "0.85",
   });
 
-  // Calculate statistics
-  const overallStats = {
-    totalPlants: plants.length,
-    completed: plants.filter(p => p.status === "completed").length,
-    pendingReview: plants.filter(p => p.status === "pending-review").length,
-    draft: plants.filter(p => p.status === "draft").length,
-    notStarted: plants.filter(p => p.status === "not-started").length,
-    avgCompleteness: Math.round(plants.reduce((sum, p) => sum + p.completeness, 0) / plants.length),
-    avgQuality: Math.round(plants.reduce((sum, p) => sum + p.quality, 0) / plants.length),
-    totalGeneration: plants.reduce((sum, p) => sum + p.generation, 0),
-    avgCUF: (plants.filter(p => p.cuf > 0).reduce((sum, p) => sum + p.cuf, 0) / plants.filter(p => p.cuf > 0).length).toFixed(1),
+  // Validation state
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
+
+  // Computed values
+  const auxiliaryConsumption = operationalData.grossGeneration && operationalData.netExportEnergy
+    ? (parseFloat(operationalData.grossGeneration) - parseFloat(operationalData.netExportEnergy)).toFixed(2)
+    : "—";
+
+  const targetAchievement = operationalData.netExportEnergy && commercialData.contractualTarget
+    ? ((parseFloat(operationalData.netExportEnergy) / parseFloat(commercialData.contractualTarget)) * 100).toFixed(2)
+    : "—";
+
+  const cuf = "21.8";
+  const paf = "97.8";
+  const expectedGeneration = "2200";
+  const revenueShortfall = "1.58";
+  const ldRisk = "Low";
+
+  // Handle form validation
+  const validateForm = () => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Check mandatory fields
+    if (!operationalData.grossGeneration) errors.push("Gross Generation is required");
+    if (!operationalData.netExportEnergy) errors.push("Net Export Energy is required");
+    if (!commercialData.revenueRealized) errors.push("Revenue Realized is required");
+
+    // Check logical consistency
+    if (parseFloat(operationalData.netExportEnergy) > parseFloat(operationalData.grossGeneration)) {
+      errors.push("Net Export cannot exceed Gross Generation");
+    }
+
+    // Check thresholds
+    if (parseFloat(operationalData.gridAvailability) < 95) {
+      warnings.push("Grid Availability below 95% threshold");
+    }
+    if (parseFloat(operationalData.plantAvailability) < 95) {
+      warnings.push("Plant Availability below 95% threshold");
+    }
+
+    setValidationErrors(errors);
+    setValidationWarnings(warnings);
+
+    return errors.length === 0;
   };
 
-  const togglePlantSelection = (plantId: string) => {
-    setSelectedPlants(prev => 
-      prev.includes(plantId) 
-        ? prev.filter(id => id !== plantId)
-        : [...prev, plantId]
-    );
+  const handleSaveDraft = () => {
+    toast.success("Draft saved successfully");
   };
 
-  const selectAllFiltered = () => {
-    setSelectedPlants(filteredPlants.map(p => p.id));
+  const handleSubmitForReview = () => {
+    if (validateForm()) {
+      toast.success("Submitted for review successfully");
+    } else {
+      toast.error("Please fix validation errors before submitting");
+    }
   };
 
-  const clearSelection = () => {
-    setSelectedPlants([]);
+  const handleReset = () => {
+    setOperationalData({
+      grossGeneration: "",
+      netExportEnergy: "",
+      importUnits: "",
+      gridAvailability: "",
+      plantAvailability: "",
+      curtailmentUnits: "",
+      solarDowntimeHours: "",
+      gridDowntimeHours: "",
+      preventiveMaintenanceHours: "",
+      breakdownHours: "",
+      transmissionLineLoss: "",
+      reactivePowerWithdrawal: "",
+    });
+    setCommercialData({
+      contractualTarget: "",
+      revenueRealized: "",
+      omDeviationAmount: "",
+    });
+    setValidationErrors([]);
+    setValidationWarnings([]);
+    toast.info("Form reset");
   };
+
+  // Filter JMR records
+  const filteredJMRRecords = jmrRecords.filter((record) => {
+    const matchesSearch =
+      record.plant.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.vendor.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = statusFilter === "all" || record.approvalStatus === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
-    <div className="h-screen bg-slate-50 flex flex-col font-sans overflow-hidden">
-      
-      {/* Enhanced Command Bar */}
-      <div className="bg-white border-b border-slate-200 shadow-sm shrink-0 z-30">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* GLOBAL HEADER */}
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 sticky top-0 z-30">
         <div className="px-6 py-4">
+          {/* Title & Primary Filters */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-gradient-to-br from-[#0B3C5D] to-[#0B3C5D]/80 rounded-xl shadow-md">
                 <Database className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 leading-none">JMR Data Management</h1>
-                <p className="text-sm text-slate-600 mt-1">Monthly Joint Meter Reading · Data Governance Platform</p>
+                <h1 className="text-2xl font-bold text-slate-900 leading-none">
+                  JMR Data Management
+                </h1>
+                <p className="text-sm text-slate-600 mt-1">
+                  Monthly Joint Meter Reading · Certified Data Governance
+                </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
-              {/* Period Selector */}
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200">
+              {/* Status Indicators */}
+              <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs font-medium text-slate-700">System Active</span>
+                </div>
+                <Separator orientation="vertical" className="h-4" />
+                <span className="text-xs text-slate-600">Last sync: 2 min ago</span>
+              </div>
+
+              <Button variant="outline" className="gap-2">
+                <Download className="w-4 h-4" />
+                Export
+              </Button>
+            </div>
+          </div>
+
+          {/* Filters Row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
                 <Calendar className="w-4 h-4 text-slate-500" />
                 <Select value={selectedFY} onValueChange={setSelectedFY}>
-                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 font-semibold text-slate-900 focus:ring-0 w-32">
+                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 font-semibold text-sm w-32">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {financialYears.map((fy) => (
-                      <SelectItem key={fy} value={fy}>{fy}</SelectItem>
+                      <SelectItem key={fy} value={fy}>
+                        {fy}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Separator orientation="vertical" className="h-5 mx-1" />
+                <Separator orientation="vertical" className="h-4" />
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 font-semibold text-slate-900 focus:ring-0 w-28">
+                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 font-semibold text-sm w-24">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {months.map((month) => (
-                      <SelectItem key={month} value={month}>{month}</SelectItem>
+                      <SelectItem key={month} value={month}>
+                        {month}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Quick Actions */}
-              <Button variant="outline" className="gap-2 border-slate-300">
-                <Download className="w-4 h-4" />
-                Export
-              </Button>
-              
-              <Dialog open={csvDialogOpen} onOpenChange={setCsvDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="gap-2 bg-[#0B3C5D] hover:bg-[#082a42] text-white shadow-md">
-                    <Upload className="w-4 h-4" />
-                    Bulk Upload
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
-                  <DialogHeader>
-                    <DialogTitle>CSV Bulk Upload</DialogTitle>
-                    <DialogDescription>
-                      Upload JMR data for multiple plants using CSV file
-                    </DialogDescription>
-                  </DialogHeader>
-                  <ScrollArea className="flex-1 pr-4">
-                    <BulkUploadDialog onClose={() => setCsvDialogOpen(false)} />
-                  </ScrollArea>
-                </DialogContent>
-              </Dialog>
+              <Select value={selectedState} onValueChange={setSelectedState}>
+                <SelectTrigger className="w-36 h-9 text-xs">
+                  <SelectValue placeholder="State" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All States">All States</SelectItem>
+                  {states.map((state) => (
+                    <SelectItem key={state} value={state}>
+                      {state}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-              <Button variant="outline" size="icon" className="border-slate-300">
-                <Settings className="w-4 h-4" />
-              </Button>
+              <Select value={selectedVendor} onValueChange={setSelectedVendor}>
+                <SelectTrigger className="w-36 h-9 text-xs">
+                  <SelectValue placeholder="Vendor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All Vendors">All Vendors</SelectItem>
+                  {vendors.map((vendor) => (
+                    <SelectItem key={vendor} value={vendor}>
+                      {vendor}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedPPAType} onValueChange={setSelectedPPAType}>
+                <SelectTrigger className="w-40 h-9 text-xs">
+                  <SelectValue placeholder="PPA Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All PPA Types">All PPA Types</SelectItem>
+                  {ppaTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </div>
 
-          {/* View Mode Tabs */}
-          <div className="flex items-center justify-between">
-            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="w-auto">
-              <TabsList className="bg-slate-100 border border-slate-200 p-1 h-11">
-                <TabsTrigger value="dashboard" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">
-                  <LayoutGrid className="w-4 h-4" />
-                  Dashboard
-                </TabsTrigger>
-                <TabsTrigger value="entry" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">
-                  <Edit3 className="w-4 h-4" />
-                  Data Entry
-                </TabsTrigger>
-                <TabsTrigger value="review" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">
-                  <CheckCircle className="w-4 h-4" />
-                  Review & Approve
-                </TabsTrigger>
-                <TabsTrigger value="analytics" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">
-                  <BarChart3 className="w-4 h-4" />
-                  Analytics
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            {/* Live Status Indicators */}
+            {/* Status Summary */}
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-lg border border-emerald-200">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                <span className="text-xs font-medium text-emerald-700">3 users active</span>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-600" />
+                <span className="text-xs font-semibold text-slate-700">
+                  Submission: <span className="text-emerald-600">Completed</span>
+                </span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Clock className="w-4 h-4" />
-                <span>Last sync: 2 min ago</span>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-600" />
+                <span className="text-xs font-semibold text-slate-700">
+                  Approval: <span className="text-amber-600">Pending</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Unlock className="w-4 h-4 text-blue-600" />
+                <span className="text-xs font-semibold text-slate-700">
+                  Lock: <span className="text-blue-600">Unlocked</span>
+                </span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* MAIN CONTENT */}
       <div className="flex-1 flex overflow-hidden">
-        
-        {/* Left Sidebar - Smart Filters & Plant List */}
-        <motion.div 
-          initial={false}
-          animate={{ width: sidebarCollapsed ? 60 : 360 }}
-          className="bg-white border-r border-slate-200 flex flex-col shrink-0 shadow-sm"
-        >
-          {/* Sidebar Header */}
-          <div className="p-4 border-b border-slate-200 flex items-center justify-between shrink-0">
-            {!sidebarCollapsed && (
-              <div>
-                <h2 className="text-sm font-bold text-slate-900">Plant Selection</h2>
-                <p className="text-xs text-slate-600 mt-0.5">{filteredPlants.length} of {plants.length} plants</p>
-              </div>
-            )}
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="shrink-0"
-            >
-              {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            </Button>
-          </div>
-
-          {!sidebarCollapsed && (
-            <>
-              {/* Search & Filters */}
-              <div className="p-4 space-y-3 border-b border-slate-200 shrink-0">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input
-                    placeholder="Search plants..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 h-10 bg-slate-50 border-slate-200"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Select value={stateFilter} onValueChange={setStateFilter}>
-                    <SelectTrigger className="h-9 text-xs bg-slate-50">
-                      <SelectValue placeholder="State" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {states.map((state) => (
-                        <SelectItem key={state} value={state}>{state}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-9 text-xs bg-slate-50">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="pending-review">Pending Review</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="not-started">Not Started</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Batch Actions */}
-                {selectedPlants.length > 0 && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded-lg"
-                  >
-                    <span className="text-xs font-semibold text-blue-900 flex-1">
-                      {selectedPlants.length} selected
-                    </span>
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={clearSelection}>
-                      Clear
-                    </Button>
-                    <Button size="sm" className="h-7 text-xs bg-[#0B3C5D]">
-                      Batch Action
-                    </Button>
-                  </motion.div>
-                )}
-              </div>
-
-              {/* Plant List */}
-              <div className="flex-1 overflow-hidden">
-                <ScrollArea className="h-full">
-                  <div className="p-3 space-y-2 pb-6">
-                  {/* Select All Option */}
-                  <div className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 rounded-lg cursor-pointer">
-                    <Checkbox 
-                      checked={selectedPlants.length === filteredPlants.length && filteredPlants.length > 0}
-                      onCheckedChange={(checked) => {
-                        if (checked) selectAllFiltered();
-                        else clearSelection();
-                      }}
-                    />
-                    <span className="text-xs font-medium text-slate-600">Select All ({filteredPlants.length})</span>
-                  </div>
-
-                  <Separator className="my-2" />
-
-                  {filteredPlants.map((plant) => {
-                    const config = getStatusConfig(plant.status);
-                    const isSelected = selectedPlant?.id === plant.id;
-                    const isChecked = selectedPlants.includes(plant.id);
-                    
-                    return (
-                      <motion.div
-                        key={plant.id}
-                        whileHover={{ x: 4 }}
-                        onClick={() => {
-                          setSelectedPlant(plant);
-                          if (viewMode === "dashboard") setViewMode("entry");
-                        }}
-                        className={`group relative p-3 rounded-xl border-2 transition-all cursor-pointer ${
-                          isSelected 
-                            ? "border-[#0B3C5D] bg-blue-50 shadow-md" 
-                            : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
-                        }`}
-                      >
-                        {/* Selection Checkbox */}
-                        <div 
-                          className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            togglePlantSelection(plant.id);
-                          }}
-                        >
-                          <Checkbox checked={isChecked} />
-                        </div>
-
-                        {/* Plant Info */}
-                        <div className="flex items-start gap-3 mb-2">
-                          <div className={`w-2 h-2 rounded-full mt-2 ${config.dotColor}`}></div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-sm text-slate-900 truncate mb-1">{plant.name}</div>
-                            <div className="flex items-center gap-2 text-xs text-slate-600">
-                              <span>{plant.id}</span>
-                              <span>•</span>
-                              <span className="flex items-center gap-1">
-                                <Zap className="w-3 h-3" />
-                                {plant.capacity}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Metrics */}
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                          <div className="bg-slate-50 rounded-lg p-2">
-                            <div className="text-[10px] text-slate-500 uppercase tracking-wide mb-0.5">Quality</div>
-                            <div className="text-sm font-bold text-slate-900">{plant.quality}%</div>
-                          </div>
-                          <div className="bg-slate-50 rounded-lg p-2">
-                            <div className="text-[10px] text-slate-500 uppercase tracking-wide mb-0.5">CUF</div>
-                            <div className="text-sm font-bold text-slate-900">{plant.cuf || "—"}%</div>
-                          </div>
-                        </div>
-
-                        {/* Status Badge */}
-                        <div className="mt-2">
-                          <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${config.color}`}>
-                            {config.label}
-                          </Badge>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-
-                  {filteredPlants.length === 0 && (
-                    <div className="text-center py-12">
-                      <Search className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                      <p className="text-sm text-slate-500">No plants found</p>
-                      <Button 
-                        variant="link" 
-                        size="sm" 
-                        className="mt-2"
-                        onClick={() => {
-                          setSearchTerm("");
-                          setStateFilter("All States");
-                          setStatusFilter("all");
-                        }}
-                      >
-                        Clear filters
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
+        {/* Main Tabs Area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+            {/* Tab Navigation */}
+            <div className="bg-white border-b border-slate-200 px-6 shrink-0">
+              <TabsList className="bg-transparent h-12 p-0 gap-1">
+                <TabsTrigger
+                  value="manual-entry"
+                  className="gap-2 data-[state=active]:bg-[#0B3C5D] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Manual Entry
+                </TabsTrigger>
+                <TabsTrigger
+                  value="bulk-upload"
+                  className="gap-2 data-[state=active]:bg-[#0B3C5D] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
+                >
+                  <FileUp className="w-4 h-4" />
+                  Excel Bulk Upload
+                </TabsTrigger>
+                <TabsTrigger
+                  value="repository"
+                  className="gap-2 data-[state=active]:bg-[#0B3C5D] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
+                >
+                  <Database className="w-4 h-4" />
+                  JMR Repository
+                </TabsTrigger>
+                <TabsTrigger
+                  value="audit"
+                  className="gap-2 data-[state=active]:bg-[#0B3C5D] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
+                >
+                  <History className="w-4 h-4" />
+                  Audit & Version History
+                </TabsTrigger>
+              </TabsList>
             </div>
-            </>
-          )}
-        </motion.div>
 
-        {/* Main Workspace */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
-          
-          {/* Dashboard View */}
-          {viewMode === "dashboard" && (
-            <ScrollArea className="flex-1">
-              <div className="p-8 max-w-7xl mx-auto space-y-6 pb-12">
-                
-                {/* Key Metrics Cards */}
-                <div className="grid grid-cols-4 gap-6">
-                  <Card className="border-none shadow-lg bg-gradient-to-br from-[#0B3C5D] to-[#0B3C5D]/80 text-white overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-                    <CardContent className="p-6 relative z-10">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-white/80">Total Capacity</span>
-                        <Zap className="w-5 h-5 text-white/80" />
-                      </div>
-                      <div className="text-4xl font-bold mb-1">780 MW</div>
-                      <div className="text-sm text-white/80">Across {plants.length} plants</div>
-                    </CardContent>
-                  </Card>
+            {/* Tab Content */}
+            <div className="flex-1 overflow-y-auto bg-slate-50">
+              {/* TAB 1: MANUAL ENTRY */}
+              <TabsContent value="manual-entry" className="m-0 h-full">
+                <div className="flex h-full">
+                  {/* Left: Form */}
+                  <div className="flex-1 overflow-y-auto">
+                    <div className="p-6 max-w-5xl mx-auto space-y-6 pb-12">
+                      {/* Progress Steps */}
+                      <Card className="border-2 border-slate-200">
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between">
+                            {[
+                              { num: 1, label: "Plant Metadata", icon: Building2 },
+                              { num: 2, label: "Operational Data", icon: Zap },
+                              { num: 3, label: "Commercial Data", icon: TrendingUp },
+                              { num: 4, label: "Review & Submit", icon: CheckCircle2 },
+                            ].map((step, idx) => {
+                              const Icon = step.icon;
+                              const isActive = entryStep === step.num;
+                              const isCompleted = entryStep > step.num;
 
-                  <Card className="border-none shadow-lg bg-gradient-to-br from-emerald-500 to-emerald-600 text-white overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-                    <CardContent className="p-6 relative z-10">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-white/80">Generation (Feb)</span>
-                        <Activity className="w-5 h-5 text-white/80" />
-                      </div>
-                      <div className="text-4xl font-bold mb-1">{(overallStats.totalGeneration / 1000).toFixed(1)}k</div>
-                      <div className="text-sm text-white/80">MWh · Target 62k MWh</div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-none shadow-lg bg-gradient-to-br from-[#F4B400] to-[#F4B400]/80 text-white overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-                    <CardContent className="p-6 relative z-10">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-white/80">Avg CUF</span>
-                        <Percent className="w-5 h-5 text-white/80" />
-                      </div>
-                      <div className="text-4xl font-bold mb-1">{overallStats.avgCUF}%</div>
-                      <div className="text-sm text-white/80">Portfolio average</div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-none shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-                    <CardContent className="p-6 relative z-10">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-white/80">Data Quality</span>
-                        <Sparkles className="w-5 h-5 text-white/80" />
-                      </div>
-                      <div className="text-4xl font-bold mb-1">{overallStats.avgQuality}%</div>
-                      <div className="text-sm text-white/80">Excellent score</div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Status Overview */}
-                <div className="grid grid-cols-5 gap-4">
-                  <Card className="shadow-md border-slate-200">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-slate-600">Completed</span>
-                        <CheckCircle className="w-4 h-4 text-emerald-600" />
-                      </div>
-                      <div className="text-3xl font-bold text-slate-900 mb-1">{overallStats.completed}</div>
-                      <Progress value={(overallStats.completed / overallStats.totalPlants) * 100} className="h-1.5" />
-                    </CardContent>
-                  </Card>
-
-                  <Card className="shadow-md border-slate-200">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-slate-600">Pending Review</span>
-                        <Clock className="w-4 h-4 text-amber-600" />
-                      </div>
-                      <div className="text-3xl font-bold text-slate-900 mb-1">{overallStats.pendingReview}</div>
-                      <Progress value={(overallStats.pendingReview / overallStats.totalPlants) * 100} className="h-1.5" />
-                    </CardContent>
-                  </Card>
-
-                  <Card className="shadow-md border-slate-200">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-slate-600">Draft</span>
-                        <FileText className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div className="text-3xl font-bold text-slate-900 mb-1">{overallStats.draft}</div>
-                      <Progress value={(overallStats.draft / overallStats.totalPlants) * 100} className="h-1.5" />
-                    </CardContent>
-                  </Card>
-
-                  <Card className="shadow-md border-slate-200">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-slate-600">Not Started</span>
-                        <Minus className="w-4 h-4 text-slate-400" />
-                      </div>
-                      <div className="text-3xl font-bold text-slate-900 mb-1">{overallStats.notStarted}</div>
-                      <Progress value={(overallStats.notStarted / overallStats.totalPlants) * 100} className="h-1.5" />
-                    </CardContent>
-                  </Card>
-
-                  <Card className="shadow-md border-slate-200 bg-gradient-to-br from-purple-50 to-white">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-slate-600">Completeness</span>
-                        <Database className="w-4 h-4 text-purple-600" />
-                      </div>
-                      <div className="text-3xl font-bold text-slate-900 mb-1">{overallStats.avgCompleteness}%</div>
-                      <Progress value={overallStats.avgCompleteness} className="h-1.5" />
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Quick Actions & Recent Activity */}
-                <div className="grid grid-cols-3 gap-6">
-                  
-                  {/* Quick Actions */}
-                  <Card className="shadow-md border-slate-200">
-                    <CardHeader className="border-b border-slate-100 pb-3">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-[#0B3C5D]" />
-                        Quick Actions
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 space-y-2">
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start gap-3 h-auto py-3 border-slate-200 hover:bg-blue-50 hover:border-blue-300"
-                        onClick={() => setViewMode("entry")}
-                      >
-                        <Plus className="w-4 h-4" />
-                        <div className="text-left">
-                          <div className="font-semibold text-sm">New Data Entry</div>
-                          <div className="text-xs text-slate-500">Start entering JMR data</div>
-                        </div>
-                      </Button>
-                      
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start gap-3 h-auto py-3 border-slate-200 hover:bg-amber-50 hover:border-amber-300"
-                        onClick={() => setViewMode("review")}
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        <div className="text-left">
-                          <div className="font-semibold text-sm">Review Pending ({overallStats.pendingReview})</div>
-                          <div className="text-xs text-slate-500">Approve submitted data</div>
-                        </div>
-                      </Button>
-
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start gap-3 h-auto py-3 border-slate-200 hover:bg-emerald-50 hover:border-emerald-300"
-                        onClick={() => setCsvDialogOpen(true)}
-                      >
-                        <Upload className="w-4 h-4" />
-                        <div className="text-left">
-                          <div className="font-semibold text-sm">Bulk Upload CSV</div>
-                          <div className="text-xs text-slate-500">Import multiple plants</div>
-                        </div>
-                      </Button>
-
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start gap-3 h-auto py-3 border-slate-200 hover:bg-purple-50 hover:border-purple-300"
-                        onClick={() => setViewMode("analytics")}
-                      >
-                        <BarChart3 className="w-4 h-4" />
-                        <div className="text-left">
-                          <div className="font-semibold text-sm">View Analytics</div>
-                          <div className="text-xs text-slate-500">Performance insights</div>
-                        </div>
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  {/* Recent Activity */}
-                  <Card className="col-span-2 shadow-md border-slate-200">
-                    <CardHeader className="border-b border-slate-100 pb-3">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Activity className="w-5 h-5 text-[#0B3C5D]" />
-                        Recent Activity
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <ScrollArea className="h-[280px]">
-                        <div className="divide-y divide-slate-100">
-                          {[
-                            { user: "Rajesh Kumar", action: "submitted data for", plant: "Jodhpur Solar Park A", time: "2 hours ago", type: "submit", color: "blue" },
-                            { user: "Priya Sharma", action: "approved data for", plant: "Pavagada Solar Park", time: "3 hours ago", type: "approve", color: "emerald" },
-                            { user: "Amit Desai", action: "updated data for", plant: "Sangli Solar Farm", time: "5 hours ago", type: "update", color: "amber" },
-                            { user: "Venkat Rao", action: "started entry for", plant: "Anantapur PV Plant", time: "1 day ago", type: "start", color: "purple" },
-                            { user: "System", action: "auto-locked", plant: "Bhadla Solar Park", time: "1 day ago", type: "system", color: "slate" },
-                          ].map((activity, idx) => (
-                            <div key={idx} className="flex items-start gap-3 p-4 hover:bg-slate-50 transition-colors">
-                              <div className={`w-8 h-8 rounded-full bg-${activity.color}-100 flex items-center justify-center text-${activity.color}-700 font-semibold text-xs shrink-0`}>
-                                {activity.user.split(" ").map(n => n[0]).join("")}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm text-slate-900">
-                                  <span className="font-semibold">{activity.user}</span>
-                                  {" "}<span className="text-slate-600">{activity.action}</span>
-                                  {" "}<span className="font-semibold">{activity.plant}</span>
-                                </p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Clock className="w-3 h-3 text-slate-400" />
-                                  <span className="text-xs text-slate-500">{activity.time}</span>
+                              return (
+                                <div key={step.num} className="flex items-center flex-1">
+                                  <div className="flex flex-col items-center flex-1">
+                                    <div
+                                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                                        isCompleted
+                                          ? "bg-emerald-600 text-white"
+                                          : isActive
+                                          ? "bg-[#0B3C5D] text-white"
+                                          : "bg-slate-200 text-slate-500"
+                                      }`}
+                                    >
+                                      {isCompleted ? (
+                                        <CheckCircle2 className="w-5 h-5" />
+                                      ) : (
+                                        <Icon className="w-5 h-5" />
+                                      )}
+                                    </div>
+                                    <span
+                                      className={`text-xs font-semibold mt-2 ${
+                                        isActive ? "text-[#0B3C5D]" : "text-slate-600"
+                                      }`}
+                                    >
+                                      {step.label}
+                                    </span>
+                                  </div>
+                                  {idx < 3 && (
+                                    <div
+                                      className={`h-0.5 flex-1 -mx-2 ${
+                                        isCompleted ? "bg-emerald-600" : "bg-slate-200"
+                                      }`}
+                                    ></div>
+                                  )}
                                 </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Performance Trends */}
-                <Card className="shadow-md border-slate-200">
-                  <CardHeader className="border-b border-slate-100">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5 text-[#0B3C5D]" />
-                        Generation Trend (Last 5 Months)
-                      </CardTitle>
-                      <Button variant="outline" size="sm">
-                        <Download className="w-4 h-4 mr-2" />
-                        Export Chart
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={historicalData}>
-                          <defs>
-                            <linearGradient id="colorGeneration" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#0B3C5D" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#0B3C5D" stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                          <XAxis dataKey="month" stroke="#64748b" />
-                          <YAxis yAxisId="left" stroke="#64748b" />
-                          <YAxis yAxisId="right" orientation="right" stroke="#64748b" />
-                          <RechartsTooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'white', 
-                              border: '1px solid #e2e8f0',
-                              borderRadius: '12px',
-                              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                            }}
-                          />
-                          <Legend />
-                          <Area 
-                            yAxisId="left"
-                            type="monotone" 
-                            dataKey="generation" 
-                            fill="url(#colorGeneration)" 
-                            stroke="#0B3C5D" 
-                            strokeWidth={2}
-                            name="Generation (MWh)"
-                          />
-                          <Bar yAxisId="left" dataKey="target" fill="#F4B400" radius={[8, 8, 0, 0]} name="Target (MWh)" />
-                          <Line 
-                            yAxisId="right"
-                            type="monotone" 
-                            dataKey="cuf" 
-                            stroke="#10B981" 
-                            strokeWidth={3} 
-                            dot={{ fill: '#10B981', r: 5 }}
-                            name="CUF (%)"
-                          />
-                        </ComposedChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-
-              </div>
-            </ScrollArea>
-          )}
-
-          {/* Data Entry View */}
-          {viewMode === "entry" && (
-            <div className="flex-1 flex flex-col overflow-hidden">
-              {selectedPlant ? (
-                <>
-                  {/* Plant Header */}
-                  <div className="bg-white border-b border-slate-200 px-8 py-5 shrink-0 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedPlant(null);
-                            setViewMode("dashboard");
-                          }}
-                        >
-                          <ChevronLeft className="w-5 h-5" />
-                        </Button>
-                        <div>
-                          <div className="flex items-center gap-3 mb-1">
-                            <h2 className="text-xl font-bold text-slate-900">{selectedPlant.name}</h2>
-                            <Badge className={`${getStatusConfig(selectedPlant.status).color} px-3 py-1 shadow-sm`}>
-                              {getStatusConfig(selectedPlant.status).label}
-                            </Badge>
+                              );
+                            })}
                           </div>
-                          <div className="flex items-center gap-6 text-sm text-slate-600">
-                            <div className="flex items-center gap-2">
-                              <Building2 className="w-4 h-4 text-slate-400" />
-                              <span className="font-medium">{selectedPlant.id}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Zap className="w-4 h-4 text-slate-400" />
-                              <span className="font-semibold">{selectedPlant.capacity}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <MapPin className="w-4 h-4 text-slate-400" />
-                              <span>{selectedPlant.district}, {selectedPlant.state}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Clock className="w-4 h-4 text-slate-400" />
-                              <span>Updated {selectedPlant.lastUpdated}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="gap-2">
-                          <History className="w-4 h-4" />
-                          History
-                        </Button>
-                        <Button variant="outline" size="sm" className="gap-2">
-                          <Copy className="w-4 h-4" />
-                          Clone Prev Month
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="gap-2"
-                          onClick={() => setShowAIPanel(!showAIPanel)}
-                        >
-                          <Lightbulb className={`w-4 h-4 ${showAIPanel ? "text-amber-500" : ""}`} />
-                          AI Assist
-                        </Button>
-                      </div>
-                    </div>
+                        </CardContent>
+                      </Card>
 
-                    {/* Progress Stepper */}
-                    <div className="mt-6 flex items-center gap-2">
-                      {[
-                        { num: 1, label: "Generation Data", icon: Activity },
-                        { num: 2, label: "Availability", icon: CheckCircle },
-                        { num: 3, label: "Commercial", icon: DollarSign },
-                        { num: 4, label: "Review", icon: Eye },
-                      ].map((step, idx) => (
-                        <div key={step.num} className="flex items-center flex-1">
-                          <button
-                            onClick={() => setEntryStep(step.num)}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all w-full ${
-                              entryStep === step.num
-                                ? "border-[#0B3C5D] bg-blue-50 shadow-md"
-                                : entryStep > step.num
-                                ? "border-emerald-500 bg-emerald-50"
-                                : "border-slate-200 bg-white hover:border-slate-300"
-                            }`}
-                          >
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                              entryStep === step.num
-                                ? "bg-[#0B3C5D] text-white"
-                                : entryStep > step.num
-                                ? "bg-emerald-500 text-white"
-                                : "bg-slate-200 text-slate-600"
-                            }`}>
-                              {entryStep > step.num ? <Check className="w-5 h-5" /> : step.num}
-                            </div>
-                            <div className="text-left">
-                              <div className={`text-xs font-semibold ${
-                                entryStep === step.num ? "text-[#0B3C5D]" : "text-slate-600"
-                              }`}>
-                                Step {step.num}
-                              </div>
-                              <div className={`text-xs ${
-                                entryStep === step.num ? "text-slate-900" : "text-slate-500"
-                              }`}>
-                                {step.label}
-                              </div>
-                            </div>
-                          </button>
-                          {idx < 3 && (
-                            <ChevronRight className="w-5 h-5 text-slate-300 mx-1 shrink-0" />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Entry Form with AI Panel */}
-                  <div className="flex-1 flex overflow-hidden">
-                    <ScrollArea className="flex-1 p-8">
-                      <div className="max-w-5xl mx-auto pb-12">
-                        <StepperContent
-                          step={entryStep}
-                          formData={formData}
-                          prevMonthData={prevMonthData}
-                          onChange={handleInputChange}
-                          auxiliaryConsumption={auxiliaryConsumption}
-                          targetAchievement={targetAchievement}
-                          cuf={cuf}
-                          pr={pr}
-                          onNext={() => setEntryStep(Math.min(4, entryStep + 1))}
-                          onPrev={() => setEntryStep(Math.max(1, entryStep - 1))}
-                        />
-                      </div>
-                    </ScrollArea>
-
-                    {/* AI Assistant Panel */}
-                    <AnimatePresence>
-                      {showAIPanel && (
+                      {/* SECTION 1: Plant Metadata */}
+                      {entryStep === 1 && (
                         <motion.div
-                          initial={{ width: 0, opacity: 0 }}
-                          animate={{ width: 360, opacity: 1 }}
-                          exit={{ width: 0, opacity: 0 }}
-                          className="border-l border-slate-200 bg-gradient-to-br from-amber-50 to-orange-50 overflow-hidden shrink-0"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="space-y-6"
                         >
-                          <div className="p-6 h-full flex flex-col">
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-2">
-                                <div className="p-2 bg-amber-500 rounded-lg">
-                                  <Sparkles className="w-5 h-5 text-white" />
+                          <Card className="border-2 border-slate-200">
+                            <CardHeader className="border-b border-slate-100">
+                              <CardTitle className="flex items-center gap-2">
+                                <Building2 className="w-5 h-5 text-[#0B3C5D]" />
+                                Plant Metadata
+                              </CardTitle>
+                              <CardDescription>
+                                Basic plant identification and configuration details
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-6 space-y-6">
+                              <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                  <Label htmlFor="state" className="text-xs font-bold uppercase text-slate-700">
+                                    State <span className="text-rose-600">*</span>
+                                  </Label>
+                                  <Select
+                                    value={plantMetadata.state}
+                                    onValueChange={(val) =>
+                                      setPlantMetadata({ ...plantMetadata, state: val })
+                                    }
+                                  >
+                                    <SelectTrigger id="state">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {states.map((state) => (
+                                        <SelectItem key={state} value={state}>
+                                          {state}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 </div>
-                                <div>
-                                  <h3 className="font-bold text-slate-900 text-sm">AI Assistant</h3>
-                                  <p className="text-xs text-slate-600">Smart suggestions</p>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="district" className="text-xs font-bold uppercase text-slate-700">
+                                    District <span className="text-rose-600">*</span>
+                                  </Label>
+                                  <Input
+                                    id="district"
+                                    value={plantMetadata.district}
+                                    onChange={(e) =>
+                                      setPlantMetadata({ ...plantMetadata, district: e.target.value })
+                                    }
+                                    placeholder="Enter district"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="plantName" className="text-xs font-bold uppercase text-slate-700">
+                                    Plant Name <span className="text-rose-600">*</span>
+                                  </Label>
+                                  <Input
+                                    id="plantName"
+                                    value={plantMetadata.plantName}
+                                    onChange={(e) =>
+                                      setPlantMetadata({ ...plantMetadata, plantName: e.target.value })
+                                    }
+                                    placeholder="Enter plant name"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="capacity" className="text-xs font-bold uppercase text-slate-700">
+                                    Capacity (MW) <span className="text-rose-600">*</span>
+                                  </Label>
+                                  <Input
+                                    id="capacity"
+                                    type="number"
+                                    value={plantMetadata.capacity}
+                                    onChange={(e) =>
+                                      setPlantMetadata({ ...plantMetadata, capacity: e.target.value })
+                                    }
+                                    placeholder="Enter capacity"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="cod" className="text-xs font-bold uppercase text-slate-700">
+                                    COD (Commercial Operation Date) <span className="text-rose-600">*</span>
+                                  </Label>
+                                  <Input
+                                    id="cod"
+                                    type="date"
+                                    value={plantMetadata.cod}
+                                    onChange={(e) =>
+                                      setPlantMetadata({ ...plantMetadata, cod: e.target.value })
+                                    }
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="vendor" className="text-xs font-bold uppercase text-slate-700">
+                                    Vendor <span className="text-rose-600">*</span>
+                                  </Label>
+                                  <Select
+                                    value={plantMetadata.vendor}
+                                    onValueChange={(val) =>
+                                      setPlantMetadata({ ...plantMetadata, vendor: val })
+                                    }
+                                  >
+                                    <SelectTrigger id="vendor">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {vendors.map((vendor) => (
+                                        <SelectItem key={vendor} value={vendor}>
+                                          {vendor}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="procurer" className="text-xs font-bold uppercase text-slate-700">
+                                    Procurer <span className="text-rose-600">*</span>
+                                  </Label>
+                                  <Input
+                                    id="procurer"
+                                    value={plantMetadata.procurer}
+                                    onChange={(e) =>
+                                      setPlantMetadata({ ...plantMetadata, procurer: e.target.value })
+                                    }
+                                    placeholder="e.g., EESL, SECI"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="contractType" className="text-xs font-bold uppercase text-slate-700">
+                                    Contract Type <span className="text-rose-600">*</span>
+                                  </Label>
+                                  <Select
+                                    value={plantMetadata.contractType}
+                                    onValueChange={(val) =>
+                                      setPlantMetadata({ ...plantMetadata, contractType: val })
+                                    }
+                                  >
+                                    <SelectTrigger id="contractType">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Domestic">Domestic</SelectItem>
+                                      <SelectItem value="ADB">ADB Funded</SelectItem>
+                                      <SelectItem value="World Bank">World Bank</SelectItem>
+                                      <SelectItem value="Other">Other</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="ppaType" className="text-xs font-bold uppercase text-slate-700">
+                                    PPA Type <span className="text-rose-600">*</span>
+                                  </Label>
+                                  <Select
+                                    value={plantMetadata.ppaType}
+                                    onValueChange={(val) =>
+                                      setPlantMetadata({ ...plantMetadata, ppaType: val })
+                                    }
+                                  >
+                                    <SelectTrigger id="ppaType">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {ppaTypes.map((type) => (
+                                        <SelectItem key={type} value={type}>
+                                          {type}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => setShowAIPanel(false)}
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
-                            </div>
+                            </CardContent>
+                          </Card>
 
-                            <ScrollArea className="flex-1">
-                              <div className="space-y-4 pr-2">
-                                {/* AI Suggestion Cards */}
-                                <Card className="border-2 border-amber-200 bg-white shadow-sm">
-                                  <CardContent className="p-4">
-                                    <div className="flex items-start gap-3 mb-3">
-                                      <Lightbulb className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                                      <div>
-                                        <h4 className="font-semibold text-sm text-slate-900 mb-1">Auto-fill Generation Data</h4>
-                                        <p className="text-xs text-slate-600">Based on historical averages and weather data for February</p>
-                                      </div>
-                                    </div>
-                                    <div className="space-y-2 mb-3">
-                                      <div className="flex justify-between text-xs">
-                                        <span className="text-slate-600">Gross Generation:</span>
-                                        <span className="font-semibold">4,520 MWh</span>
-                                      </div>
-                                      <div className="flex justify-between text-xs">
-                                        <span className="text-slate-600">Confidence:</span>
-                                        <span className="font-semibold text-emerald-600">94%</span>
-                                      </div>
-                                    </div>
-                                    <Button size="sm" className="w-full bg-amber-500 hover:bg-amber-600 text-white">
-                                      Apply Suggestions
-                                    </Button>
-                                  </CardContent>
-                                </Card>
-
-                                <Card className="border border-slate-200 bg-white shadow-sm">
-                                  <CardContent className="p-4">
-                                    <div className="flex items-start gap-3 mb-3">
-                                      <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                                      <div>
-                                        <h4 className="font-semibold text-sm text-slate-900 mb-1">Data Quality Check</h4>
-                                        <p className="text-xs text-slate-600">All fields validated · No anomalies detected</p>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs text-emerald-600 font-medium">
-                                      <CheckCircle className="w-4 h-4" />
-                                      Ready for submission
-                                    </div>
-                                  </CardContent>
-                                </Card>
-
-                                <Card className="border border-slate-200 bg-white shadow-sm">
-                                  <CardContent className="p-4">
-                                    <div className="flex items-start gap-3 mb-3">
-                                      <BookOpen className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
-                                      <div>
-                                        <h4 className="font-semibold text-sm text-slate-900 mb-1">Quick Tips</h4>
-                                        <ul className="text-xs text-slate-600 space-y-1 mt-2">
-                                          <li>• Ensure grid availability is ≤ 100%</li>
-                                          <li>• Net export cannot exceed gross generation</li>
-                                          <li>• Document any curtailment events</li>
-                                        </ul>
-                                      </div>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-
-                                <Card className="border border-slate-200 bg-white shadow-sm">
-                                  <CardContent className="p-4">
-                                    <div className="flex items-start gap-3">
-                                      <Target className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                                      <div>
-                                        <h4 className="font-semibold text-sm text-slate-900 mb-1">Performance Benchmark</h4>
-                                        <p className="text-xs text-slate-600 mb-2">Compared to similar plants in {selectedPlant.state}</p>
-                                        <div className="space-y-2">
-                                          <div>
-                                            <div className="flex justify-between text-xs mb-1">
-                                              <span className="text-slate-600">CUF Ranking</span>
-                                              <span className="font-semibold">Top 25%</span>
-                                            </div>
-                                            <Progress value={75} className="h-1.5" />
-                                          </div>
-                                          <div>
-                                            <div className="flex justify-between text-xs mb-1">
-                                              <span className="text-slate-600">Availability</span>
-                                              <span className="font-semibold">Top 15%</span>
-                                            </div>
-                                            <Progress value={85} className="h-1.5" />
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              </div>
-                            </ScrollArea>
+                          <div className="flex justify-end gap-3">
+                            <Button variant="outline" onClick={handleReset}>
+                              <RotateCcw className="w-4 h-4 mr-2" />
+                              Reset
+                            </Button>
+                            <Button onClick={() => setEntryStep(2)} className="bg-[#0B3C5D]">
+                              Next Step
+                              <ArrowRight className="w-4 h-4 ml-2" />
+                            </Button>
                           </div>
                         </motion.div>
                       )}
-                    </AnimatePresence>
-                  </div>
-                </>
-              ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center max-w-md">
-                    <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <FileText className="w-12 h-12 text-blue-600" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-slate-900 mb-3">Select a Plant to Begin</h3>
-                    <p className="text-slate-600 mb-6">Choose a plant from the sidebar to start entering JMR data or use quick actions to get started</p>
-                    <div className="flex gap-3 justify-center">
-                      <Button 
-                        variant="outline"
-                        onClick={() => setViewMode("dashboard")}
-                      >
-                        <LayoutGrid className="w-4 h-4 mr-2" />
-                        View Dashboard
-                      </Button>
-                      <Button
-                        className="bg-[#0B3C5D]"
-                        onClick={() => filteredPlants.length > 0 && setSelectedPlant(filteredPlants[0])}
-                      >
-                        <PlayCircle className="w-4 h-4 mr-2" />
-                        Start Entry
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
-          {/* Review View */}
-          {viewMode === "review" && (
-            <ScrollArea className="flex-1">
-              <div className="p-8 max-w-7xl mx-auto space-y-6 pb-12">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-slate-900">Review & Approval</h2>
-                    <p className="text-slate-600 mt-1">Review submitted JMR data and approve for locking</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" className="gap-2">
-                      <Filter className="w-4 h-4" />
-                      Filter
-                    </Button>
-                    <Button variant="outline" className="gap-2">
-                      <Download className="w-4 h-4" />
-                      Export List
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Pending Reviews Table */}
-                <Card className="shadow-md border-slate-200">
-                  <CardHeader className="border-b border-slate-100">
-                    <CardTitle className="text-base">Pending Reviews ({plants.filter(p => p.status === "pending-review").length})</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-slate-50">
-                          <TableHead className="w-12">
-                            <Checkbox />
-                          </TableHead>
-                          <TableHead>Plant</TableHead>
-                          <TableHead>Location</TableHead>
-                          <TableHead>Submitted By</TableHead>
-                          <TableHead>Quality</TableHead>
-                          <TableHead>Submitted</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {plants.filter(p => p.status === "pending-review").map((plant) => (
-                          <TableRow key={plant.id} className="hover:bg-slate-50">
-                            <TableCell>
-                              <Checkbox />
-                            </TableCell>
-                            <TableCell>
+                      {/* SECTION 2: Operational Parameters */}
+                      {entryStep === 2 && (
+                        <motion.div
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="space-y-6"
+                        >
+                          <Card className="border-2 border-slate-200">
+                            <CardHeader className="border-b border-slate-100">
+                              <CardTitle className="flex items-center gap-2">
+                                <Zap className="w-5 h-5 text-[#0B3C5D]" />
+                                Operational Parameters
+                              </CardTitle>
+                              <CardDescription>Monthly generation and operational metrics</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-6 space-y-6">
+                              {/* Generation Metrics */}
                               <div>
-                                <div className="font-semibold text-slate-900">{plant.name}</div>
-                                <div className="text-xs text-slate-500">{plant.id} · {plant.capacity}</div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">{plant.district}, {plant.state}</div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-xs">
-                                  {plant.submittedBy.split(" ").map(n => n[0]).join("")}
+                                <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                  <div className="w-1 h-4 bg-[#0B3C5D] rounded"></div>
+                                  Generation Metrics
+                                </h3>
+                                <div className="grid grid-cols-3 gap-4">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase text-slate-700">
+                                      Gross Generation (MWh) <span className="text-rose-600">*</span>
+                                    </Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      value={operationalData.grossGeneration}
+                                      onChange={(e) =>
+                                        setOperationalData({
+                                          ...operationalData,
+                                          grossGeneration: e.target.value,
+                                        })
+                                      }
+                                      placeholder="0.00"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase text-slate-700">
+                                      Net Export Energy (MWh) <span className="text-rose-600">*</span>
+                                    </Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      value={operationalData.netExportEnergy}
+                                      onChange={(e) =>
+                                        setOperationalData({
+                                          ...operationalData,
+                                          netExportEnergy: e.target.value,
+                                        })
+                                      }
+                                      placeholder="0.00"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase text-slate-700">
+                                      Import Units (MWh)
+                                    </Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      value={operationalData.importUnits}
+                                      onChange={(e) =>
+                                        setOperationalData({
+                                          ...operationalData,
+                                          importUnits: e.target.value,
+                                        })
+                                      }
+                                      placeholder="0.00"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase text-slate-700">
+                                      Auxiliary Consumption (MWh)
+                                    </Label>
+                                    <Input
+                                      value={auxiliaryConsumption}
+                                      disabled
+                                      className="bg-slate-100 font-semibold"
+                                    />
+                                    <p className="text-xs text-slate-500">Auto-calculated</p>
+                                  </div>
                                 </div>
-                                <span className="text-sm">{plant.submittedBy}</span>
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Progress value={plant.quality} className="h-2 w-16" />
-                                <span className="text-sm font-semibold">{plant.quality}%</span>
+
+                              <Separator />
+
+                              {/* Availability Metrics */}
+                              <div>
+                                <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                  <div className="w-1 h-4 bg-[#0B3C5D] rounded"></div>
+                                  Availability Metrics
+                                </h3>
+                                <div className="grid grid-cols-3 gap-4">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase text-slate-700">
+                                      Grid Availability (%) <span className="text-rose-600">*</span>
+                                    </Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      value={operationalData.gridAvailability}
+                                      onChange={(e) =>
+                                        setOperationalData({
+                                          ...operationalData,
+                                          gridAvailability: e.target.value,
+                                        })
+                                      }
+                                      placeholder="0.00"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase text-slate-700">
+                                      Plant Availability (%) <span className="text-rose-600">*</span>
+                                    </Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      value={operationalData.plantAvailability}
+                                      onChange={(e) =>
+                                        setOperationalData({
+                                          ...operationalData,
+                                          plantAvailability: e.target.value,
+                                        })
+                                      }
+                                      placeholder="0.00"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase text-slate-700">
+                                      Curtailment Units (MWh)
+                                    </Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      value={operationalData.curtailmentUnits}
+                                      onChange={(e) =>
+                                        setOperationalData({
+                                          ...operationalData,
+                                          curtailmentUnits: e.target.value,
+                                        })
+                                      }
+                                      placeholder="0.00"
+                                    />
+                                  </div>
+                                </div>
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm text-slate-600">{plant.lastUpdated}</div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex gap-2 justify-end">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setSelectedPlant(plant);
-                                    setViewMode("entry");
-                                  }}
-                                >
-                                  <Eye className="w-4 h-4 mr-1" />
-                                  View
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                                  onClick={() => toast.success(`${plant.name} approved successfully`)}
-                                >
-                                  <CheckCircle className="w-4 h-4 mr-1" />
-                                  Approve
-                                </Button>
+
+                              <Separator />
+
+                              {/* Downtime Metrics */}
+                              <div>
+                                <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                  <div className="w-1 h-4 bg-[#0B3C5D] rounded"></div>
+                                  Downtime Hours
+                                </h3>
+                                <div className="grid grid-cols-4 gap-4">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase text-slate-700">
+                                      Solar Downtime (hrs)
+                                    </Label>
+                                    <Input
+                                      type="number"
+                                      step="0.1"
+                                      value={operationalData.solarDowntimeHours}
+                                      onChange={(e) =>
+                                        setOperationalData({
+                                          ...operationalData,
+                                          solarDowntimeHours: e.target.value,
+                                        })
+                                      }
+                                      placeholder="0.0"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase text-slate-700">
+                                      Grid Downtime (hrs)
+                                    </Label>
+                                    <Input
+                                      type="number"
+                                      step="0.1"
+                                      value={operationalData.gridDowntimeHours}
+                                      onChange={(e) =>
+                                        setOperationalData({
+                                          ...operationalData,
+                                          gridDowntimeHours: e.target.value,
+                                        })
+                                      }
+                                      placeholder="0.0"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase text-slate-700">
+                                      PM Hours
+                                    </Label>
+                                    <Input
+                                      type="number"
+                                      step="0.1"
+                                      value={operationalData.preventiveMaintenanceHours}
+                                      onChange={(e) =>
+                                        setOperationalData({
+                                          ...operationalData,
+                                          preventiveMaintenanceHours: e.target.value,
+                                        })
+                                      }
+                                      placeholder="0.0"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase text-slate-700">
+                                      Breakdown Hours
+                                    </Label>
+                                    <Input
+                                      type="number"
+                                      step="0.1"
+                                      value={operationalData.breakdownHours}
+                                      onChange={(e) =>
+                                        setOperationalData({
+                                          ...operationalData,
+                                          breakdownHours: e.target.value,
+                                        })
+                                      }
+                                      placeholder="0.0"
+                                    />
+                                  </div>
+                                </div>
                               </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
 
-                {/* Workflow Progress */}
-                <Card className="shadow-md border-slate-200">
-                  <CardHeader className="border-b border-slate-100">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Activity className="w-5 h-5 text-[#0B3C5D]" />
-                      Approval Workflow
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-8">
-                    <WorkflowTimeline stages={workflowStages} />
-                  </CardContent>
-                </Card>
-              </div>
-            </ScrollArea>
-          )}
+                              <Separator />
 
-          {/* Analytics View */}
-          {viewMode === "analytics" && (
-            <ScrollArea className="flex-1">
-              <div className="p-8 max-w-7xl mx-auto space-y-6 pb-12">
-                <HistoricalComparison data={historicalData} />
-              </div>
-            </ScrollArea>
-          )}
+                              {/* Other Parameters */}
+                              <div>
+                                <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                  <div className="w-1 h-4 bg-[#0B3C5D] rounded"></div>
+                                  Other Parameters
+                                </h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase text-slate-700">
+                                      Transmission Line Loss (%)
+                                    </Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      value={operationalData.transmissionLineLoss}
+                                      onChange={(e) =>
+                                        setOperationalData({
+                                          ...operationalData,
+                                          transmissionLineLoss: e.target.value,
+                                        })
+                                      }
+                                      placeholder="0.00"
+                                    />
+                                  </div>
 
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase text-slate-700">
+                                      Reactive Power Withdrawal (kVAR)
+                                    </Label>
+                                    <Input
+                                      type="number"
+                                      step="0.1"
+                                      value={operationalData.reactivePowerWithdrawal}
+                                      onChange={(e) =>
+                                        setOperationalData({
+                                          ...operationalData,
+                                          reactivePowerWithdrawal: e.target.value,
+                                        })
+                                      }
+                                      placeholder="0.0"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          <div className="flex justify-between gap-3">
+                            <Button variant="outline" onClick={() => setEntryStep(1)}>
+                              Previous
+                            </Button>
+                            <div className="flex gap-3">
+                              <Button variant="outline" onClick={handleReset}>
+                                <RotateCcw className="w-4 h-4 mr-2" />
+                                Reset
+                              </Button>
+                              <Button onClick={() => setEntryStep(3)} className="bg-[#0B3C5D]">
+                                Next Step
+                                <ArrowRight className="w-4 h-4 ml-2" />
+                              </Button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* SECTION 3: Commercial Parameters */}
+                      {entryStep === 3 && (
+                        <motion.div
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="space-y-6"
+                        >
+                          <Card className="border-2 border-slate-200">
+                            <CardHeader className="border-b border-slate-100">
+                              <CardTitle className="flex items-center gap-2">
+                                <TrendingUp className="w-5 h-5 text-[#0B3C5D]" />
+                                Commercial Parameters
+                              </CardTitle>
+                              <CardDescription>Revenue and contractual compliance data</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-6 space-y-6">
+                              <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                  <Label className="text-xs font-bold uppercase text-slate-700">
+                                    Contractual Target Generation (MWh) <span className="text-rose-600">*</span>
+                                  </Label>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={commercialData.contractualTarget}
+                                    onChange={(e) =>
+                                      setCommercialData({
+                                        ...commercialData,
+                                        contractualTarget: e.target.value,
+                                      })
+                                    }
+                                    placeholder="0.00"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label className="text-xs font-bold uppercase text-slate-700">
+                                    Revenue Realized (₹ Lakhs) <span className="text-rose-600">*</span>
+                                  </Label>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={commercialData.revenueRealized}
+                                    onChange={(e) =>
+                                      setCommercialData({
+                                        ...commercialData,
+                                        revenueRealized: e.target.value,
+                                      })
+                                    }
+                                    placeholder="0.00"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label className="text-xs font-bold uppercase text-slate-700">
+                                    O&M Deviation Amount (₹ Lakhs)
+                                  </Label>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={commercialData.omDeviationAmount}
+                                    onChange={(e) =>
+                                      setCommercialData({
+                                        ...commercialData,
+                                        omDeviationAmount: e.target.value,
+                                      })
+                                    }
+                                    placeholder="0.00"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label className="text-xs font-bold uppercase text-slate-700">
+                                    Target Achievement (%)
+                                  </Label>
+                                  <Input
+                                    value={targetAchievement}
+                                    disabled
+                                    className="bg-slate-100 font-semibold"
+                                  />
+                                  <p className="text-xs text-slate-500">Auto-calculated</p>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          {/* Auto-Computed Preview */}
+                          <Card className="border-2 border-blue-200 bg-blue-50">
+                            <CardHeader className="border-b border-blue-100">
+                              <CardTitle className="flex items-center gap-2 text-blue-900">
+                                <CheckCircle2 className="w-5 h-5" />
+                                Auto-Computed Preview
+                              </CardTitle>
+                              <CardDescription className="text-blue-700">
+                                Live calculated KPIs based on entered data
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-6">
+                              <div className="grid grid-cols-5 gap-4">
+                                <div className="bg-white p-4 rounded-lg border border-blue-200">
+                                  <div className="text-xs font-bold text-slate-600 uppercase mb-1">CUF</div>
+                                  <div className="text-2xl font-bold text-slate-900">{cuf}%</div>
+                                </div>
+                                <div className="bg-white p-4 rounded-lg border border-blue-200">
+                                  <div className="text-xs font-bold text-slate-600 uppercase mb-1">PAF</div>
+                                  <div className="text-2xl font-bold text-slate-900">{paf}%</div>
+                                </div>
+                                <div className="bg-white p-4 rounded-lg border border-blue-200">
+                                  <div className="text-xs font-bold text-slate-600 uppercase mb-1">
+                                    Expected Gen
+                                  </div>
+                                  <div className="text-2xl font-bold text-slate-900">{expectedGeneration}</div>
+                                  <div className="text-xs text-slate-600">MWh</div>
+                                </div>
+                                <div className="bg-white p-4 rounded-lg border border-blue-200">
+                                  <div className="text-xs font-bold text-slate-600 uppercase mb-1">
+                                    Revenue Shortfall
+                                  </div>
+                                  <div className="text-2xl font-bold text-rose-600">₹{revenueShortfall}</div>
+                                  <div className="text-xs text-slate-600">Lakhs</div>
+                                </div>
+                                <div className="bg-white p-4 rounded-lg border border-blue-200">
+                                  <div className="text-xs font-bold text-slate-600 uppercase mb-1">LD Risk</div>
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-emerald-50 text-emerald-700 border-emerald-200 mt-1"
+                                  >
+                                    {ldRisk}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          <div className="flex justify-between gap-3">
+                            <Button variant="outline" onClick={() => setEntryStep(2)}>
+                              Previous
+                            </Button>
+                            <div className="flex gap-3">
+                              <Button variant="outline" onClick={handleReset}>
+                                <RotateCcw className="w-4 h-4 mr-2" />
+                                Reset
+                              </Button>
+                              <Button onClick={() => setEntryStep(4)} className="bg-[#0B3C5D]">
+                                Next Step
+                                <ArrowRight className="w-4 h-4 ml-2" />
+                              </Button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* SECTION 4: Review & Validation */}
+                      {entryStep === 4 && (
+                        <motion.div
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="space-y-6"
+                        >
+                          {/* Validation Panel */}
+                          <Card className="border-2 border-slate-200">
+                            <CardHeader className="border-b border-slate-100">
+                              <CardTitle className="flex items-center gap-2">
+                                <ShieldCheck className="w-5 h-5 text-[#0B3C5D]" />
+                                Validation & Compliance Check
+                              </CardTitle>
+                              <CardDescription>
+                                Automated field validation and threshold checks
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-6 space-y-4">
+                              {validationErrors.length > 0 && (
+                                <div className="p-4 bg-rose-50 border-2 border-rose-200 rounded-lg">
+                                  <div className="flex items-start gap-3">
+                                    <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                                    <div className="flex-1">
+                                      <h4 className="font-bold text-rose-900 mb-2">
+                                        Validation Errors ({validationErrors.length})
+                                      </h4>
+                                      <ul className="space-y-1">
+                                        {validationErrors.map((error, idx) => (
+                                          <li key={idx} className="text-sm text-rose-700">
+                                            • {error}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {validationWarnings.length > 0 && (
+                                <div className="p-4 bg-amber-50 border-2 border-amber-200 rounded-lg">
+                                  <div className="flex items-start gap-3">
+                                    <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                                    <div className="flex-1">
+                                      <h4 className="font-bold text-amber-900 mb-2">
+                                        Warnings ({validationWarnings.length})
+                                      </h4>
+                                      <ul className="space-y-1">
+                                        {validationWarnings.map((warning, idx) => (
+                                          <li key={idx} className="text-sm text-amber-700">
+                                            • {warning}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {validationErrors.length === 0 && validationWarnings.length === 0 && (
+                                <div className="p-4 bg-emerald-50 border-2 border-emerald-200 rounded-lg">
+                                  <div className="flex items-center gap-3">
+                                    <CheckCircle className="w-5 h-5 text-emerald-600" />
+                                    <div className="flex-1">
+                                      <h4 className="font-bold text-emerald-900">All Validations Passed</h4>
+                                      <p className="text-sm text-emerald-700 mt-1">
+                                        Data is ready for submission
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              <Button
+                                variant="outline"
+                                onClick={validateForm}
+                                className="w-full gap-2"
+                              >
+                                <RefreshCw className="w-4 h-4" />
+                                Re-run Validation
+                              </Button>
+                            </CardContent>
+                          </Card>
+
+                          {/* Data Summary */}
+                          <Card className="border-2 border-slate-200">
+                            <CardHeader className="border-b border-slate-100">
+                              <CardTitle>Data Summary</CardTitle>
+                              <CardDescription>Review all entered information before submission</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-6 space-y-6">
+                              <div>
+                                <h4 className="text-sm font-bold text-slate-700 mb-3">Plant Metadata</h4>
+                                <div className="grid grid-cols-3 gap-4 text-sm">
+                                  <div>
+                                    <span className="text-slate-600">Plant:</span>{" "}
+                                    <span className="font-semibold">{plantMetadata.plantName}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-600">Capacity:</span>{" "}
+                                    <span className="font-semibold">{plantMetadata.capacity} MW</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-600">Vendor:</span>{" "}
+                                    <span className="font-semibold">{plantMetadata.vendor}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <Separator />
+
+                              <div>
+                                <h4 className="text-sm font-bold text-slate-700 mb-3">
+                                  Key Operational Metrics
+                                </h4>
+                                <div className="grid grid-cols-3 gap-4 text-sm">
+                                  <div>
+                                    <span className="text-slate-600">Gross Generation:</span>{" "}
+                                    <span className="font-semibold">{operationalData.grossGeneration} MWh</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-600">Net Export:</span>{" "}
+                                    <span className="font-semibold">{operationalData.netExportEnergy} MWh</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-600">Plant Availability:</span>{" "}
+                                    <span className="font-semibold">{operationalData.plantAvailability}%</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <Separator />
+
+                              <div>
+                                <h4 className="text-sm font-bold text-slate-700 mb-3">Commercial Metrics</h4>
+                                <div className="grid grid-cols-3 gap-4 text-sm">
+                                  <div>
+                                    <span className="text-slate-600">Revenue Realized:</span>{" "}
+                                    <span className="font-semibold">₹{commercialData.revenueRealized} L</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-600">Target Achievement:</span>{" "}
+                                    <span className="font-semibold">{targetAchievement}%</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-600">CUF:</span>{" "}
+                                    <span className="font-semibold">{cuf}%</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          {/* Action Buttons */}
+                          <div className="flex justify-between gap-3">
+                            <Button variant="outline" onClick={() => setEntryStep(3)}>
+                              Previous
+                            </Button>
+                            <div className="flex gap-3">
+                              <Button variant="outline" onClick={handleReset}>
+                                <RotateCcw className="w-4 h-4 mr-2" />
+                                Reset All
+                              </Button>
+                              <Button variant="outline" onClick={handleSaveDraft} className="gap-2">
+                                <Save className="w-4 h-4" />
+                                Save Draft
+                              </Button>
+                              <Button
+                                onClick={handleSubmitForReview}
+                                className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+                              >
+                                <Send className="w-4 h-4" />
+                                Submit for Review
+                              </Button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right: Workflow Panel */}
+                  {showWorkflowPanel && (
+                    <motion.div
+                      initial={{ x: 300 }}
+                      animate={{ x: 0 }}
+                      className="w-80 border-l border-slate-200 bg-white shrink-0"
+                    >
+                      <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+                        <h3 className="font-bold text-slate-900">Workflow Status</h3>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setShowWorkflowPanel(false)}
+                        >
+                          <XIcon className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <ScrollArea className="h-[calc(100vh-200px)]">
+                        <div className="p-4 space-y-6">
+                          {/* Maker */}
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <User className="w-4 h-4 text-blue-600" />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-bold text-slate-600 uppercase">Maker</h4>
+                                <p className="text-sm font-semibold text-slate-900">Data Entry</p>
+                              </div>
+                            </div>
+                            <div className="ml-4 pl-4 border-l-2 border-blue-200 space-y-2">
+                              <div className="text-sm">
+                                <span className="text-slate-600">Entered by:</span>{" "}
+                                <span className="font-semibold">Current User</span>
+                              </div>
+                              <div className="text-sm">
+                                <span className="text-slate-600">Date:</span>{" "}
+                                <span className="font-semibold">Mar 2, 2026 10:30</span>
+                              </div>
+                              <Badge className="bg-blue-100 text-blue-700 border-blue-200">
+                                In Progress
+                              </Badge>
+                            </div>
+                          </div>
+
+                          <Separator />
+
+                          {/* Checker */}
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                                <UserCheck className="w-4 h-4 text-amber-600" />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-bold text-slate-600 uppercase">Checker</h4>
+                                <p className="text-sm font-semibold text-slate-900">Technical Review</p>
+                              </div>
+                            </div>
+                            <div className="ml-4 pl-4 border-l-2 border-slate-200 space-y-2">
+                              <div className="text-sm text-slate-500">Pending submission</div>
+                            </div>
+                          </div>
+
+                          <Separator />
+
+                          {/* Approver */}
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                                <ShieldCheck className="w-4 h-4 text-slate-400" />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-bold text-slate-600 uppercase">Approver</h4>
+                                <p className="text-sm font-semibold text-slate-900">Final Approval</p>
+                              </div>
+                            </div>
+                            <div className="ml-4 pl-4 border-l-2 border-slate-200 space-y-2">
+                              <div className="text-sm text-slate-500">Awaiting review</div>
+                            </div>
+                          </div>
+
+                          <Separator />
+
+                          {/* Comments Section */}
+                          <div className="space-y-3">
+                            <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                              <MessageSquare className="w-4 h-4" />
+                              Comments
+                            </h4>
+                            <Textarea
+                              placeholder="Add review comments..."
+                              className="min-h-24 text-sm"
+                            />
+                          </div>
+
+                          {/* Actions */}
+                          <div className="space-y-2">
+                            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2">
+                              <CheckCircle className="w-4 h-4" />
+                              Approve
+                            </Button>
+                            <Button variant="outline" className="w-full gap-2 border-rose-300 text-rose-600 hover:bg-rose-50">
+                              <Ban className="w-4 h-4" />
+                              Reject
+                            </Button>
+                          </div>
+
+                          {/* Escalation Alert */}
+                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                              <div className="text-xs text-amber-700">
+                                <p className="font-semibold mb-1">Escalation Note</p>
+                                <p>Records pending review for &gt;5 days will be auto-escalated</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </ScrollArea>
+                    </motion.div>
+                  )}
+
+                  {!showWorkflowPanel && (
+                    <Button
+                      onClick={() => setShowWorkflowPanel(true)}
+                      className="fixed right-0 top-1/2 -translate-y-1/2 rounded-l-lg rounded-r-none h-32 w-10 bg-[#0B3C5D] hover:bg-[#082a42] shadow-lg z-20"
+                      style={{ writingMode: "vertical-rl" }}
+                    >
+                      <span className="transform rotate-180">Workflow Panel</span>
+                    </Button>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* TAB 2: EXCEL BULK UPLOAD */}
+              <TabsContent value="bulk-upload" className="m-0 p-6">
+                <div className="max-w-5xl mx-auto space-y-6">
+                  <BulkUploadContent />
+                </div>
+              </TabsContent>
+
+              {/* TAB 3: JMR REPOSITORY */}
+              <TabsContent value="repository" className="m-0 p-6">
+                <div className="max-w-7xl mx-auto space-y-6">
+                  {/* Search & Filter Bar */}
+                  <Card className="border-2 border-slate-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1 relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <Input
+                            placeholder="Search by JMR ID, Plant, Vendor..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                          <SelectTrigger className="w-48">
+                            <SelectValue placeholder="Filter by status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="approved">Approved</SelectItem>
+                            <SelectItem value="pending">Pending Review</SelectItem>
+                            <SelectItem value="draft">Draft</SelectItem>
+                            <SelectItem value="rejected">Rejected</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button variant="outline" className="gap-2">
+                          <Download className="w-4 h-4" />
+                          Export Table
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* JMR Records Table */}
+                  <Card className="border-2 border-slate-200">
+                    <CardHeader className="border-b border-slate-100">
+                      <CardTitle>Digital JMR Repository</CardTitle>
+                      <CardDescription>
+                        Complete archive of submitted and approved JMR records
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-slate-50">
+                              <TableHead className="font-bold">JMR ID</TableHead>
+                              <TableHead className="font-bold">FY / Month</TableHead>
+                              <TableHead className="font-bold">Plant</TableHead>
+                              <TableHead className="font-bold">Vendor</TableHead>
+                              <TableHead className="font-bold text-right">Generation (MWh)</TableHead>
+                              <TableHead className="font-bold text-right">Revenue (₹L)</TableHead>
+                              <TableHead className="font-bold">Status</TableHead>
+                              <TableHead className="font-bold text-center">Lock</TableHead>
+                              <TableHead className="font-bold text-center">Version</TableHead>
+                              <TableHead className="font-bold text-center">PDF</TableHead>
+                              <TableHead className="font-bold text-center">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {filteredJMRRecords.map((record) => {
+                              const statusConfig = getStatusConfig(record.approvalStatus);
+                              const StatusIcon = statusConfig.icon;
+
+                              return (
+                                <TableRow key={record.id} className="hover:bg-slate-50">
+                                  <TableCell className="font-mono text-xs font-semibold">
+                                    {record.id}
+                                  </TableCell>
+                                  <TableCell className="text-sm">
+                                    <div>{record.fy}</div>
+                                    <div className="text-xs text-slate-600">{record.month}</div>
+                                  </TableCell>
+                                  <TableCell className="font-semibold text-sm">
+                                    {record.plant}
+                                  </TableCell>
+                                  <TableCell className="text-sm">{record.vendor}</TableCell>
+                                  <TableCell className="text-right font-semibold">
+                                    {record.grossGeneration.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell className="text-right font-semibold">
+                                    ₹{record.revenue.toFixed(2)}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge
+                                      variant={statusConfig.variant}
+                                      className={`gap-1 ${statusConfig.className}`}
+                                    >
+                                      <StatusIcon className="w-3 h-3" />
+                                      {statusConfig.label}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    {record.lockStatus ? (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger>
+                                            <Lock className="w-4 h-4 text-slate-600 mx-auto" />
+                                          </TooltipTrigger>
+                                          <TooltipContent>Record Locked</TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    ) : (
+                                      <Unlock className="w-4 h-4 text-amber-600 mx-auto" />
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    <Badge variant="outline" className="text-xs">
+                                      v{record.version}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    {record.pdfUploaded ? (
+                                      <CheckCircle className="w-4 h-4 text-emerald-600 mx-auto" />
+                                    ) : (
+                                      <XCircle className="w-4 h-4 text-slate-300 mx-auto" />
+                                    )}
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center justify-center gap-1">
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                              <Eye className="w-4 h-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>View Details</TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                              <Download className="w-4 h-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>Download PDF</TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                              <GitCompare className="w-4 h-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>Compare Versions</TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* TAB 4: AUDIT & VERSION HISTORY */}
+              <TabsContent value="audit" className="m-0 p-6">
+                <div className="max-w-7xl mx-auto space-y-6">
+                  <Card className="border-2 border-slate-200">
+                    <CardHeader className="border-b border-slate-100">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Audit Trail & Version History</CardTitle>
+                          <CardDescription>
+                            Complete log of all modifications and approvals
+                          </CardDescription>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" className="gap-2">
+                            <GitCompare className="w-4 h-4" />
+                            Compare Versions
+                          </Button>
+                          <Button variant="outline" className="gap-2">
+                            <Download className="w-4 h-4" />
+                            Export Audit Log
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-slate-50">
+                              <TableHead className="font-bold text-center">Version</TableHead>
+                              <TableHead className="font-bold">Modified By</TableHead>
+                              <TableHead className="font-bold">Role</TableHead>
+                              <TableHead className="font-bold">Timestamp</TableHead>
+                              <TableHead className="font-bold">Fields Changed</TableHead>
+                              <TableHead className="font-bold">Change Summary</TableHead>
+                              <TableHead className="font-bold">Status</TableHead>
+                              <TableHead className="font-bold">IP Address</TableHead>
+                              <TableHead className="font-bold text-center">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {auditRecords.map((audit) => (
+                              <TableRow key={audit.versionNo} className="hover:bg-slate-50">
+                                <TableCell className="text-center">
+                                  <Badge variant="outline" className="font-mono">
+                                    v{audit.versionNo}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="font-semibold">{audit.modifiedBy}</TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="text-xs">
+                                    {audit.role}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-sm font-mono text-slate-600">
+                                  {audit.timestamp}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex flex-wrap gap-1">
+                                    {audit.fieldsChanged.map((field, idx) => (
+                                      <Badge
+                                        key={idx}
+                                        variant="outline"
+                                        className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                      >
+                                        {field}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-sm max-w-xs">{audit.changeSummary}</TableCell>
+                                <TableCell>
+                                  <Badge
+                                    className={
+                                      audit.approvalStatus === "Approved"
+                                        ? "bg-emerald-600"
+                                        : "bg-blue-600"
+                                    }
+                                  >
+                                    {audit.approvalStatus}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="font-mono text-xs text-slate-600">
+                                  {audit.ipAddress}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center justify-center gap-1">
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                                            <Eye className="w-4 h-4" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>View Changes</TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8"
+                                            disabled={audit.versionNo === 2}
+                                          >
+                                            <RotateCcw className="w-4 h-4" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Rollback (Admin Only)</TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Version Comparison Tool */}
+                  <Card className="border-2 border-blue-200 bg-blue-50">
+                    <CardHeader>
+                      <CardTitle className="text-blue-900">Version Comparison Tool</CardTitle>
+                      <CardDescription className="text-blue-700">
+                        Select two versions to compare side-by-side
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center gap-4">
+                        <Select defaultValue="1">
+                          <SelectTrigger className="w-48 bg-white">
+                            <SelectValue placeholder="Version 1" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">Version 1</SelectItem>
+                            <SelectItem value="2">Version 2</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <span className="text-blue-900 font-semibold">vs</span>
+
+                        <Select defaultValue="2">
+                          <SelectTrigger className="w-48 bg-white">
+                            <SelectValue placeholder="Version 2" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">Version 1</SelectItem>
+                            <SelectItem value="2">Version 2</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <Button className="bg-[#0B3C5D] gap-2">
+                          <GitCompare className="w-4 h-4" />
+                          Compare
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </div>
+          </Tabs>
         </div>
       </div>
     </div>
   );
 }
 
-// Stepper Content Component
-function StepperContent({ 
-  step, 
-  formData, 
-  prevMonthData, 
-  onChange, 
-  auxiliaryConsumption, 
-  targetAchievement, 
-  cuf, 
-  pr,
-  onNext,
-  onPrev
-}: any) {
-  const getChangeIndicator = (current: string, previous: string) => {
-    const curr = parseFloat(current);
-    const prev = parseFloat(previous);
-    if (isNaN(curr) || isNaN(prev)) return null;
-    
-    const diff = curr - prev;
-    const percentChange = ((diff / prev) * 100).toFixed(1);
-    
-    if (diff > 0) {
-      return (
-        <div className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
-          <ArrowUpRight className="w-3 h-3" />
-          +{percentChange}%
-        </div>
-      );
-    } else if (diff < 0) {
-      return (
-        <div className="flex items-center gap-1 text-xs text-rose-600 font-medium">
-          <ArrowDownRight className="w-3 h-3" />
-          {percentChange}%
-        </div>
-      );
+// Bulk Upload Component
+function BulkUploadContent() {
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadStats, setUploadStats] = useState({
+    total: 0,
+    valid: 0,
+    errors: 0,
+    duplicates: 0,
+    warnings: 0,
+  });
+  const [showResults, setShowResults] = useState(false);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+      // Simulate processing
+      setTimeout(() => {
+        setUploadStats({
+          total: 25,
+          valid: 20,
+          errors: 3,
+          duplicates: 1,
+          warnings: 1,
+        });
+        setShowResults(true);
+        toast.success("File processed successfully");
+      }, 1500);
     }
-    return <div className="text-xs text-slate-400">—</div>;
   };
 
   return (
     <div className="space-y-6">
-      
-      {/* Step 1: Generation Data */}
-      {step === 1 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
-        >
-          <div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Generation & Export Data</h3>
-            <p className="text-slate-600">Enter monthly generation and export metrics</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <Card className="shadow-md border-slate-200 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <Label className="text-sm font-semibold text-slate-700">
-                    Gross Generation (MWh) <span className="text-red-500">*</span>
-                  </Label>
-                  {getChangeIndicator(formData.grossGeneration, prevMonthData.grossGeneration)}
-                </div>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.grossGeneration}
-                  onChange={(e) => onChange("grossGeneration", e.target.value)}
-                  className="text-xl font-bold h-14 mb-3 border-2 focus:border-[#0B3C5D]"
-                />
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Previous: {prevMonthData.grossGeneration} MWh</span>
-                  <span className="flex items-center gap-1 text-emerald-600 font-medium">
-                    <CheckCircle className="w-3 h-3" />
-                    Validated
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-md border-slate-200 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <Label className="text-sm font-semibold text-slate-700">
-                    Net Export (MWh) <span className="text-red-500">*</span>
-                  </Label>
-                  {getChangeIndicator(formData.netExport, prevMonthData.netExport)}
-                </div>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.netExport}
-                  onChange={(e) => onChange("netExport", e.target.value)}
-                  className="text-xl font-bold h-14 mb-3 border-2 focus:border-[#0B3C5D]"
-                />
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Previous: {prevMonthData.netExport} MWh</span>
-                  <span className="flex items-center gap-1 text-emerald-600 font-medium">
-                    <CheckCircle className="w-3 h-3" />
-                    Validated
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-md border-slate-200 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <Label className="text-sm font-semibold text-slate-700 mb-4 block">
-                  Contractual Target (MWh) <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.contractualTarget}
-                  onChange={(e) => onChange("contractualTarget", e.target.value)}
-                  className="text-xl font-bold h-14 mb-3 border-2 focus:border-[#0B3C5D]"
-                />
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500">From PPA contract</span>
-                  <span className="flex items-center gap-1 text-blue-600 font-medium">
-                    <Database className="w-3 h-3" />
-                    Auto-loaded
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-md border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 to-white">
-              <CardContent className="p-6">
-                <Label className="text-sm font-semibold text-slate-700 mb-4 block">
-                  Auxiliary Consumption
-                </Label>
-                <div className="text-3xl font-bold text-slate-900 mb-2">{auxiliaryConsumption}</div>
-                <div className="text-xs text-slate-500">MWh · Auto-calculated</div>
-              </CardContent>
-            </Card>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Step 2: Availability */}
-      {step === 2 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
-        >
-          <div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Availability & Performance</h3>
-            <p className="text-slate-600">Grid and plant availability metrics</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <Card className="shadow-md border-slate-200">
-              <CardContent className="p-6">
-                <Label className="text-sm font-semibold text-slate-700 mb-4 block">
-                  Grid Availability (%) <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  max="100"
-                  value={formData.gridAvailability}
-                  onChange={(e) => onChange("gridAvailability", e.target.value)}
-                  className="text-xl font-bold h-14 mb-3 border-2 focus:border-[#0B3C5D]"
-                />
-                <div className="text-xs text-slate-500">
-                  Previous: {prevMonthData.gridAvailability}%
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-md border-slate-200">
-              <CardContent className="p-6">
-                <Label className="text-sm font-semibold text-slate-700 mb-4 block">
-                  Plant Availability (%) <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  max="100"
-                  value={formData.plantAvailability}
-                  onChange={(e) => onChange("plantAvailability", e.target.value)}
-                  className="text-xl font-bold h-14 mb-3 border-2 focus:border-[#0B3C5D]"
-                />
-                <div className="text-xs text-slate-500">
-                  Previous: {prevMonthData.plantAvailability}%
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-md border-slate-200">
-              <CardContent className="p-6">
-                <Label className="text-sm font-semibold text-slate-700 mb-4 block">
-                  Curtailment Units (MWh)
-                </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.curtailmentUnits}
-                  onChange={(e) => onChange("curtailmentUnits", e.target.value)}
-                  className="text-xl font-bold h-14 mb-3 border-2 focus:border-[#0B3C5D]"
-                />
-                <div className="text-xs text-slate-500">Grid-imposed curtailment</div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-md border-slate-200">
-              <CardContent className="p-6">
-                <Label className="text-sm font-semibold text-slate-700 mb-4 block">
-                  Breakdown Hours
-                </Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  value={formData.breakdownHours}
-                  onChange={(e) => onChange("breakdownHours", e.target.value)}
-                  className="text-xl font-bold h-14 mb-3 border-2 focus:border-[#0B3C5D]"
-                />
-                <div className="text-xs text-slate-500">Unplanned downtime</div>
-              </CardContent>
-            </Card>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Step 3: Commercial */}
-      {step === 3 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
-        >
-          <div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Commercial Data</h3>
-            <p className="text-slate-600">Revenue and commercial metrics</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <Card className="shadow-md border-slate-200">
-              <CardContent className="p-6">
-                <Label className="text-sm font-semibold text-slate-700 mb-4 block">
-                  Revenue (₹ Lakhs)
-                </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.revenue}
-                  onChange={(e) => onChange("revenue", e.target.value)}
-                  className="text-xl font-bold h-14 mb-3 border-2 focus:border-[#0B3C5D]"
-                />
-                <div className="text-xs text-slate-500">Calculated from tariff</div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-md border-l-4 border-l-emerald-500 bg-gradient-to-br from-emerald-50 to-white">
-              <CardContent className="p-6">
-                <Label className="text-sm font-semibold text-slate-700 mb-4 block">
-                  Target Achievement
-                </Label>
-                <div className="text-3xl font-bold text-slate-900 mb-2">{targetAchievement}%</div>
-                <div className="text-xs text-slate-500">Auto-calculated</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Auto-calculated Metrics */}
-          <div>
-            <h4 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-600" />
-              Performance Indicators (Auto-Calculated)
-            </h4>
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="shadow-md border-l-4 border-l-amber-500 bg-gradient-to-br from-amber-50 to-white">
-                <CardContent className="p-5">
-                  <div className="text-xs font-medium text-slate-600 mb-2">CUF</div>
-                  <div className="text-2xl font-bold text-slate-900">{cuf}%</div>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-md border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 to-white">
-                <CardContent className="p-5">
-                  <div className="text-xs font-medium text-slate-600 mb-2">Performance Ratio</div>
-                  <div className="text-2xl font-bold text-slate-900">{pr}%</div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Step 4: Review */}
-      {step === 4 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
-        >
-          <div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Review & Submit</h3>
-            <p className="text-slate-600">Verify all entered data before submission</p>
-          </div>
-
-          <Card className="shadow-md border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-white">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-emerald-500 rounded-xl">
-                  <CheckCircle className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-bold text-slate-900 mb-1">Data Quality: Excellent</h4>
-                  <p className="text-sm text-slate-600 mb-3">All required fields completed with 98% accuracy score</p>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <div className="text-xs text-slate-500 mb-1">Completeness</div>
-                      <div className="flex items-center gap-2">
-                        <Progress value={100} className="h-2 flex-1" />
-                        <span className="text-xs font-bold">100%</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-slate-500 mb-1">Validation</div>
-                      <div className="flex items-center gap-2">
-                        <Progress value={98} className="h-2 flex-1" />
-                        <span className="text-xs font-bold">98%</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-slate-500 mb-1">Consistency</div>
-                      <div className="flex items-center gap-2">
-                        <Progress value={100} className="h-2 flex-1" />
-                        <span className="text-xs font-bold">100%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Summary Table */}
-          <Card className="shadow-md border-slate-200">
-            <CardHeader className="border-b border-slate-100">
-              <CardTitle className="text-base">Data Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-semibold">Gross Generation</TableCell>
-                    <TableCell className="text-right">{formData.grossGeneration} MWh</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-semibold">Net Export</TableCell>
-                    <TableCell className="text-right">{formData.netExport} MWh</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-semibold">Auxiliary Consumption</TableCell>
-                    <TableCell className="text-right">{auxiliaryConsumption} MWh</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-semibold">Grid Availability</TableCell>
-                    <TableCell className="text-right">{formData.gridAvailability}%</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-semibold">Plant Availability</TableCell>
-                    <TableCell className="text-right">{formData.plantAvailability}%</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-semibold">Target Achievement</TableCell>
-                    <TableCell className="text-right">{targetAchievement}%</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-semibold">CUF</TableCell>
-                    <TableCell className="text-right">{cuf}%</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      {/* Navigation Buttons */}
-      <Card className="shadow-md bg-white sticky bottom-0 border-slate-200">
+      {/* Download Template */}
+      <Card className="border-2 border-blue-200 bg-blue-50">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-100 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div>
-                <div className="font-semibold text-slate-900">Step {step} of 4 · {step === 4 ? "Ready to submit" : "In progress"}</div>
-                <div className="text-sm text-slate-600">Auto-saved 2 min ago</div>
-              </div>
+            <div>
+              <h3 className="font-bold text-blue-900 mb-1">Step 1: Download Template</h3>
+              <p className="text-sm text-blue-700">
+                Download the standardized Excel template with all required fields
+              </p>
             </div>
-            <div className="flex gap-3">
-              {step > 1 && (
-                <Button variant="outline" className="gap-2" onClick={onPrev}>
-                  <ChevronLeft className="w-4 h-4" />
-                  Previous
-                </Button>
-              )}
-              <Button variant="outline" className="gap-2">
-                <Save className="w-4 h-4" />
-                Save Draft
-              </Button>
-              {step < 4 ? (
-                <Button className="gap-2 bg-[#0B3C5D]" onClick={onNext}>
-                  Next Step
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              ) : (
-                <Button 
-                  className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-                  onClick={() => toast.success("Data submitted successfully for review")}
-                >
-                  <Send className="w-4 h-4" />
-                  Submit for Review
-                </Button>
-              )}
-            </div>
+            <Button className="bg-[#0B3C5D] gap-2">
+              <Download className="w-4 h-4" />
+              Download Template
+            </Button>
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
-}
 
-// Historical Comparison Component
-function HistoricalComparison({ data }: { data: any[] }) {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Performance Analytics</h2>
-          <p className="text-slate-600 mt-1">Historical trends and comparative analysis</p>
-        </div>
-        <div className="flex gap-2">
-          <Select defaultValue="5months">
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="3months">Last 3 Months</SelectItem>
-              <SelectItem value="5months">Last 5 Months</SelectItem>
-              <SelectItem value="12months">Last 12 Months</SelectItem>
-              <SelectItem value="custom">Custom Range</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" className="gap-2">
-            <Download className="w-4 h-4" />
-            Export Report
-          </Button>
-        </div>
-      </div>
-
-      <Card className="shadow-md border-slate-200">
+      {/* Upload Zone */}
+      <Card className="border-2 border-slate-200">
         <CardHeader className="border-b border-slate-100">
-          <CardTitle className="text-base flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-[#0B3C5D]" />
-            Generation vs Target Comparison
-          </CardTitle>
+          <CardTitle>Step 2: Upload Completed File</CardTitle>
+          <CardDescription>Drag and drop your Excel file or click to browse</CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={data}>
-                <defs>
-                  <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0B3C5D" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#0B3C5D" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="month" stroke="#64748b" />
-                <YAxis stroke="#64748b" />
-                <RechartsTooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                  }}
-                />
-                <Legend />
-                <Area 
-                  type="monotone" 
-                  dataKey="actual" 
-                  fill="url(#colorActual)" 
-                  stroke="#0B3C5D" 
-                  strokeWidth={2}
-                  name="Actual Generation (MWh)"
-                />
-                <Bar dataKey="target" fill="#F4B400" radius={[8, 8, 0, 0]} name="Target (MWh)" />
-                <Line 
-                  type="monotone" 
-                  dataKey="cuf" 
-                  stroke="#10B981" 
-                  strokeWidth={3} 
-                  dot={{ fill: '#10B981', r: 6 }}
-                  name="CUF (%)"
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
+          <label
+            htmlFor="file-upload"
+            className="block border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-[#0B3C5D] hover:bg-blue-50 transition-all"
+          >
+            <input
+              id="file-upload"
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+            <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+            <p className="text-sm font-semibold text-slate-900 mb-1">
+              Drop Excel file here or click to upload
+            </p>
+            <p className="text-xs text-slate-600">Supports .xlsx, .xls, .csv files (Max 10MB)</p>
+
+            {uploadedFile && (
+              <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-emerald-200 rounded-lg">
+                <FileCheck className="w-5 h-5 text-emerald-600" />
+                <span className="text-sm font-semibold text-slate-900">{uploadedFile.name}</span>
+              </div>
+            )}
+          </label>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-3 gap-6">
-        <Card className="shadow-md border-l-4 border-l-blue-500">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-sm font-medium text-slate-600">Avg Generation</div>
-              <TrendingUp className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div className="text-4xl font-bold text-slate-900 mb-1">4,544 MWh</div>
-            <div className="text-sm text-emerald-600 font-medium flex items-center gap-1">
-              <ArrowUpRight className="w-4 h-4" />
-              +2.3% vs previous period
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-md border-l-4 border-l-amber-500">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-sm font-medium text-slate-600">Avg CUF</div>
-              <Activity className="w-5 h-5 text-amber-600" />
-            </div>
-            <div className="text-4xl font-bold text-slate-900 mb-1">22.7%</div>
-            <div className="text-sm text-slate-600">Within expected range</div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-md border-l-4 border-l-emerald-500">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-sm font-medium text-slate-600">Target Achievement</div>
-              <Target className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div className="text-4xl font-bold text-slate-900 mb-1">95.4%</div>
-            <div className="text-sm text-rose-600 font-medium flex items-center gap-1">
-              <ArrowDownRight className="w-4 h-4" />
-              -4.6% shortfall
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-// Workflow Timeline Component
-function WorkflowTimeline({ stages }: { stages: any[] }) {
-  return (
-    <div className="space-y-6">
-      {stages.map((stage, idx) => {
-        const isCompleted = stage.status === "completed";
-        const isCurrent = stage.status === "current";
-
-        return (
-          <div key={stage.id} className="flex gap-6">
-            <div className="flex flex-col items-center">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-4 shrink-0 ${
-                isCompleted ? "bg-emerald-500 border-emerald-500 text-white" :
-                isCurrent ? "bg-amber-500 border-amber-500 text-white" :
-                "bg-slate-200 border-slate-200 text-slate-400"
-              }`}>
-                {isCompleted ? <CheckCircle className="w-6 h-6" /> : stage.id}
-              </div>
-              {idx < stages.length - 1 && (
-                <div className={`w-0.5 h-16 ${isCompleted ? "bg-emerald-300" : "bg-slate-200"}`} />
-              )}
-            </div>
-
-            <Card className={`flex-1 ${isCurrent ? "border-2 border-amber-500 bg-amber-50 shadow-lg" : "border border-slate-200 shadow-md"}`}>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900 mb-1">{stage.name}</h3>
-                    {stage.user !== "—" && stage.user !== "Pending" && (
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <User className="w-4 h-4" />
-                        <span>{stage.user}</span>
-                        {stage.duration !== "—" && (
-                          <>
-                            <span>·</span>
-                            <Clock className="w-4 h-4" />
-                            <span>{stage.duration}</span>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <Badge className={
-                    isCompleted ? "bg-emerald-500 text-white" :
-                    isCurrent ? "bg-amber-500 text-white" :
-                    "bg-slate-300 text-slate-700"
-                  }>
-                    {isCompleted ? "Completed" : isCurrent ? "In Progress" : "Pending"}
-                  </Badge>
+      {/* Upload Results */}
+      {showResults && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="border-2 border-slate-200">
+            <CardHeader className="border-b border-slate-100">
+              <CardTitle>Upload Results</CardTitle>
+              <CardDescription>Validation summary and error details</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              {/* Statistics */}
+              <div className="grid grid-cols-5 gap-4">
+                <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-blue-900">{uploadStats.total}</div>
+                  <div className="text-xs font-semibold text-blue-700 mt-1">Total Records</div>
                 </div>
-                
-                {stage.date !== "—" && stage.date !== "In Progress" && (
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <Calendar className="w-4 h-4" />
-                    <span>{stage.date}</span>
-                  </div>
-                )}
+                <div className="p-4 bg-emerald-50 border-2 border-emerald-200 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-emerald-900">{uploadStats.valid}</div>
+                  <div className="text-xs font-semibold text-emerald-700 mt-1">Valid</div>
+                </div>
+                <div className="p-4 bg-rose-50 border-2 border-rose-200 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-rose-900">{uploadStats.errors}</div>
+                  <div className="text-xs font-semibold text-rose-700 mt-1">Errors</div>
+                </div>
+                <div className="p-4 bg-amber-50 border-2 border-amber-200 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-amber-900">{uploadStats.warnings}</div>
+                  <div className="text-xs font-semibold text-amber-700 mt-1">Warnings</div>
+                </div>
+                <div className="p-4 bg-slate-50 border-2 border-slate-200 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-slate-900">{uploadStats.duplicates}</div>
+                  <div className="text-xs font-semibold text-slate-700 mt-1">Duplicates</div>
+                </div>
+              </div>
 
-                {isCurrent && (
-                  <div className="mt-4 pt-4 border-t border-amber-200">
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                        onClick={() => toast.success("Data approved successfully")}
-                      >
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Approve
-                      </Button>
-                      <Button size="sm" variant="outline" className="text-rose-600 border-rose-300 hover:bg-rose-50">
-                        <XCircle className="w-4 h-4 mr-1" />
-                        Reject
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <MessageSquare className="w-4 h-4 mr-1" />
-                        Request Changes
-                      </Button>
+              {/* Error Details */}
+              {uploadStats.errors > 0 && (
+                <div className="p-4 bg-rose-50 border-2 border-rose-200 rounded-lg">
+                  <h4 className="font-bold text-rose-900 mb-3 flex items-center gap-2">
+                    <XCircle className="w-5 h-5" />
+                    Error Records ({uploadStats.errors})
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="bg-white p-3 rounded border border-rose-100">
+                      <div className="flex items-start justify-between mb-1">
+                        <span className="text-sm font-semibold text-slate-900">Row 7</span>
+                        <Badge variant="outline" className="bg-rose-100 text-rose-700 border-rose-200 text-xs">
+                          Invalid Data
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-rose-700">
+                        Gross Generation cannot be empty (required field)
+                      </p>
+                    </div>
+                    <div className="bg-white p-3 rounded border border-rose-100">
+                      <div className="flex items-start justify-between mb-1">
+                        <span className="text-sm font-semibold text-slate-900">Row 14</span>
+                        <Badge variant="outline" className="bg-rose-100 text-rose-700 border-rose-200 text-xs">
+                          Validation Error
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-rose-700">
+                        Net Export (2500) exceeds Gross Generation (2400)
+                      </p>
                     </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+                </div>
+              )}
 
-// Bulk Upload Dialog Component
-function BulkUploadDialog({ onClose }: { onClose: () => void }) {
-  const [dragActive, setDragActive] = useState(false);
-
-  return (
-    <div className="space-y-6 py-4">
-      {/* Upload Area */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-slate-900">Select CSV File</h3>
-          <Button variant="outline" size="sm" className="gap-2">
-            <Download className="w-4 h-4" />
-            Download Template
-          </Button>
-        </div>
-        <div 
-          className={`border-2 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${
-            dragActive 
-              ? "border-[#0B3C5D] bg-blue-50" 
-              : "border-slate-300 bg-slate-50 hover:border-blue-400"
-          }`}
-          onDragEnter={() => setDragActive(true)}
-          onDragLeave={() => setDragActive(false)}
-        >
-          <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Upload className="w-10 h-10 text-blue-600" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 mb-2">
-            Drag & Drop CSV File Here
-          </h3>
-          <p className="text-sm text-slate-600 mb-4">
-            or click to browse from your computer
-          </p>
-          <Button className="bg-[#0B3C5D] hover:bg-[#082a42] text-white">
-            <Upload className="w-4 h-4 mr-2" />
-            Select File
-          </Button>
-        </div>
-        
-        <Card className="mt-4 border-blue-200 bg-blue-50">
-          <CardContent className="p-4">
-            <h4 className="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
-              <Info className="w-4 h-4" />
-              CSV Format Requirements
-            </h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <div className="font-semibold text-blue-900 mb-1">Required Columns:</div>
-                <ul className="text-blue-800 space-y-0.5 text-xs">
-                  <li>• FY, Month, State, District</li>
-                  <li>• Plant ID, Gross Gen, Net Export</li>
-                  <li>• Grid Avail, Plant Avail</li>
-                </ul>
+              {/* Actions */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                <Button variant="outline" className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Download Error Report
+                </Button>
+                <div className="flex gap-3">
+                  <Button variant="outline">Fix & Re-upload</Button>
+                  <Button
+                    className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+                    disabled={uploadStats.errors > 0}
+                  >
+                    <Send className="w-4 h-4" />
+                    Submit All for Review
+                  </Button>
+                </div>
               </div>
-              <div>
-                <div className="font-semibold text-blue-900 mb-1">Optional Columns:</div>
-                <ul className="text-blue-800 space-y-0.5 text-xs">
-                  <li>• Curtailment, Breakdown Hrs</li>
-                  <li>• PM Hrs, Target, Revenue</li>
-                  <li>• Max file size: 10MB</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-        <Button variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button variant="outline" className="gap-2">
-          <Eye className="w-4 h-4" />
-          Preview Data
-        </Button>
-        <Button className="bg-[#0B3C5D] hover:bg-[#082a42] text-white gap-2">
-          <Upload className="w-4 h-4" />
-          Upload & Process
-        </Button>
-      </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
     </div>
   );
 }

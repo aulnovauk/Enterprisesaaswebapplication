@@ -949,7 +949,7 @@ export function ReportsMIS() {
               </div>
 
               {/* CENTER PANEL - Report Canvas */}
-              <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden">
+              <div className="flex-1 flex flex-col bg-slate-50 min-h-0">
                 
                 {/* Canvas Toolbar */}
                 <div className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
@@ -978,8 +978,8 @@ export function ReportsMIS() {
                   </div>
                 </div>
 
-                <ScrollArea className="flex-1">
-                  <div className="p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto">
+                  <div className="p-6 space-y-6 pb-12">
                     
                     {/* Field Wells (Power BI Style) */}
                     <Card className="border-2 border-slate-200 shadow-lg">
@@ -1305,7 +1305,7 @@ export function ReportsMIS() {
                     </Card>
 
                   </div>
-                </ScrollArea>
+                </div>
               </div>
 
               {/* RIGHT PANEL - Settings & Export */}
