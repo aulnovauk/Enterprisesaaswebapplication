@@ -407,26 +407,25 @@ export function JMRDataManagement() {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* GLOBAL HEADER */}
       <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 sticky top-0 z-30">
-        <div className="px-6 py-4">
-          {/* Title & Primary Filters */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-gradient-to-br from-[#0B3C5D] to-[#0B3C5D]/80 rounded-xl shadow-md">
-                <Database className="w-6 h-6 text-white" />
+        <div className="px-6 py-2">
+          {/* Row 1: Title & Actions */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-gradient-to-br from-[#0B3C5D] to-[#0B3C5D]/80 rounded-xl shadow-md">
+                <Database className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 leading-none">
+                <h1 className="text-base font-bold text-slate-900 leading-none">
                   JMR Data Management
                 </h1>
-                <p className="text-sm text-slate-600 mt-1">
+                <p className="text-xs text-slate-600 mt-0.5">
                   Monthly Joint Meter Reading · Certified Data Governance
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Status Indicators */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                   <span className="text-xs font-medium text-slate-700">System Active</span>
@@ -435,20 +434,20 @@ export function JMRDataManagement() {
                 <span className="text-xs text-slate-600">Last sync: 2 min ago</span>
               </div>
 
-              <Button variant="outline" className="gap-2">
-                <Download className="w-4 h-4" />
+              <Button variant="outline" size="sm" className="gap-1.5 h-7 px-3 text-xs">
+                <Download className="w-3.5 h-3.5" />
                 Export
               </Button>
             </div>
           </div>
 
-          {/* Filters Row */}
+          {/* Row 2: Filters & Status Summary */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
-                <Calendar className="w-4 h-4 text-slate-500" />
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg border border-slate-200">
+                <Calendar className="w-3 h-3 text-slate-500" />
                 <Select value={selectedFY} onValueChange={setSelectedFY}>
-                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 font-semibold text-sm w-32">
+                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 font-semibold text-xs w-24">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -459,9 +458,9 @@ export function JMRDataManagement() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Separator orientation="vertical" className="h-4" />
+                <Separator orientation="vertical" className="h-3.5" />
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 font-semibold text-sm w-24">
+                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 font-semibold text-xs w-16">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -475,7 +474,7 @@ export function JMRDataManagement() {
               </div>
 
               <Select value={selectedState} onValueChange={setSelectedState}>
-                <SelectTrigger className="w-36 h-9 text-xs">
+                <SelectTrigger className="w-28 h-7 text-xs">
                   <SelectValue placeholder="State" />
                 </SelectTrigger>
                 <SelectContent>
@@ -489,7 +488,7 @@ export function JMRDataManagement() {
               </Select>
 
               <Select value={selectedVendor} onValueChange={setSelectedVendor}>
-                <SelectTrigger className="w-36 h-9 text-xs">
+                <SelectTrigger className="w-28 h-7 text-xs">
                   <SelectValue placeholder="Vendor" />
                 </SelectTrigger>
                 <SelectContent>
@@ -503,7 +502,7 @@ export function JMRDataManagement() {
               </Select>
 
               <Select value={selectedPPAType} onValueChange={setSelectedPPAType}>
-                <SelectTrigger className="w-40 h-9 text-xs">
+                <SelectTrigger className="w-32 h-7 text-xs">
                   <SelectValue placeholder="PPA Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -517,25 +516,19 @@ export function JMRDataManagement() {
               </Select>
             </div>
 
-            {/* Status Summary */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-600" />
-                <span className="text-xs font-semibold text-slate-700">
-                  Submission: <span className="text-emerald-600">Completed</span>
-                </span>
+            {/* Status Summary - Compact Badges */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 px-2 py-1 bg-emerald-50 rounded border border-emerald-200">
+                <CheckCircle className="w-3 h-3 text-emerald-600" />
+                <span className="text-xs font-medium text-emerald-700">Completed</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-600" />
-                <span className="text-xs font-semibold text-slate-700">
-                  Approval: <span className="text-amber-600">Pending</span>
-                </span>
+              <div className="flex items-center gap-1 px-2 py-1 bg-amber-50 rounded border border-amber-200">
+                <Clock className="w-3 h-3 text-amber-600" />
+                <span className="text-xs font-medium text-amber-700">Pending</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Unlock className="w-4 h-4 text-blue-600" />
-                <span className="text-xs font-semibold text-slate-700">
-                  Lock: <span className="text-blue-600">Unlocked</span>
-                </span>
+              <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 rounded border border-blue-200">
+                <Unlock className="w-3 h-3 text-blue-600" />
+                <span className="text-xs font-medium text-blue-700">Unlocked</span>
               </div>
             </div>
           </div>

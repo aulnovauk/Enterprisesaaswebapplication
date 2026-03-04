@@ -364,25 +364,38 @@ export function Dashboard() {
       
       {/* GLOBAL TOP FILTER BAR */}
       <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
-        <div className="px-6 py-3">
-          <div className="flex items-center justify-between gap-4">
-            {/* Left - Title */}
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-[#0B3C5D] rounded-lg">
-                <BarChart3 className="w-5 h-5 text-white" />
+        <div className="px-6 py-2">
+          {/* Row 1: Title & Meta Info */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-[#0B3C5D] rounded-lg">
+                <BarChart3 className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-900 leading-none">Portfolio Dashboard</h1>
+                <h1 className="text-base font-bold text-slate-900 leading-none">Portfolio Dashboard</h1>
                 <p className="text-xs text-slate-600 mt-0.5">
                   {PORTFOLIO_CONFIG.totalCapacity} MW · {PORTFOLIO_CONFIG.totalPlants} Plants · {PORTFOLIO_CONFIG.states.length} States
                 </p>
               </div>
             </div>
 
-            {/* Center - Filters */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 rounded-lg border border-slate-200">
+                <Clock className="w-3 h-3 text-slate-500" />
+                <span className="text-xs text-slate-600">Updated 2 min ago</span>
+              </div>
+              <Button size="sm" variant="outline" className="gap-1.5 h-7 px-3 text-xs">
+                <Download className="w-3.5 h-3.5" />
+                Export
+              </Button>
+            </div>
+          </div>
+
+          {/* Row 2: Filters & Controls */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Select value={financialYear} onValueChange={setFinancialYear}>
-                <SelectTrigger className="w-36 h-9 text-xs">
+                <SelectTrigger className="w-32 h-7 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -393,7 +406,7 @@ export function Dashboard() {
               </Select>
 
               <Select value={month} onValueChange={setMonth}>
-                <SelectTrigger className="w-32 h-9 text-xs">
+                <SelectTrigger className="w-28 h-7 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -404,7 +417,7 @@ export function Dashboard() {
               </Select>
 
               <Select value={stateFilter} onValueChange={setStateFilter}>
-                <SelectTrigger className="w-36 h-9 text-xs">
+                <SelectTrigger className="w-32 h-7 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -416,7 +429,7 @@ export function Dashboard() {
               </Select>
 
               <Select value={vendorFilter} onValueChange={setVendorFilter}>
-                <SelectTrigger className="w-36 h-9 text-xs">
+                <SelectTrigger className="w-32 h-7 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -427,34 +440,22 @@ export function Dashboard() {
                   <SelectItem value="Vendor D">Vendor D</SelectItem>
                 </SelectContent>
               </Select>
-
-              <div className="flex bg-slate-100 rounded-lg p-0.5 border border-slate-200">
-                {["MTD", "YTD", "Annual"].map((duration) => (
-                  <button
-                    key={duration}
-                    onClick={() => setDurationToggle(duration)}
-                    className={`px-3 py-1 text-xs font-semibold rounded transition-all ${
-                      durationToggle === duration
-                        ? "bg-[#0B3C5D] text-white shadow-sm"
-                        : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  >
-                    {duration}
-                  </button>
-                ))}
-              </div>
             </div>
 
-            {/* Right - Actions */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-200">
-                <Clock className="w-3.5 h-3.5 text-slate-600" />
-                <span className="text-xs text-slate-700">Updated: 2 min ago</span>
-              </div>
-              <Button size="sm" variant="outline" className="gap-2 h-9">
-                <Download className="w-4 h-4" />
-                Export
-              </Button>
+            <div className="flex bg-slate-100 rounded-lg p-0.5 border border-slate-200">
+              {["MTD", "YTD", "Annual"].map((duration) => (
+                <button
+                  key={duration}
+                  onClick={() => setDurationToggle(duration)}
+                  className={`px-4 py-1 text-xs font-semibold rounded transition-all ${
+                    durationToggle === duration
+                      ? "bg-[#0B3C5D] text-white shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  {duration}
+                </button>
+              ))}
             </div>
           </div>
         </div>

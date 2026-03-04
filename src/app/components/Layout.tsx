@@ -67,6 +67,9 @@ export function Layout() {
   const [selectedPlant, setSelectedPlant] = useState("All Plants");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
+  // Hide global filters on pages with their own comprehensive filter systems
+  const hideGlobalFilters = location.pathname === "/" || location.pathname === "/jmr-data";
+
   return (
     <div className="flex h-screen bg-white">
       {/* Left Sidebar */}
@@ -175,46 +178,52 @@ export function Layout() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
         <header className="h-16 border-b border-gray-200 bg-white px-8 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Select value={selectedFY} onValueChange={setSelectedFY}>
-              <SelectTrigger className="w-40 h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {financialYears.map((fy) => (
-                  <SelectItem key={fy} value={fy}>{fy}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {!hideGlobalFilters && (
+            <div className="flex items-center gap-4">
+              <Select value={selectedFY} onValueChange={setSelectedFY}>
+                <SelectTrigger className="w-40 h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {financialYears.map((fy) => (
+                    <SelectItem key={fy} value={fy}>{fy}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-36 h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map((month) => (
-                  <SelectItem key={month} value={month}>{month}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-36 h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {months.map((month) => (
+                    <SelectItem key={month} value={month}>{month}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <Select value={selectedPlant} onValueChange={setSelectedPlant}>
-              <SelectTrigger className="w-48 h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {plants.map((plant) => (
-                  <SelectItem key={plant} value={plant}>{plant}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <Select value={selectedPlant} onValueChange={setSelectedPlant}>
+                <SelectTrigger className="w-48 h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {plants.map((plant) => (
+                    <SelectItem key={plant} value={plant}>{plant}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {hideGlobalFilters && <div></div>}
 
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="h-9">
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
+            {!hideGlobalFilters && (
+              <Button variant="outline" size="sm" className="h-9">
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
