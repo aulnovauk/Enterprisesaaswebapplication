@@ -142,14 +142,14 @@ const cleaningRecommendations = [
   },
 ];
 
-// Site benchmarking
+// Site benchmarking — axes = metrics, series = plants
 const siteBenchmarking = [
-  { site: "Plant A", cuf: 21.8, availability: 96.2, pr: 78.8, efficiency: 88 },
-  { site: "Plant B", cuf: 22.1, availability: 93.8, pr: 77.5, efficiency: 82 },
-  { site: "Plant C", cuf: 22.3, availability: 94.5, pr: 78.2, efficiency: 84 },
-  { site: "Plant D", cuf: 20.8, availability: 92.1, pr: 76.1, efficiency: 78 },
-  { site: "Plant E", cuf: 23.5, availability: 97.3, pr: 79.8, efficiency: 92 },
-  { site: "Portfolio Avg", cuf: 22.1, availability: 94.8, pr: 78.1, efficiency: 85 },
+  { metric: "CUF",          plantE: 98, portfolioAvg: 85, plantD: 72 },
+  { metric: "Availability", plantE: 97, portfolioAvg: 88, plantD: 79 },
+  { metric: "PR Score",     plantE: 95, portfolioAvg: 83, plantD: 75 },
+  { metric: "Efficiency",   plantE: 92, portfolioAvg: 85, plantD: 78 },
+  { metric: "Compliance",   plantE: 96, portfolioAvg: 80, plantD: 65 },
+  { metric: "LD Safety",    plantE: 99, portfolioAvg: 82, plantD: 60 },
 ];
 
 // Asset Health Index components
@@ -708,34 +708,97 @@ export function AITrendAnalytics() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Site Benchmarking */}
         <Card>
-          <CardHeader className="border-b bg-gray-50">
-            <CardTitle className="text-base font-semibold">Site Benchmarking Comparison</CardTitle>
-            <p className="text-xs text-gray-600 mt-1">Performance comparison across portfolio sites</p>
+          <CardHeader className="border-b bg-gradient-to-r from-emerald-50 to-blue-50">
+            <div className="flex items-start justify-between">
+              <div>
+                <CardTitle className="text-base font-semibold">Site Benchmarking Comparison</CardTitle>
+                <p className="text-xs text-gray-600 mt-1">6-dimension performance comparison across portfolio sites</p>
+              </div>
+              {/* Inline legend */}
+              <div className="flex flex-col gap-1 text-right">
+                {[
+                  { label: "Plant E (Best)", color: "#10B981" },
+                  { label: "Portfolio Avg", color: "#3B82F6" },
+                  { label: "Plant D (Lowest)", color: "#EF4444" },
+                ].map((s) => (
+                  <div key={s.label} className="flex items-center gap-1.5 justify-end">
+                    <span className="text-[10px] text-gray-600 font-medium">{s.label}</span>
+                    <span style={{ display: "inline-block", width: 22, height: 3, borderRadius: 2, background: s.color }} />
+                  </div>
+                ))}
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="p-6">
-            <ResponsiveContainer width="100%" height={350}>
-              <RadarChart data={siteBenchmarking}>
-                <PolarGrid stroke="#E5E7EB" />
-                <PolarAngleAxis dataKey="site" tick={{ fontSize: 10 }} />
-                <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 10 }} />
-                <Radar name="Efficiency Score" dataKey="efficiency" stroke="#0A2E4A" fill="#0A2E4A" fillOpacity={0.6} />
-                <Tooltip content={<CustomChartTooltip unit="index" />} />
+          <CardContent className="p-4 pb-2">
+            <ResponsiveContainer width="100%" height={310}>
+              <RadarChart data={siteBenchmarking} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
+                <PolarGrid stroke="#CBD5E1" strokeDasharray="3 3" />
+                <PolarAngleAxis
+                  dataKey="metric"
+                  tick={{ fontSize: 11, fill: "#475569", fontWeight: 600 }}
+                  tickLine={false}
+                />
+                <PolarRadiusAxis
+                  angle={90}
+                  domain={[50, 100]}
+                  tick={{ fontSize: 9, fill: "#94A3B8" }}
+                  tickCount={4}
+                  axisLine={false}
+                />
+                {/* Plant E — top performer */}
+                <Radar
+                  name="Plant E (Best)"
+                  dataKey="plantE"
+                  stroke="#10B981"
+                  fill="#10B981"
+                  fillOpacity={0.12}
+                  strokeWidth={2.5}
+                  dot={{ r: 3, fill: "#10B981", strokeWidth: 0 }}
+                />
+                {/* Portfolio Average */}
+                <Radar
+                  name="Portfolio Avg"
+                  dataKey="portfolioAvg"
+                  stroke="#3B82F6"
+                  fill="#3B82F6"
+                  fillOpacity={0.10}
+                  strokeWidth={2}
+                  strokeDasharray="5 3"
+                  dot={{ r: 3, fill: "#3B82F6", strokeWidth: 0 }}
+                />
+                {/* Plant D — needs attention */}
+                <Radar
+                  name="Plant D (Lowest)"
+                  dataKey="plantD"
+                  stroke="#EF4444"
+                  fill="#EF4444"
+                  fillOpacity={0.08}
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: "#EF4444", strokeWidth: 0 }}
+                />
+                <Tooltip
+                  contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "8px", fontSize: "11px", color: "#f1f5f9", padding: "8px 12px" }}
+                  formatter={(value: number, name: string) => [`${value}/100`, name]}
+                />
               </RadarChart>
             </ResponsiveContainer>
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="grid grid-cols-3 gap-4 text-center text-xs">
-                <div>
-                  <div className="text-gray-600 mb-1">Top Performer</div>
-                  <div className="text-sm font-bold text-green-600">Plant E (92)</div>
-                </div>
-                <div>
-                  <div className="text-gray-600 mb-1">Portfolio Avg</div>
-                  <div className="text-sm font-bold text-gray-900">85</div>
-                </div>
-                <div>
-                  <div className="text-gray-600 mb-1">Needs Attention</div>
-                  <div className="text-sm font-bold text-red-600">Plant D (78)</div>
-                </div>
+
+            {/* Summary strip */}
+            <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
+              <div className="text-center p-2 rounded-lg bg-emerald-50 border border-emerald-100">
+                <div className="text-[10px] text-emerald-600 font-semibold uppercase mb-0.5">Top Performer</div>
+                <div className="text-sm font-bold text-emerald-700">Plant E</div>
+                <div className="text-xs text-emerald-600">Avg score 96</div>
+              </div>
+              <div className="text-center p-2 rounded-lg bg-blue-50 border border-blue-100">
+                <div className="text-[10px] text-blue-600 font-semibold uppercase mb-0.5">Portfolio Avg</div>
+                <div className="text-sm font-bold text-blue-700">Score 84</div>
+                <div className="text-xs text-blue-600">Across 6 metrics</div>
+              </div>
+              <div className="text-center p-2 rounded-lg bg-rose-50 border border-rose-100">
+                <div className="text-[10px] text-rose-600 font-semibold uppercase mb-0.5">Needs Attention</div>
+                <div className="text-sm font-bold text-rose-700">Plant D</div>
+                <div className="text-xs text-rose-600">Avg score 72</div>
               </div>
             </div>
           </CardContent>

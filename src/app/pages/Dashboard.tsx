@@ -1,4 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, Suspense, lazy } from "react";
+const SolarMap = lazy(() => import("../components/SolarMap"));
+import { ExportMenu } from "../components/ExportMenu";
 import { motion, AnimatePresence } from "motion/react";
 import {
   BarChart,
@@ -49,7 +51,6 @@ import {
   DollarSign,
   Activity,
   MapPin,
-  Download,
   Calendar,
   Filter,
   Clock,
@@ -213,21 +214,19 @@ const strategicKPIs = [
 // Plant Markers for India Map (Simplified representation)
 const plantMarkers = [
   // Maharashtra
-  { id: 1, name: "Pune Solar Park", state: "Maharashtra", lat: 18.5, lon: 73.8, capacity: 25, status: "compliant", cuf: 23.5 },
-  { id: 2, name: "Nashik Site A", state: "Maharashtra", lat: 19.9, lon: 73.7, capacity: 15, status: "warning", cuf: 21.2 },
-  { id: 3, name: "Aurangabad Project", state: "Maharashtra", lat: 19.8, lon: 75.3, capacity: 30, status: "compliant", cuf: 24.1 },
-  { id: 4, name: "Solapur SPV", state: "Maharashtra", lat: 17.6, lon: 75.9, capacity: 20, status: "compliant", cuf: 23.8 },
-  { id: 5, name: "Nagpur Plant", state: "Maharashtra", lat: 21.1, lon: 79.0, capacity: 18, status: "curtailment", cuf: 19.5 },
-  
+  { id: 1, name: "Pune Solar Park",     state: "Maharashtra", lat: 18.5, lon: 73.8, capacity: 25, status: "compliant",     cuf: 23.5, generation: 2150, target: 2100, availability: 97.2, ldRisk: "none",   vendor: "Vendor D" },
+  { id: 2, name: "Nashik Site A",        state: "Maharashtra", lat: 19.9, lon: 73.7, capacity: 15, status: "warning",       cuf: 21.2, generation: 1180, target: 1260, availability: 94.5, ldRisk: "low",    vendor: "Vendor A" },
+  { id: 3, name: "Aurangabad Project",   state: "Maharashtra", lat: 19.8, lon: 75.3, capacity: 30, status: "compliant",     cuf: 24.1, generation: 2380, target: 2450, availability: 96.8, ldRisk: "none",   vendor: "Vendor B" },
+  { id: 4, name: "Solapur SPV",          state: "Maharashtra", lat: 17.6, lon: 75.9, capacity: 20, status: "compliant",     cuf: 23.8, generation: 1720, target: 1680, availability: 97.5, ldRisk: "none",   vendor: "Vendor D" },
+  { id: 5, name: "Nagpur Plant",         state: "Maharashtra", lat: 21.1, lon: 79.0, capacity: 18, status: "curtailment",   cuf: 19.5, generation: 1310, target: 1580, availability: 91.2, ldRisk: "high",   vendor: "Vendor C" },
   // Tamil Nadu
-  { id: 6, name: "Chennai Coastal", state: "Tamil Nadu", lat: 13.0, lon: 80.2, capacity: 22, status: "compliant", cuf: 24.5 },
-  { id: 7, name: "Coimbatore Solar", state: "Tamil Nadu", lat: 11.0, lon: 76.9, capacity: 28, status: "warning", cuf: 20.8 },
-  { id: 8, name: "Madurai Project", state: "Tamil Nadu", lat: 9.9, lon: 78.1, capacity: 16, status: "compliant", cuf: 23.2 },
-  { id: 9, name: "Trichy Site B", state: "Tamil Nadu", lat: 10.8, lon: 78.7, capacity: 19, status: "non-compliant", cuf: 18.5 },
-  
+  { id: 6, name: "Chennai Coastal",      state: "Tamil Nadu",  lat: 13.0, lon: 80.2, capacity: 22, status: "compliant",     cuf: 24.5, generation: 1920, target: 1850, availability: 98.1, ldRisk: "none",   vendor: "Vendor D" },
+  { id: 7, name: "Coimbatore Solar",     state: "Tamil Nadu",  lat: 11.0, lon: 76.9, capacity: 28, status: "warning",       cuf: 20.8, generation: 2120, target: 2350, availability: 93.5, ldRisk: "medium", vendor: "Vendor C" },
+  { id: 8, name: "Madurai Project",      state: "Tamil Nadu",  lat:  9.9, lon: 78.1, capacity: 16, status: "compliant",     cuf: 23.2, generation: 1560, target: 1480, availability: 96.4, ldRisk: "none",   vendor: "Vendor A" },
+  { id: 9, name: "Trichy Site B",        state: "Tamil Nadu",  lat: 10.8, lon: 78.7, capacity: 19, status: "non-compliant", cuf: 18.5, generation: 1140, target: 1680, availability: 88.3, ldRisk: "high",   vendor: "Vendor C" },
   // Goa
-  { id: 10, name: "Panaji Solar Farm", state: "Goa", lat: 15.4, lon: 73.8, capacity: 8, status: "compliant", cuf: 22.8 },
-  { id: 11, name: "Margao SPV", state: "Goa", lat: 15.2, lon: 73.9, capacity: 7, status: "warning", cuf: 21.5 },
+  { id: 10, name: "Panaji Solar Farm",   state: "Goa",         lat: 15.4, lon: 73.8, capacity: 8,  status: "compliant",     cuf: 22.8, generation:  720, target:  700, availability: 97.0, ldRisk: "none",   vendor: "Vendor B" },
+  { id: 11, name: "Margao SPV",          state: "Goa",         lat: 15.2, lon: 73.9, capacity: 7,  status: "warning",       cuf: 21.5, generation:  580, target:  630, availability: 93.8, ldRisk: "low",    vendor: "Vendor A" },
 ];
 
 // Risk & Alert Data
@@ -236,10 +235,33 @@ const riskData = {
   highLDRisk: 5,
   escalationTriggered: 3,
   pendingJMR: 12,
+  overdueJMR: 3,
+  ldExposureCr: 1.24,
+  riskScore: 62,
   topUnderperforming: [
     { plant: "Trichy Site B", state: "Tamil Nadu", cuf: 18.5, gap: -5.5 },
     { plant: "Nagpur Plant", state: "Maharashtra", cuf: 19.5, gap: -4.5 },
     { plant: "Coimbatore Solar", state: "Tamil Nadu", cuf: 20.8, gap: -3.2 },
+  ],
+  complianceTrend: [
+    { month: "Sep", nonCompliant: 10 },
+    { month: "Oct", nonCompliant: 9 },
+    { month: "Nov", nonCompliant: 11 },
+    { month: "Dec", nonCompliant: 9 },
+    { month: "Jan", nonCompliant: 9 },
+    { month: "Feb", nonCompliant: 8 },
+  ],
+  recentAlerts: [
+    { id: 1, category: "Non-Compliant", plant: "Trichy Site B",    state: "Tamil Nadu",    daysOpen: 2,  severity: "critical", detail: "CUF 18.5% — 5.5% below target" },
+    { id: 2, category: "Curtailment",   plant: "Nagpur Plant",     state: "Maharashtra",   daysOpen: 5,  severity: "high",     detail: "Grid curtailment — 18.8% generation loss" },
+    { id: 3, category: "JMR Overdue",   plant: "Nashik Site A",    state: "Maharashtra",   daysOpen: 9,  severity: "high",     detail: "JMR submission pending — SLA breached" },
+    { id: 4, category: "Warning",       plant: "Coimbatore Solar", state: "Tamil Nadu",    daysOpen: 1,  severity: "medium",   detail: "CUF trending below threshold for 3 days" },
+    { id: 5, category: "JMR Overdue",   plant: "Margao SPV",       state: "Goa",           daysOpen: 11, severity: "high",     detail: "JMR submission pending — SLA breached" },
+  ],
+  vendorLDExposure: [
+    { vendor: "Vendor C", plants: 15, ldCr: 0.54, risk: "high" },
+    { vendor: "Vendor A", plants: 12, ldCr: 0.42, risk: "medium" },
+    { vendor: "Vendor B", plants: 8,  ldCr: 0.28, risk: "low" },
   ],
 };
 
@@ -267,6 +289,33 @@ const cufTrendData = [
   { month: "Jan", portfolio: 22.2, target: 24.0 },
   { month: "Feb", portfolio: 22.1, target: 24.0 },
 ];
+
+// Previous year data for comparison mode
+const prevYearMtdGenerationData = [
+  { plant: "Chennai Coastal", target: 1700, actual: 1680 },
+  { plant: "Aurangabad Project", target: 2250, actual: 2190 },
+  { plant: "Pune Solar Park", target: 1950, actual: 1920 },
+  { plant: "Coimbatore Solar", target: 2150, actual: 1980 },
+  { plant: "Solapur SPV", target: 1550, actual: 1530 },
+  { plant: "Nashik Site A", target: 1180, actual: 1050 },
+];
+
+const prevYearCufTrendData = [
+  { month: "Mar", prevPortfolio: 19.8 },
+  { month: "Apr", prevPortfolio: 20.1 },
+  { month: "May", prevPortfolio: 20.4 },
+  { month: "Jun", prevPortfolio: 20.2 },
+  { month: "Jul", prevPortfolio: 19.5 },
+  { month: "Aug", prevPortfolio: 19.9 },
+  { month: "Sep", prevPortfolio: 20.6 },
+  { month: "Oct", prevPortfolio: 21.1 },
+  { month: "Nov", prevPortfolio: 20.8 },
+  { month: "Dec", prevPortfolio: 20.3 },
+  { month: "Jan", prevPortfolio: 20.9 },
+  { month: "Feb", prevPortfolio: 20.7 },
+];
+
+const mergedCufData = cufTrendData.map((d, i) => ({ ...d, prevPortfolio: prevYearCufTrendData[i].prevPortfolio }));
 
 const downtimeData = [
   { name: "Grid Outage", value: 38, color: "#EF4444" },
@@ -645,9 +694,17 @@ export function Dashboard() {
   const [stateFilter, setStateFilter] = useState("All States");
   const [vendorFilter, setVendorFilter] = useState("All Vendors");
   const [durationToggle, setDurationToggle] = useState("MTD");
+  const [showComparison, setShowComparison] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
+
+  const mergedMtdData = mtdGenerationData.map((d, i) => ({
+    ...d,
+    prevActual: prevYearMtdGenerationData[i]?.actual,
+    prevTarget: prevYearMtdGenerationData[i]?.target,
+  }));
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div ref={dashboardRef} data-dashboard-content className="min-h-screen bg-slate-50 flex flex-col">
       
       {/* GLOBAL TOP FILTER BAR */}
       <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
@@ -671,10 +728,11 @@ export function Dashboard() {
                 <Clock className="w-3 h-3 text-slate-500" />
                 <span className="text-xs text-slate-600">Updated 2 min ago</span>
               </div>
-              <Button size="sm" variant="outline" className="gap-1.5 h-7 px-3 text-xs">
-                <Download className="w-3.5 h-3.5" />
-                Export
-              </Button>
+              <ExportMenu
+                kpis={strategicKPIs.map(k => ({ title: k.title, value: k.value, unit: k.unit, change: k.change }))}
+                plants={plantMarkers}
+                dashboardRef={dashboardRef}
+              />
             </div>
           </div>
 
@@ -765,63 +823,74 @@ export function Dashboard() {
                     whileHover={{ y: -2 }}
                     className="cursor-pointer"
                   >
-                    <Card className="border-2 border-slate-200 hover:border-[#0A2E4A] hover:shadow-lg transition-all">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <p className="text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-1">
-                              {kpi.title}
-                            </p>
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="text-2xl font-bold text-slate-900">{kpi.value}</span>
-                              <span className="text-xs font-medium text-slate-600">{kpi.unit}</span>
+                    {(() => {
+                      const accentColor =
+                        kpi.compliance === "green"  ? { bar: "#10B981", border: "border-l-emerald-500", bg: "kpi-card-green" } :
+                        kpi.compliance === "yellow" ? { bar: "#E8A800", border: "border-l-amber-500",   bg: "kpi-card-yellow" } :
+                        kpi.compliance === "red"    ? { bar: "#EF4444", border: "border-l-rose-500",    bg: "kpi-card-red" } :
+                                                      { bar: "#94a3b8", border: "border-l-slate-400",   bg: "kpi-card-stable" };
+                      return (
+                        <Card className={`border border-slate-200 border-l-4 ${accentColor.border} shadow-sm hover:shadow-md transition-all overflow-hidden ${accentColor.bg}`}>
+                          {/* Coloured top accent strip */}
+                          <div style={{ height: 3, background: `linear-gradient(90deg, ${accentColor.bar}, ${accentColor.bar}88)`, flexShrink: 0 }} />
+                          <CardContent className="p-4 pt-3">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-1">
+                                  {kpi.title}
+                                </p>
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className="text-2xl font-bold text-slate-900">{kpi.value}</span>
+                                  <span className="text-xs font-medium text-slate-600">{kpi.unit}</span>
+                                </div>
+                              </div>
+                              <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${complianceColors[kpi.compliance]}`} style={{ boxShadow: `0 0 6px ${accentColor.bar}99` }} />
                             </div>
-                          </div>
-                          <div className={`w-2 h-2 rounded-full ${complianceColors[kpi.compliance]}`}></div>
-                        </div>
 
-                        <div className="mb-2">
-                          <div className="flex items-center justify-between text-[10px] mb-1">
-                            <span className="text-slate-600">Target: {kpi.target} {kpi.unit}</span>
-                            <span className="font-bold text-slate-900">{progressPercent.toFixed(0)}%</span>
-                          </div>
-                          <Progress value={progressPercent} className="h-1" />
-                        </div>
+                            <div className="mb-2">
+                              <div className="flex items-center justify-between text-[10px] mb-1">
+                                <span className="text-slate-600">Target: {kpi.target} {kpi.unit}</span>
+                                <span className="font-bold text-slate-900">{progressPercent.toFixed(0)}%</span>
+                              </div>
+                              <Progress value={progressPercent} className="h-1" />
+                            </div>
 
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1">
-                            {kpi.trend === "up" ? (
-                              <ArrowUp className="w-3 h-3 text-emerald-600" />
-                            ) : kpi.trend === "down" ? (
-                              <ArrowDown className="w-3 h-3 text-rose-600" />
-                            ) : (
-                              <div className="w-3 h-3" />
-                            )}
-                            <span className={`text-[10px] font-bold ${
-                              kpi.trend === "up" ? "text-emerald-600" : 
-                              kpi.trend === "down" ? "text-rose-600" : "text-slate-600"
-                            }`}>
-                              {kpi.change}
-                            </span>
-                            <span className="text-[10px] text-slate-500">MoM</span>
-                          </div>
-                          
-                          <div className="h-6 w-16">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <LineChart data={kpi.sparkline.map((val) => ({ value: val }))}>
-                                <Line 
-                                  type="monotone" 
-                                  dataKey="value" 
-                                  stroke={kpi.compliance === "green" ? "#10B981" : kpi.compliance === "yellow" ? "#E8A800" : "#EF4444"}
-                                  strokeWidth={1.5}
-                                  dot={false}
-                                />
-                              </LineChart>
-                            </ResponsiveContainer>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1">
+                                {kpi.trend === "up" ? (
+                                  <ArrowUp className="w-3 h-3 text-emerald-600" />
+                                ) : kpi.trend === "down" ? (
+                                  <ArrowDown className="w-3 h-3 text-rose-600" />
+                                ) : (
+                                  <div className="w-3 h-3" />
+                                )}
+                                <span className={`text-[10px] font-bold ${
+                                  kpi.trend === "up" ? "text-emerald-600" : 
+                                  kpi.trend === "down" ? "text-rose-600" : "text-slate-600"
+                                }`}>
+                                  {kpi.change}
+                                </span>
+                                <span className="text-[10px] text-slate-500">MoM</span>
+                              </div>
+                              
+                              <div className="h-6 w-16">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <LineChart data={kpi.sparkline.map((val) => ({ value: val }))}>
+                                    <Line 
+                                      type="monotone" 
+                                      dataKey="value" 
+                                      stroke={kpi.compliance === "green" ? "#10B981" : kpi.compliance === "yellow" ? "#E8A800" : "#EF4444"}
+                                      strokeWidth={1.5}
+                                      dot={false}
+                                    />
+                                  </LineChart>
+                                </ResponsiveContainer>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })()}
                   </motion.div>
                 </KpiCardWithPreview>
               );
@@ -838,41 +907,106 @@ export function Dashboard() {
                   Geographic Distribution
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
-                <div className="relative bg-slate-50 rounded-xl p-8 h-96 border-2 border-slate-200">
-                  {/* Simplified India Map Representation */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <MapPin className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                      <p className="text-sm font-semibold text-slate-700 mb-2">Interactive Map View</p>
-                      <p className="text-xs text-slate-500 mb-4">Click on markers to view plant details</p>
-                      
-                      {/* Legend */}
-                      <div className="inline-flex flex-col gap-2 bg-white p-4 rounded-lg border-2 border-slate-200 shadow-sm">
-                        {Object.entries(statusColors).map(([status, config]) => (
-                          <div key={status} className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: config.bg }}></div>
-                            <span className="text-xs font-medium text-slate-700">{config.label}</span>
-                          </div>
-                        ))}
+              <CardContent className="p-3">
+                <div className="rounded-xl overflow-hidden h-96 border border-slate-200 shadow-inner">
+                  <Suspense fallback={
+                    <div className="w-full h-full bg-slate-900 flex items-center justify-center rounded-xl">
+                      <div className="text-center">
+                        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                        <p className="text-sm text-slate-400">Loading map...</p>
                       </div>
                     </div>
-                  </div>
+                  }>
+                    <SolarMap plantMarkers={plantMarkers} statusColors={statusColors} />
+                  </Suspense>
+                </div>
+                {/* State summary strip — enhanced */}
+                <div className="grid grid-cols-3 gap-2 mt-3">
+                  {PORTFOLIO_CONFIG.states.map((state) => {
+                    const statePlants = plantMarkers.filter(p => p.state === state);
+                    const stateCapacity = statePlants.reduce((sum, p) => sum + p.capacity, 0);
+                    const compliant = statePlants.filter(p => p.status === "compliant").length;
+                    const avgCuf = statePlants.length ? (statePlants.reduce((s, p) => s + p.cuf, 0) / statePlants.length) : 0;
+                    const stateGen = statePlants.reduce((s, p) => s + p.generation, 0);
+                    const stateTgt = statePlants.reduce((s, p) => s + p.target, 0);
+                    const achieve = stateTgt > 0 ? Math.round((stateGen / stateTgt) * 100) : 0;
+                    const highRisk = statePlants.filter(p => p.ldRisk === "high").length;
+                    const cufPct = Math.min((avgCuf / 25) * 100, 100);
+                    const cufCol = avgCuf >= 23 ? "#10B981" : avgCuf >= 21 ? "#F59E0B" : "#F97316";
+                    const achCol = achieve >= 100 ? "#10B981" : achieve >= 95 ? "#F59E0B" : "#EF4444";
+                    return (
+                      <div key={state} className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        {/* Header row */}
+                        <div className="flex items-start justify-between mb-1.5">
+                          <div>
+                            <div className="text-[10px] font-bold text-slate-500 uppercase leading-tight">{state}</div>
+                            <div className="text-sm font-bold text-slate-900 leading-tight">{stateCapacity} MW</div>
+                          </div>
+                          <div className="flex flex-col items-end gap-0.5">
+                            <div className="text-[10px] text-slate-500">{statePlants.length} sites</div>
+                            <div className="flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                              <span className="text-[10px] font-semibold text-emerald-600">{compliant}/{statePlants.length}</span>
+                            </div>
+                          </div>
+                        </div>
+                        {/* CUF bar */}
+                        <div className="mb-1.5">
+                          <div className="flex justify-between mb-0.5">
+                            <span className="text-[9px] text-slate-500">Avg CUF</span>
+                            <span className="text-[9px] font-bold" style={{ color: cufCol }}>{avgCuf.toFixed(1)}%</span>
+                          </div>
+                          <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${cufPct}%`, background: cufCol }} />
+                          </div>
+                        </div>
+                        {/* Achievement row */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] text-slate-500">Achievement</span>
+                          <span className="text-[9px] font-bold" style={{ color: achCol }}>{achieve}%</span>
+                        </div>
+                        {/* High risk badge */}
+                        {highRisk > 0 && (
+                          <div className="mt-1 flex items-center gap-1">
+                            <span className="text-[9px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5">⚠ {highRisk} LD Risk</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
 
-                  {/* Plant Summary Cards */}
-                  <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-2">
-                    {PORTFOLIO_CONFIG.states.map((state) => {
-                      const statePlants = plantMarkers.filter(p => p.state === state);
-                      const stateCapacity = statePlants.reduce((sum, p) => sum + p.capacity, 0);
-                      
+                {/* Plant drill-down list */}
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide">All Plants — Ranked by CUF</span>
+                    <span className="text-[9px] text-slate-400">Click marker on map for details</span>
+                  </div>
+                  <div className="space-y-1">
+                    {[...plantMarkers].sort((a, b) => b.cuf - a.cuf).map((plant, idx) => {
+                      const pct = plant.target > 0 ? Math.round((plant.generation / plant.target) * 100) : 0;
+                      const cufCol = plant.cuf >= 23 ? "#10B981" : plant.cuf >= 21 ? "#F59E0B" : plant.cuf >= 19 ? "#F97316" : "#EF4444";
+                      const sttCol: Record<string, string> = { compliant: "#10B981", warning: "#F59E0B", "non-compliant": "#EF4444", curtailment: "#F97316", shutdown: "#6B7280" };
+                      const dotCol = sttCol[plant.status] ?? "#6B7280";
+                      const achCol = pct >= 100 ? "#10B981" : pct >= 95 ? "#F59E0B" : "#EF4444";
+                      const ldBg: Record<string, string> = { high: "bg-rose-50 text-rose-700 border-rose-200", medium: "bg-amber-50 text-amber-700 border-amber-200", low: "bg-yellow-50 text-yellow-700 border-yellow-200", none: "bg-emerald-50 text-emerald-700 border-emerald-200" };
                       return (
-                        <div key={state} className="bg-white p-3 rounded-lg border-2 border-slate-200 shadow-sm">
-                          <div className="text-[10px] font-bold text-slate-600 uppercase mb-1">{state}</div>
-                          <div className="text-lg font-bold text-slate-900">{stateCapacity} MW</div>
-                          <div className="text-xs text-slate-600">{statePlants.length} Plants</div>
+                        <div key={plant.id} className="flex items-center gap-2 px-2 py-1 rounded bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors">
+                          <span className="text-[9px] font-bold text-slate-400 w-4 text-right shrink-0">#{idx + 1}</span>
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: dotCol, boxShadow: `0 0 4px ${dotCol}80` }} />
+                          <span className="text-[10px] font-semibold text-slate-800 flex-1 min-w-0 truncate">{plant.name}</span>
+                          <span className="text-[9px] text-slate-500 shrink-0 hidden sm:inline">{plant.state.replace("Tamil Nadu", "TN").replace("Maharashtra", "MH")}</span>
+                          <span className="text-[9px] font-bold shrink-0" style={{ color: cufCol }}>{plant.cuf}%</span>
+                          <span className="text-[9px] font-bold shrink-0 w-9 text-right" style={{ color: achCol }}>{pct}%</span>
+                          {plant.ldRisk !== "none" && (
+                            <span className={`text-[8px] font-semibold border rounded px-1 shrink-0 ${ldBg[plant.ldRisk]}`}>{plant.ldRisk.toUpperCase()}</span>
+                          )}
                         </div>
                       );
                     })}
+                  </div>
+                  <div className="flex justify-between mt-1 px-2">
+                    <span className="text-[8px] text-slate-400"># = CUF rank · Color dot = status · CUF% · Achieve%</span>
                   </div>
                 </div>
               </CardContent>
@@ -881,55 +1015,156 @@ export function Dashboard() {
             {/* Right: Risk & Alert Panel */}
             <Card className="col-span-5 border-2 border-slate-200 shadow-md">
               <CardHeader className="border-b border-slate-100 pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-rose-600" />
-                  Risk & Alert Dashboard
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-600" />
+                    Risk & Alert Dashboard
+                  </CardTitle>
+                  {/* Portfolio Risk Score badge */}
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Risk Score</div>
+                      <div className="text-xs font-bold text-orange-600">{riskData.riskScore}/100</div>
+                    </div>
+                    <div className="px-2 py-1 rounded-md text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-300 uppercase tracking-wide">
+                      Elevated
+                    </div>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="p-4">
-                <div className="space-y-4">
-                  {/* Risk Summary Cards */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-rose-50 rounded-lg border-2 border-rose-200">
-                      <div className="text-xs font-semibold text-rose-700 mb-1">Non-Compliant Plants</div>
-                      <div className="text-2xl font-bold text-rose-900">{riskData.nonCompliantPlants}</div>
+              <CardContent className="p-3">
+                <div className="space-y-3">
+
+                  {/* ── KPI Cards 2×2 ──────────────────────────────────────────── */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2.5 bg-rose-50 rounded-lg border-2 border-rose-200">
+                      <div className="text-[10px] font-semibold text-rose-700 mb-0.5">Non-Compliant Plants</div>
+                      <div className="text-2xl font-bold text-rose-900 leading-none">{riskData.nonCompliantPlants}</div>
+                      <div className="text-[9px] text-rose-500 mt-1">↑ 1 vs last month</div>
                     </div>
-                    <div className="p-3 bg-amber-50 rounded-lg border-2 border-amber-200">
-                      <div className="text-xs font-semibold text-amber-700 mb-1">High LD Risk</div>
-                      <div className="text-2xl font-bold text-amber-900">{riskData.highLDRisk}</div>
+                    <div className="p-2.5 bg-amber-50 rounded-lg border-2 border-amber-200">
+                      <div className="text-[10px] font-semibold text-amber-700 mb-0.5">High LD Risk</div>
+                      <div className="text-2xl font-bold text-amber-900 leading-none">{riskData.highLDRisk}</div>
+                      <div className="text-[9px] text-amber-600 mt-1">₹{riskData.ldExposureCr} Cr exposure</div>
                     </div>
-                    <div className="p-3 bg-purple-50 rounded-lg border-2 border-purple-200">
-                      <div className="text-xs font-semibold text-purple-700 mb-1">Escalations</div>
-                      <div className="text-2xl font-bold text-purple-900">{riskData.escalationTriggered}</div>
+                    <div className="p-2.5 bg-purple-50 rounded-lg border-2 border-purple-200">
+                      <div className="text-[10px] font-semibold text-purple-700 mb-0.5">Escalations</div>
+                      <div className="text-2xl font-bold text-purple-900 leading-none">{riskData.escalationTriggered}</div>
+                      <div className="text-[9px] text-purple-500 mt-1">2 awaiting response</div>
                     </div>
-                    <div className="p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
-                      <div className="text-xs font-semibold text-blue-700 mb-1">Pending JMR</div>
-                      <div className="text-2xl font-bold text-blue-900">{riskData.pendingJMR}</div>
+                    <div className="p-2.5 bg-blue-50 rounded-lg border-2 border-blue-200">
+                      <div className="text-[10px] font-semibold text-blue-700 mb-0.5">Pending JMR</div>
+                      <div className="text-2xl font-bold text-blue-900 leading-none">{riskData.pendingJMR}</div>
+                      <div className="text-[9px] text-rose-600 mt-1 font-semibold">⚠ {riskData.overdueJMR} overdue &gt;7 days</div>
+                    </div>
+                  </div>
+
+                  {/* ── LD Financial Exposure Banner ────────────────────────────── */}
+                  <div className="p-2.5 rounded-lg border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 flex items-center justify-between">
+                    <div>
+                      <div className="text-[9px] font-bold text-orange-600 uppercase tracking-wide mb-0.5">Total LD Financial Exposure</div>
+                      <div className="text-lg font-bold text-orange-800">₹{riskData.ldExposureCr} Cr at risk</div>
+                      <div className="text-[9px] text-orange-600">Across {riskData.highLDRisk} plants · Vendor C highest</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[9px] text-orange-500 mb-1">vs Budget</div>
+                      <div className="text-base font-bold text-orange-700">4.0%</div>
+                      <div className="text-[9px] text-orange-500">of revenue</div>
                     </div>
                   </div>
 
                   <Separator />
 
-                  {/* Top Underperforming Plants */}
+                  {/* ── Active Alert Feed ───────────────────────────────────────── */}
                   <div>
-                    <h4 className="text-xs font-bold text-slate-700 uppercase mb-3">Top Underperforming Plants</h4>
-                    <div className="space-y-2">
-                      {riskData.topUnderperforming.map((plant, idx) => (
-                        <div key={idx} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-bold text-slate-900">{plant.plant}</span>
-                            <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 text-[10px]">
-                              {plant.gap.toFixed(1)}%
-                            </Badge>
+                    <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-2">Active Alerts</h4>
+                    <div className="space-y-1.5">
+                      {riskData.recentAlerts.map((alert) => {
+                        const sevStyle: Record<string, { dot: string; bg: string; badge: string; text: string }> = {
+                          critical: { dot: "bg-rose-500",   bg: "bg-rose-50 border-rose-200",     badge: "bg-rose-100 text-rose-700 border-rose-300",     text: "text-rose-700" },
+                          high:     { dot: "bg-orange-500", bg: "bg-orange-50 border-orange-200", badge: "bg-orange-100 text-orange-700 border-orange-300", text: "text-orange-600" },
+                          medium:   { dot: "bg-amber-400",  bg: "bg-amber-50 border-amber-200",   badge: "bg-amber-100 text-amber-700 border-amber-200",    text: "text-amber-600" },
+                        };
+                        const s = sevStyle[alert.severity] ?? sevStyle.medium;
+                        return (
+                          <div key={alert.id} className={`px-2.5 py-2 rounded-lg border ${s.bg}`}>
+                            <div className="flex items-center justify-between mb-0.5">
+                              <div className="flex items-center gap-1.5">
+                                <span className={`w-2 h-2 rounded-full ${s.dot} shrink-0`} />
+                                <span className="text-[10px] font-bold text-slate-800 truncate">{alert.plant}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className={`text-[9px] border rounded px-1.5 py-0.5 font-semibold ${s.badge}`}>{alert.category}</span>
+                                <span className={`text-[9px] font-bold ${s.text}`}>{alert.daysOpen}d</span>
+                              </div>
+                            </div>
+                            <div className="text-[9px] text-slate-500 pl-3.5">{alert.detail}</div>
                           </div>
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-slate-600">{plant.state}</span>
-                            <span className="font-semibold text-slate-900">CUF: {plant.cuf}%</span>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
+
+                  <Separator />
+
+                  {/* ── 6-Month Compliance Trend ────────────────────────────────── */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-wide">Non-Compliant Trend (6M)</h4>
+                      <span className="text-[9px] text-emerald-600 font-semibold">↓ Improving</span>
+                    </div>
+                    <ResponsiveContainer width="100%" height={60}>
+                      <BarChart data={riskData.complianceTrend} barSize={14} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
+                        <XAxis dataKey="month" tick={{ fontSize: 8, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 8, fill: "#94a3b8" }} axisLine={false} tickLine={false} domain={[0, 14]} />
+                        <Bar dataKey="nonCompliant" radius={[3, 3, 0, 0]}>
+                          {riskData.complianceTrend.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={entry.nonCompliant >= 10 ? "#EF4444" : entry.nonCompliant >= 9 ? "#F97316" : "#F59E0B"}
+                            />
+                          ))}
+                        </Bar>
+                        <Tooltip
+                          contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "6px", fontSize: "10px", color: "#f1f5f9" }}
+                          formatter={(v: number) => [`${v} plants`, "Non-Compliant"]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <Separator />
+
+                  {/* ── Vendor LD Exposure ──────────────────────────────────────── */}
+                  <div>
+                    <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-2">Vendor LD Exposure</h4>
+                    <div className="space-y-2">
+                      {riskData.vendorLDExposure.map((v) => {
+                        const maxLd = Math.max(...riskData.vendorLDExposure.map((x) => x.ldCr));
+                        const pct = Math.round((v.ldCr / maxLd) * 100);
+                        const col = v.risk === "high" ? "#EF4444" : v.risk === "medium" ? "#F97316" : "#F59E0B";
+                        const bgBadge = v.risk === "high" ? "bg-rose-100 text-rose-700 border-rose-200" : v.risk === "medium" ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-amber-100 text-amber-700 border-amber-200";
+                        return (
+                          <div key={v.vendor}>
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-semibold text-slate-700">{v.vendor}</span>
+                                <span className="text-[9px] text-slate-400">{v.plants} plants</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-bold text-slate-800">₹{v.ldCr} Cr</span>
+                                <span className={`text-[8px] font-bold border rounded px-1 ${bgBadge}`}>{v.risk.toUpperCase()}</span>
+                              </div>
+                            </div>
+                            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: col }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                 </div>
               </CardContent>
             </Card>
@@ -940,18 +1175,34 @@ export function Dashboard() {
             {/* MTD vs Target Generation */}
             <Card className="col-span-4 border-2 border-slate-200 shadow-md">
               <CardHeader className="border-b border-slate-100 pb-3">
-                <CardTitle className="text-base">MTD vs Target Generation</CardTitle>
-                <CardDescription className="text-xs">Top 6 plants by capacity</CardDescription>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-base">MTD vs Target Generation</CardTitle>
+                    <CardDescription className="text-xs">Top 6 plants by capacity</CardDescription>
+                  </div>
+                  <button
+                    onClick={() => setShowComparison((v) => !v)}
+                    className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md border transition-all ${
+                      showComparison
+                        ? "bg-amber-50 border-amber-300 text-amber-700"
+                        : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"
+                    }`}
+                  >
+                    <TrendingUp className="w-3 h-3" />
+                    vs PY
+                  </button>
+                </div>
               </CardHeader>
               <CardContent className="p-4">
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={mtdGenerationData} layout="vertical">
+                    <BarChart data={mergedMtdData} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis type="number" tick={{ fontSize: 10 }} stroke="#64748b" />
                       <YAxis dataKey="plant" type="category" tick={{ fontSize: 10 }} stroke="#64748b" width={100} />
                       <Tooltip content={<CustomChartTooltip unit="MWh" />} />
                       <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      {showComparison && <Bar dataKey="prevActual" fill="#CBD5E1" name="PY Actual (MWh)" opacity={0.7} />}
                       <Bar dataKey="target" fill="#94A3B8" name="Target (MWh)" />
                       <Bar dataKey="actual" fill="#0A2E4A" name="Actual (MWh)" />
                     </BarChart>
@@ -963,18 +1214,44 @@ export function Dashboard() {
             {/* CUF Trend (12 Month) */}
             <Card className="col-span-5 border-2 border-slate-200 shadow-md">
               <CardHeader className="border-b border-slate-100 pb-3">
-                <CardTitle className="text-base">Portfolio CUF Trend (12 Months)</CardTitle>
-                <CardDescription className="text-xs">Monthly performance vs target</CardDescription>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-base">Portfolio CUF Trend (12 Months)</CardTitle>
+                    <CardDescription className="text-xs">Monthly performance vs target</CardDescription>
+                  </div>
+                  <button
+                    onClick={() => setShowComparison((v) => !v)}
+                    className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md border transition-all ${
+                      showComparison
+                        ? "bg-amber-50 border-amber-300 text-amber-700"
+                        : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"
+                    }`}
+                  >
+                    <TrendingUp className="w-3 h-3" />
+                    vs PY
+                  </button>
+                </div>
               </CardHeader>
               <CardContent className="p-4">
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={cufTrendData}>
+                    <LineChart data={mergedCufData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="#64748b" />
-                      <YAxis domain={[19, 25]} tick={{ fontSize: 10 }} stroke="#64748b" />
+                      <YAxis domain={[18, 25]} tick={{ fontSize: 10 }} stroke="#64748b" />
                       <Tooltip content={<CustomChartTooltip unit="%" />} />
                       <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      {showComparison && (
+                        <Line
+                          type="monotone"
+                          dataKey="prevPortfolio"
+                          stroke="#94A3B8"
+                          strokeWidth={2}
+                          strokeDasharray="4 4"
+                          name="PY CUF (%)"
+                          dot={{ fill: "#94A3B8", r: 3 }}
+                        />
+                      )}
                       <Line 
                         type="monotone" 
                         dataKey="portfolio" 

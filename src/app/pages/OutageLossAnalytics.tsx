@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { PageExportMenu } from "../components/PageExportMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -12,7 +13,6 @@ import {
   Power,
   Wrench,
   Cloud,
-  Download,
   Filter,
   TrendingDown,
   TrendingUp,
@@ -21,6 +21,10 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
+  CalendarDays,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
 } from "lucide-react";
 import {
   BarChart,
@@ -155,6 +159,29 @@ const yoyData = [
   { month: "Feb 2026", actual: 4485 },
 ];
 
+// YTD monthly loss by category (Apr → Feb, FY 2025-26)
+const ytdMonthlyLossData = [
+  { month: "Apr", gridOutage: 95,  equipFailure: 68,  plannedShutdown: 35, forceMajeure: 15, spylTotal: 195 },
+  { month: "May", gridOutage: 110, equipFailure: 72,  plannedShutdown: 42, forceMajeure: 18, spylTotal: 228 },
+  { month: "Jun", gridOutage: 130, equipFailure: 85,  plannedShutdown: 38, forceMajeure: 22, spylTotal: 262 },
+  { month: "Jul", gridOutage: 155, equipFailure: 92,  plannedShutdown: 45, forceMajeure: 28, spylTotal: 305 },
+  { month: "Aug", gridOutage: 180, equipFailure: 98,  plannedShutdown: 50, forceMajeure: 32, spylTotal: 340 },
+  { month: "Sep", gridOutage: 165, equipFailure: 88,  plannedShutdown: 38, forceMajeure: 25, spylTotal: 310 },
+  { month: "Oct", gridOutage: 120, equipFailure: 75,  plannedShutdown: 45, forceMajeure: 20, spylTotal: 255 },
+  { month: "Nov", gridOutage: 140, equipFailure: 82,  plannedShutdown: 38, forceMajeure: 22, spylTotal: 270 },
+  { month: "Dec", gridOutage: 160, equipFailure: 95,  plannedShutdown: 55, forceMajeure: 30, spylTotal: 328 },
+  { month: "Jan", gridOutage: 135, equipFailure: 78,  plannedShutdown: 40, forceMajeure: 22, spylTotal: 262 },
+  { month: "Feb", gridOutage: 180, equipFailure: 110, plannedShutdown: 48, forceMajeure: 35, spylTotal: 310 },
+];
+
+// YTD summary vs Same Period Last Year (SPYL)
+const ytdSummaryRows = [
+  { category: "Grid Outage",       color: "#EF4444", ytdHours: 156.5, ytdMWh: 1250, revenue: "₹2.50 Cr", spylMWh: 1130, changePct: +10.6 },
+  { category: "Equipment Failure", color: "#F59E0B", ytdHours:  98.3, ytdMWh:  890, revenue: "₹1.78 Cr", spylMWh:  798, changePct: +11.5 },
+  { category: "Planned Shutdown",  color: "#10B981", ytdHours:  45.2, ytdMWh:  420, revenue: "₹0.84 Cr", spylMWh:  480, changePct: -12.5 },
+  { category: "Force Majeure",     color: "#6366F1", ytdHours:  28.4, ytdMWh:  280, revenue: "₹0.56 Cr", spylMWh:  195, changePct: +43.6 },
+];
+
 // Pareto analysis (80/20 rule)
 const paretoData = [
   { cause: "Grid Instability", incidents: 42, energyLoss: 1250, cumPct: 43.2 },
@@ -226,11 +253,12 @@ const getEventColor = (type: string) => {
 export function OutageLossAnalytics() {
   const [rootCauseFilter, setRootCauseFilter] = useState("all");
   const [plantFilter, setPlantFilter] = useState("all");
+  const pageRef = useRef<HTMLDivElement>(null);
 
   const totalLoss = downtimeCategories.reduce((sum, cat) => sum + cat.energyLoss, 0);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div ref={pageRef} className="min-h-screen bg-slate-50 flex flex-col">
       <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
         <div className="px-6 py-2">
           <div className="flex items-center justify-between mb-2">
@@ -244,10 +272,12 @@ export function OutageLossAnalytics() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Button style={{ backgroundColor: "#0A2E4A" }} className="text-white h-7 px-3 text-xs">
-                <Download className="w-4 h-4 mr-2" />
-                Export Report
-              </Button>
+              <PageExportMenu
+                pageTitle="Outage & Loss Analytics"
+                contentRef={pageRef}
+                variant="navy"
+                label="Export Report"
+              />
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -548,6 +578,197 @@ export function OutageLossAnalytics() {
           </CardContent>
         </Card>
       </div>
+
+      {/* ── YTD Loss Comparison ─────────────────────────────────────────── */}
+      <Card className="mb-8 border-2 border-slate-200">
+        <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-[#0A2E4A] to-[#0A2E4A]/80 rounded-t-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="w-5 h-5 text-white" />
+              <CardTitle className="text-base font-semibold text-white">
+                Year-to-Date (YTD) Loss Comparison — FY 2025-26
+              </CardTitle>
+            </div>
+            <span className="text-xs text-blue-200 font-medium">Apr 2025 – Feb 2026 &nbsp;·&nbsp; 11 months</span>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-6 space-y-6">
+
+          {/* ── KPI summary strip ── */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: "YTD Total Hours Lost", value: "328.4 hrs", sub: "vs 298.5 SPYL", delta: +10.0, icon: Calendar },
+              { label: "YTD Energy Loss",       value: "2,840 MWh", sub: "vs 2,603 SPYL", delta: +9.1,  icon: Zap },
+              { label: "YTD Revenue Impact",    value: "₹5.68 Cr",  sub: "lost generation", delta: null, icon: TrendingDown },
+              { label: "Worst Category YTD",    value: "Grid Outage", sub: "44% of total loss", delta: null, icon: AlertCircle },
+            ].map(({ label, value, sub, delta, icon: Icon }) => (
+              <div key={label} className="p-4 rounded-xl border-2 border-slate-100 bg-slate-50 flex flex-col gap-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <Icon className="w-4 h-4 text-slate-500" />
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</span>
+                </div>
+                <span className="text-xl font-bold text-slate-900">{value}</span>
+                <div className="flex items-center gap-1">
+                  {delta !== null ? (
+                    delta > 0 ? (
+                      <ArrowUpRight className="w-3.5 h-3.5 text-rose-500" />
+                    ) : (
+                      <ArrowDownRight className="w-3.5 h-3.5 text-emerald-500" />
+                    )
+                  ) : (
+                    <Minus className="w-3.5 h-3.5 text-slate-400" />
+                  )}
+                  <span className={`text-xs font-semibold ${
+                    delta === null ? "text-slate-500"
+                    : delta > 0   ? "text-rose-600"
+                    : "text-emerald-600"
+                  }`}>
+                    {delta !== null ? `${delta > 0 ? "+" : ""}${delta}% vs SPYL` : sub}
+                  </span>
+                  {delta !== null && (
+                    <span className="text-xs text-slate-400 ml-0.5">&nbsp;· {sub}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Stacked bar + SPYL line chart ── */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-bold text-slate-800">Monthly Loss by Category (MWh) vs Same Period Last Year</h4>
+              <div className="flex items-center gap-4 text-xs text-slate-500">
+                <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-[#EF4444]" />Grid Outage</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-[#F59E0B]" />Equipment Failure</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-[#10B981]" />Planned Shutdown</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-[#6366F1]" />Force Majeure</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block w-8 h-0.5 bg-[#0A2E4A] border-dashed border-t-2 border-[#0A2E4A]" />SPYL Total</span>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={280}>
+              <ComposedChart data={ytdMonthlyLossData} barCategoryGap="25%">
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#6B7280" />
+                <YAxis tick={{ fontSize: 11 }} stroke="#6B7280" unit=" MWh" width={60} />
+                <Tooltip
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null;
+                    const total = payload.filter(p => p.dataKey !== "spylTotal").reduce((s, p) => s + (Number(p.value) || 0), 0);
+                    return (
+                      <div className="bg-white border border-slate-200 rounded-lg shadow-lg p-3 text-xs min-w-[160px]">
+                        <p className="font-bold text-slate-900 mb-2">{label}</p>
+                        {payload.map((p: any) => p.dataKey !== "spylTotal" && (
+                          <div key={p.dataKey} className="flex justify-between gap-4 mb-1">
+                            <span style={{ color: p.fill }} className="font-medium">{p.name}</span>
+                            <span className="font-mono font-semibold">{p.value} MWh</span>
+                          </div>
+                        ))}
+                        <div className="border-t border-slate-100 mt-1 pt-1 flex justify-between">
+                          <span className="font-bold text-slate-700">YTD Total</span>
+                          <span className="font-mono font-bold text-slate-900">{total} MWh</span>
+                        </div>
+                        {payload.find((p: any) => p.dataKey === "spylTotal") && (
+                          <div className="flex justify-between mt-1 text-slate-500">
+                            <span>SPYL Total</span>
+                            <span className="font-mono">{payload.find((p: any) => p.dataKey === "spylTotal")?.value} MWh</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }}
+                />
+                <Bar dataKey="gridOutage"      name="Grid Outage"       stackId="a" fill="#EF4444" radius={[0,0,0,0]} />
+                <Bar dataKey="equipFailure"    name="Equipment Failure" stackId="a" fill="#F59E0B" />
+                <Bar dataKey="plannedShutdown" name="Planned Shutdown"  stackId="a" fill="#10B981" />
+                <Bar dataKey="forceMajeure"    name="Force Majeure"     stackId="a" fill="#6366F1" radius={[3,3,0,0]} />
+                <Line
+                  type="monotone"
+                  dataKey="spylTotal"
+                  name="SPYL Total"
+                  stroke="#0A2E4A"
+                  strokeWidth={2}
+                  strokeDasharray="5 3"
+                  dot={{ r: 3, fill: "#0A2E4A" }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* ── YTD vs SPYL summary table ── */}
+          <div>
+            <h4 className="text-sm font-bold text-slate-800 mb-3">YTD vs Same Period Last Year — Category Breakdown</h4>
+            <div className="overflow-x-auto rounded-lg border border-slate-200">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="font-bold text-xs">Category</TableHead>
+                    <TableHead className="font-bold text-xs text-right">YTD Hours</TableHead>
+                    <TableHead className="font-bold text-xs text-right">YTD Loss (MWh)</TableHead>
+                    <TableHead className="font-bold text-xs text-right">SPYL (MWh)</TableHead>
+                    <TableHead className="font-bold text-xs text-right">Δ vs SPYL</TableHead>
+                    <TableHead className="font-bold text-xs text-right">Revenue Impact</TableHead>
+                    <TableHead className="font-bold text-xs text-center">Trend</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ytdSummaryRows.map((row) => (
+                    <TableRow key={row.category} className="hover:bg-slate-50">
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
+                          <span className="font-semibold text-slate-900 text-sm">{row.category}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm">{row.ytdHours.toFixed(1)}</TableCell>
+                      <TableCell className="text-right font-mono font-semibold text-sm">{row.ytdMWh.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono text-slate-500 text-sm">{row.spylMWh.toLocaleString()}</TableCell>
+                      <TableCell className="text-right">
+                        <span className={`inline-flex items-center gap-0.5 font-semibold text-sm ${
+                          row.changePct < 0 ? "text-emerald-600" : "text-rose-600"
+                        }`}>
+                          {row.changePct < 0
+                            ? <ArrowDownRight className="w-3.5 h-3.5" />
+                            : <ArrowUpRight className="w-3.5 h-3.5" />
+                          }
+                          {row.changePct > 0 ? "+" : ""}{row.changePct.toFixed(1)}%
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right font-semibold text-slate-700 text-sm">{row.revenue}</TableCell>
+                      <TableCell className="text-center">
+                        {row.changePct > 20 ? (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700">Critical</span>
+                        ) : row.changePct > 0 ? (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">Elevated</span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">Improved</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {/* Totals row */}
+                  <TableRow className="bg-slate-100 font-bold border-t-2 border-slate-300">
+                    <TableCell className="font-bold text-slate-900">Total</TableCell>
+                    <TableCell className="text-right font-mono font-bold">328.4</TableCell>
+                    <TableCell className="text-right font-mono font-bold">2,840</TableCell>
+                    <TableCell className="text-right font-mono text-slate-600">2,603</TableCell>
+                    <TableCell className="text-right">
+                      <span className="inline-flex items-center gap-0.5 font-bold text-rose-600">
+                        <ArrowUpRight className="w-3.5 h-3.5" />+9.1%
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-slate-900">₹5.68 Cr</TableCell>
+                    <TableCell className="text-center">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">Elevated</span>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+        </CardContent>
+      </Card>
 
       {/* Pareto Analysis */}
       <Card className="mb-8">

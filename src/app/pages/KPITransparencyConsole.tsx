@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { PageExportMenu } from "../components/PageExportMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -11,7 +12,6 @@ import {
   Calculator,
   ChevronDown,
   ChevronRight,
-  Download,
   FileText,
   AlertCircle,
   CheckCircle,
@@ -190,6 +190,7 @@ export function KPITransparencyConsole() {
   });
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [isEditingFormula, setIsEditingFormula] = useState(false);
+  const pageRef = useRef<HTMLDivElement>(null);
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section as keyof typeof prev] }));
@@ -198,7 +199,7 @@ export function KPITransparencyConsole() {
   const selectedKPIData = kpiList.find((k) => k.id === selectedKPI);
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
+    <div ref={pageRef} className="p-8 bg-gray-50 min-h-screen">
       {/* Page Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -662,10 +663,11 @@ export function KPITransparencyConsole() {
                 <p className="text-xs text-gray-600 mt-1">Step-by-step calculation audit trail with actual values used</p>
               </div>
             </div>
-            <Button variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              Export Calculation Sheet
-            </Button>
+            <PageExportMenu
+              pageTitle="KPI Transparency Console"
+              contentRef={pageRef}
+              label="Export Calculation Sheet"
+            />
           </div>
         </CardHeader>
         <CardContent className="p-0">

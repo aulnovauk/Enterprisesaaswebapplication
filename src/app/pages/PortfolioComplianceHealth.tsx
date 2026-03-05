@@ -1,3 +1,5 @@
+import { useRef } from "react";
+import { PageExportMenu } from "../components/PageExportMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -19,7 +21,6 @@ import {
   ArrowDown,
   Minus,
   Bell,
-  Download,
 } from "lucide-react";
 import {
   RadarChart,
@@ -233,9 +234,10 @@ export function PortfolioComplianceHealth() {
   };
 
   const currentRisk = riskColors[riskStatus as keyof typeof riskColors];
+  const pageRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
+    <div ref={pageRef} className="p-8 bg-gray-50 min-h-screen">
       {/* Page Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -253,10 +255,11 @@ export function PortfolioComplianceHealth() {
               <Clock className="w-3 h-3 mr-1" />
               Last Updated: 28-Feb-2026 23:59
             </Badge>
-            <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Export Report
-            </Button>
+            <PageExportMenu
+              pageTitle="Portfolio Compliance Health"
+              contentRef={pageRef}
+              label="Export Report"
+            />
           </div>
         </div>
       </div>

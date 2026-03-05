@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { PageExportMenu } from "../components/PageExportMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -10,7 +11,6 @@ import { Separator } from "../components/ui/separator";
 import { ScrollArea } from "../components/ui/scroll-area";
 import {
   FileSearch,
-  Download,
   Filter,
   Shield,
   Activity,
@@ -340,12 +340,13 @@ const modificationTimeline = [
 export function AuditLogs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const pageRef = useRef<HTMLDivElement>(null);
 
   const activeAlerts = complianceAlerts.filter(a => a.priority === "critical" || a.priority === "high").length;
   const pendingJMRs = jmrSubmissions.filter(j => j.status === "Pending Review" || j.status === "Not Submitted").length;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div ref={pageRef} className="min-h-screen bg-slate-50 flex flex-col">
       <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
         <div className="px-6 py-2">
           <div className="flex items-center justify-between mb-2">
@@ -363,10 +364,11 @@ export function AuditLogs() {
                 <Clock className="w-3 h-3 mr-1" />
                 Last Updated: 28-Feb-2026 14:32
               </Badge>
-              <Button variant="outline" size="sm" className="h-7 px-3 text-xs">
-                <Download className="w-3.5 h-3.5 mr-1.5" />
-                Export All Logs
-              </Button>
+              <PageExportMenu
+                pageTitle="Governance & Audit Dashboard"
+                contentRef={pageRef}
+                label="Export All Logs"
+              />
             </div>
           </div>
         </div>

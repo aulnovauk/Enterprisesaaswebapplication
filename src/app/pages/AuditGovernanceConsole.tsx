@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { PageExportMenu } from "../components/PageExportMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -12,7 +13,6 @@ import {
   FileText,
   Mail,
   Database,
-  Download,
   Filter,
   Search,
   Eye,
@@ -279,9 +279,10 @@ const drDrillRecords = [
 export function AuditGovernanceConsole() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("activity");
+  const pageRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div ref={pageRef} className="min-h-screen bg-slate-50 flex flex-col">
       <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
         <div className="px-6 py-2 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -297,10 +298,11 @@ export function AuditGovernanceConsole() {
             <Badge className="bg-gray-100 text-gray-800 border border-gray-300 px-3 py-1.5 font-mono font-semibold text-xs">
               Session: ADM-2026-02-28-14:32
             </Badge>
-            <Button variant="outline" className="h-7 px-3 text-xs border-2" style={{ borderColor: '#0A2E4A', color: '#0A2E4A' }}>
-              <Download className="w-4 h-4 mr-2" />
-              Export Audit Logs
-            </Button>
+            <PageExportMenu
+              pageTitle="Audit & Governance Console"
+              contentRef={pageRef}
+              label="Export Audit Logs"
+            />
           </div>
         </div>
       </div>

@@ -1,3 +1,5 @@
+import { useRef } from "react";
+import { PageExportMenu } from "../components/PageExportMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -10,7 +12,6 @@ import {
   AlertTriangle,
   Wind,
   DollarSign,
-  Download,
   ChevronRight,
   ChevronDown,
 } from "lucide-react";
@@ -179,9 +180,10 @@ export function WaterfallLossAnalytics() {
   const totalLosses = waterfallData
     .filter((d) => d.type === "loss")
     .reduce((sum, d) => sum + Math.abs(d.value), 0);
+  const pageRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
+    <div ref={pageRef} className="p-8 bg-gray-50 min-h-screen">
       {/* Page Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -538,10 +540,12 @@ export function WaterfallLossAnalytics() {
                 Detailed investigation of top 5 loss events with financial impact
               </p>
             </div>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Download className="w-4 h-4 mr-2" />
-              Export Analysis
-            </Button>
+            <PageExportMenu
+              pageTitle="Waterfall Loss Analytics"
+              contentRef={pageRef}
+              variant="blue"
+              label="Export Analysis"
+            />
           </div>
         </CardHeader>
         <CardContent className="p-0">

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { PageExportMenu } from "../components/PageExportMenu";
 import { motion, AnimatePresence } from "motion/react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -267,6 +268,7 @@ export function JMRDataManagement() {
   const [selectedVendor, setSelectedVendor] = useState("All Vendors");
   const [selectedPPAType, setSelectedPPAType] = useState("All PPA Types");
   const [showWorkflowPanel, setShowWorkflowPanel] = useState(true);
+  const pageRef = useRef<HTMLDivElement>(null);
   const [entryStep, setEntryStep] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -405,7 +407,7 @@ export function JMRDataManagement() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div ref={pageRef} className="min-h-screen bg-slate-50 flex flex-col">
       {/* GLOBAL HEADER */}
       <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 sticky top-0 z-30">
         <div className="px-6 py-2">
@@ -435,10 +437,11 @@ export function JMRDataManagement() {
                 <span className="text-xs text-slate-600">Last sync: 2 min ago</span>
               </div>
 
-              <Button variant="outline" size="sm" className="gap-1.5 h-7 px-3 text-xs">
-                <Download className="w-3.5 h-3.5" />
-                Export
-              </Button>
+              <PageExportMenu
+                pageTitle="JMR Data Management"
+                contentRef={pageRef}
+                label="Export"
+              />
             </div>
           </div>
 

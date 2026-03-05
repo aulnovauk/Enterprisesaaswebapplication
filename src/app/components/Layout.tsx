@@ -20,7 +20,10 @@ import {
   ChevronRight,
   Bell,
   Search,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useDarkMode } from "../hooks/useDarkMode";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,6 +56,7 @@ export function Layout() {
   const [commandOpen, setCommandOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const unreadCount = useNotificationCount();
+  const { isDark, toggle: toggleDark } = useDarkMode();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -168,6 +172,18 @@ export function Layout() {
               title={isSidebarCollapsed ? "Search (⌘K)" : "Search (⌘K)"}
             >
               <Search className="w-[18px] h-[18px]" />
+            </button>
+
+            <button
+              onClick={toggleDark}
+              className={`flex items-center justify-center rounded-lg transition-all duration-200 ${
+                isDark
+                  ? "text-amber-400 hover:bg-white/10 hover:text-amber-300"
+                  : "text-slate-400 hover:bg-white/10 hover:text-white"
+              } ${isSidebarCollapsed ? "w-10 h-10" : "w-9 h-9"}`}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
             </button>
 
             <button

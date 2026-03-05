@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { PageExportMenu } from "../components/PageExportMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Separator } from "../components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import {
   FileText,
   DollarSign,
@@ -13,13 +17,17 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-  Download,
   Calculator,
   Bell,
   TrendingUp,
   Shield,
   Users,
   Building2,
+  Sliders,
+  Layers,
+  ArrowUpRight,
+  ArrowDownRight,
+  Info,
 } from "lucide-react";
 import {
   BarChart,
@@ -165,6 +173,66 @@ const vendorwiseLD = [
   },
 ];
 
+// Client / Procurer-wise LD data
+const clientwiseLD = [
+  {
+    clientName: "SECI",
+    clientType: "Central PSU",
+    procurerType: "Central Agency",
+    sites: 2,
+    totalContractedMWh: 3350,
+    totalActualMWh: 3100,
+    totalShortfall: 250,
+    ldExposure: 3.75,
+    complianceRate: 40,
+    contractValue: "₹6.7 Cr",
+    tariff: "₹2.00/kWh",
+    status: "critical",
+  },
+  {
+    clientName: "NTPC",
+    clientType: "Central PSU",
+    procurerType: "Central Agency",
+    sites: 1,
+    totalContractedMWh: 2500,
+    totalActualMWh: 2300,
+    totalShortfall: 200,
+    ldExposure: 3.60,
+    complianceRate: 0,
+    contractValue: "₹5.0 Cr",
+    tariff: "₹2.00/kWh",
+    status: "critical",
+  },
+  {
+    clientName: "MP DISCOM",
+    clientType: "State Utility",
+    procurerType: "State Agency",
+    sites: 1,
+    totalContractedMWh: 4200,
+    totalActualMWh: 4100,
+    totalShortfall: 100,
+    ldExposure: 1.00,
+    complianceRate: 100,
+    contractValue: "₹8.4 Cr",
+    tariff: "₹2.00/kWh",
+    status: "warning",
+  },
+  {
+    clientName: "Gujarat Urja Vikas",
+    clientType: "State Utility",
+    procurerType: "State Agency",
+    sites: 1,
+    totalContractedMWh: 1250,
+    totalActualMWh: 1280,
+    totalShortfall: -30,
+    ldExposure: 0,
+    complianceRate: 100,
+    contractValue: "₹2.5 Cr",
+    tariff: "₹2.00/kWh",
+    status: "good",
+  },
+];
+
 // Guaranteed vs Actual comparison
 const guaranteedVsActual = [
   { parameter: "Generation (MWh)", guaranteed: 10900, actual: 10480, variance: -420, variancePct: -3.85, status: "red" },
@@ -221,9 +289,71 @@ const monthlyLDTrend = [
 
 export function ContractLDAnalytics() {
   const [selectedSite, setSelectedSite] = useState<typeof sitewiseLD[0] | null>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  // ── Configurable LD formula state ──────────────────────────────────
+  type FormulaType = "flat-rate" | "pct-contract" | "tiered";
+  const [formulaType, setFormulaType] = useState<FormulaType>("flat-rate");
+  const [ldRateInput, setLdRateInput] = useState("0.018");
+  const [ldCapPct, setLdCapPct] = useState("10");
+  const [ldThresholdPct, setLdThresholdPct] = useState("2");
+  const [examplePlantIdx, setExamplePlantIdx] = useState(3); // Plant D default
+
+  // ── Live calculation derived values ────────────────────────────────
+  const exPlant = sitewiseLD[examplePlantIdx];
+  const exRate = parseFloat(ldRateInput) || 0;
+  const exCap = parseFloat(ldCapPct) || 10;
+  const exThreshold = parseFloat(ldThresholdPct) || 0;
+  const exShortfall = Math.max(0, exPlant.contractedGen - exPlant.actualGen);
+  const exShortfallPct = ((exPlant.contractedGen - exPlant.actualGen) / exPlant.contractedGen) * 100;
+  const exAboveThreshold = exShortfallPct > exThreshold && exShortfall > 0;
+  const TARIFF = 2.0; // ₹/kWh assumed
+  const exContractValue = exPlant.contractedGen * 1000 * TARIFF; // ₹
+  const exCapAmount = (exContractValue * exCap) / 100; // ₹
+
+  let exComputedLD = 0;
+  type LDStep = { label: string; value: string };
+  const exLDSteps: LDStep[] = [];
+
+  if (formulaType === "flat-rate") {
+    exComputedLD = exShortfall * 1000 * exRate;
+    exLDSteps.push({ label: "Shortfall (kWh)", value: `${exShortfall} × 1,000 = ${(exShortfall * 1000).toLocaleString()} kWh` });
+    exLDSteps.push({ label: "Apply Rate", value: `${(exShortfall * 1000).toLocaleString()} × ₹${exRate}/kWh = ₹${exComputedLD.toLocaleString("en-IN", { maximumFractionDigits: 0 })}` });
+  } else if (formulaType === "pct-contract") {
+    exComputedLD = (exShortfallPct / 100) * exContractValue * (exRate / 100);
+    exLDSteps.push({ label: "Shortfall %", value: `(${exShortfall} / ${exPlant.contractedGen}) × 100 = ${exShortfallPct.toFixed(2)}%` });
+    exLDSteps.push({ label: "Contract Value", value: `${exPlant.contractedGen} MWh × 1,000 × ₹${TARIFF} = ₹${(exContractValue / 100000).toFixed(2)}L` });
+    exLDSteps.push({ label: "Apply Rate", value: `${exShortfallPct.toFixed(2)}% × ₹${(exContractValue / 100000).toFixed(2)}L × ${exRate}% = ₹${(exComputedLD / 100000).toFixed(4)}L` });
+  } else {
+    const s1Limit = exPlant.contractedGen * 0.02;
+    const s2Limit = exPlant.contractedGen * 0.05;
+    if (exShortfall <= s1Limit) {
+      exComputedLD = exShortfall * 1000 * 0.010;
+      exLDSteps.push({ label: "Slab 1 only (0–2%)", value: `${exShortfall} × 1,000 × ₹0.010 = ₹${exComputedLD.toLocaleString("en-IN", { maximumFractionDigits: 0 })}` });
+    } else if (exShortfall <= s2Limit) {
+      const s1 = s1Limit * 1000 * 0.010;
+      const s2 = (exShortfall - s1Limit) * 1000 * 0.015;
+      exComputedLD = s1 + s2;
+      exLDSteps.push({ label: "Slab 1 (0–2%)", value: `₹${s1.toLocaleString("en-IN", { maximumFractionDigits: 0 })}` });
+      exLDSteps.push({ label: "Slab 2 (2–5%)", value: `₹${s2.toLocaleString("en-IN", { maximumFractionDigits: 0 })}` });
+    } else {
+      const s1 = s1Limit * 1000 * 0.010;
+      const s2 = (s2Limit - s1Limit) * 1000 * 0.015;
+      const s3 = (exShortfall - s2Limit) * 1000 * 0.020;
+      exComputedLD = s1 + s2 + s3;
+      exLDSteps.push({ label: "Slab 1 (0–2%)", value: `₹${s1.toLocaleString("en-IN", { maximumFractionDigits: 0 })}` });
+      exLDSteps.push({ label: "Slab 2 (2–5%)", value: `₹${s2.toLocaleString("en-IN", { maximumFractionDigits: 0 })}` });
+      exLDSteps.push({ label: "Slab 3 (>5%)", value: `₹${s3.toLocaleString("en-IN", { maximumFractionDigits: 0 })}` });
+    }
+    exLDSteps.push({ label: "Combined LD", value: `₹${exComputedLD.toLocaleString("en-IN", { maximumFractionDigits: 0 })}` });
+  }
+
+  const exFinalLD = exAboveThreshold ? Math.min(exComputedLD, exCapAmount) : 0;
+  const exIsCapped = exAboveThreshold && exComputedLD > exCapAmount;
+  const exFinalLDLakhs = exFinalLD / 100000;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div ref={pageRef} className="min-h-screen bg-slate-50 flex flex-col">
       <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
         <div className="px-6 py-2">
           <div className="flex items-center justify-between mb-2">
@@ -237,10 +367,11 @@ export function ContractLDAnalytics() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" className="h-7 px-3 text-xs">
-                <Download className="w-4 h-4 mr-2" />
-                Export LD Report
-              </Button>
+              <PageExportMenu
+                pageTitle="Contract & LD Analytics"
+                contentRef={pageRef}
+                label="Export LD Report"
+              />
               <Button size="sm" style={{ backgroundColor: "#0A2E4A" }} className="text-white h-7 px-3 text-xs">
                 <Bell className="w-4 h-4 mr-2" />
                 Configure Alerts
@@ -391,88 +522,225 @@ export function ContractLDAnalytics() {
         </CardContent>
       </Card>
 
-      {/* LD Formula Application Panel */}
-      <Card className="mb-6">
-        <CardHeader className="border-b bg-blue-50 py-3">
+      {/* ── Configurable LD Formula Panel ───────────────────────────────── */}
+      <Card className="mb-6 border-2 border-blue-200">
+        <CardHeader className="border-b bg-gradient-to-r from-blue-700 to-blue-600 py-3 rounded-t-xl">
           <div className="flex items-center gap-2">
-            <Calculator className="w-4 h-4 text-blue-600" />
+            <Sliders className="w-4 h-4 text-white" />
             <div>
-              <CardTitle className="text-sm font-semibold">LD Formula Application</CardTitle>
-              <p className="text-[11px] text-gray-600 mt-0.5">Standard contractual formula for liquidated damages calculation</p>
+              <CardTitle className="text-sm font-semibold text-white">Configurable LD Formula Engine</CardTitle>
+              <p className="text-[11px] text-blue-100 mt-0.5">Select formula type and adjust parameters — live calculation updates instantly</p>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Formula Explanation */}
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">Formula</h3>
-                <div className="p-4 bg-gray-100 border-2 border-gray-300 rounded-lg">
-                  <p className="font-mono text-sm text-gray-900 font-bold">
-                    LD Amount = (Contracted Generation - Actual Generation) × LD Rate
-                  </p>
-                </div>
-              </div>
+        <CardContent className="p-4 space-y-4">
 
-              <Separator />
-
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-gray-900">Parameters</h3>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between p-2 bg-blue-50 rounded">
-                    <span className="text-gray-700">Contracted Generation:</span>
-                    <span className="font-semibold text-gray-900">As per PPA/Contract</span>
-                  </div>
-                  <div className="flex justify-between p-2 bg-blue-50 rounded">
-                    <span className="text-gray-700">Actual Generation:</span>
-                    <span className="font-semibold text-gray-900">From JMR Data</span>
-                  </div>
-                  <div className="flex justify-between p-2 bg-blue-50 rounded">
-                    <span className="text-gray-700">LD Rate:</span>
-                    <span className="font-semibold text-gray-900">₹0.010 - ₹0.018 per kWh</span>
-                  </div>
-                </div>
-              </div>
+          {/* ── Config bar ── */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-bold uppercase tracking-wide text-slate-600">Formula Type</Label>
+              <Select value={formulaType} onValueChange={(v) => {
+                setFormulaType(v as FormulaType);
+                if (v === "flat-rate") setLdRateInput("0.018");
+                if (v === "pct-contract") setLdRateInput("5");
+              }}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="flat-rate">Flat Rate (₹/kWh)</SelectItem>
+                  <SelectItem value="pct-contract">% of Contract Value</SelectItem>
+                  <SelectItem value="tiered">Tiered / Slab-Based</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Example Calculation */}
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">Example: Plant D - Tumkur</h3>
-                <div className="space-y-3">
-                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
-                    <div className="text-xs text-gray-600 mb-1">Step 1: Identify Shortfall</div>
-                    <div className="font-mono text-sm font-semibold text-gray-900">
-                      2,500 MWh - 2,300 MWh = 200 MWh
-                    </div>
-                  </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-bold uppercase tracking-wide text-slate-600">
+                {formulaType === "flat-rate" ? "LD Rate (₹/kWh)" : formulaType === "pct-contract" ? "LD Rate (% of value)" : "Slabs (fixed)"}
+              </Label>
+              <Input
+                type="number"
+                value={ldRateInput}
+                onChange={(e) => setLdRateInput(e.target.value)}
+                disabled={formulaType === "tiered"}
+                className="h-8 text-xs disabled:opacity-50"
+                step={formulaType === "pct-contract" ? "0.5" : "0.001"}
+              />
+            </div>
 
-                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
-                    <div className="text-xs text-gray-600 mb-1">Step 2: Apply LD Rate</div>
-                    <div className="font-mono text-sm font-semibold text-gray-900">
-                      200 MWh × 1,000 × ₹0.018 = ₹3,600
-                    </div>
-                  </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-bold uppercase tracking-wide text-slate-600">Annual Cap (%)</Label>
+              <Input
+                type="number"
+                value={ldCapPct}
+                onChange={(e) => setLdCapPct(e.target.value)}
+                className="h-8 text-xs"
+                min="0" max="100"
+              />
+            </div>
 
-                  <div className="p-3 bg-red-100 border-2 border-red-300 rounded">
-                    <div className="text-xs text-gray-600 mb-1">LD Amount (Final)</div>
-                    <div className="font-mono text-lg font-bold text-red-600">
-                      ₹3.6 Lakhs
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-bold uppercase tracking-wide text-slate-600">Trigger Threshold (%)</Label>
+              <Input
+                type="number"
+                value={ldThresholdPct}
+                onChange={(e) => setLdThresholdPct(e.target.value)}
+                className="h-8 text-xs"
+                step="0.5" min="0"
+              />
+            </div>
+          </div>
+
+          {/* ── Formula expression display ── */}
+          <div className="p-3 bg-slate-900 rounded-lg border border-slate-700">
+            {formulaType === "flat-rate" && (
+              <p className="font-mono text-sm text-emerald-400 font-bold">
+                LD Amount = (Contracted − Actual) × 1,000 × ₹{ldRateInput}/kWh
+                <span className="text-slate-400 font-normal ml-2">· if shortfall &gt; {ldThresholdPct}% · cap: {ldCapPct}% of contract value</span>
+              </p>
+            )}
+            {formulaType === "pct-contract" && (
+              <p className="font-mono text-sm text-emerald-400 font-bold">
+                LD Amount = (Shortfall% / 100) × Contract Value × {ldRateInput}%
+                <span className="text-slate-400 font-normal ml-2">· if shortfall &gt; {ldThresholdPct}% · cap: {ldCapPct}% of contract value</span>
+              </p>
+            )}
+            {formulaType === "tiered" && (
+              <div className="space-y-1">
+                <p className="font-mono text-xs text-emerald-400 font-bold">Tiered Slab Formula:</p>
+                <p className="font-mono text-xs text-yellow-300">· Slab 1 (shortfall 0–2%)  → ₹0.010/kWh</p>
+                <p className="font-mono text-xs text-orange-300">· Slab 2 (shortfall 2–5%)  → ₹0.015/kWh</p>
+                <p className="font-mono text-xs text-red-300">· Slab 3 (shortfall  &gt;5%) → ₹0.020/kWh</p>
+                <p className="font-mono text-xs text-slate-400">· Trigger threshold: {ldThresholdPct}%  &nbsp;·  Cap: {ldCapPct}% of contract value</p>
+              </div>
+            )}
+          </div>
+
+          {/* ── Live Calculation Preview ── */}
+          <div className="border-2 border-slate-200 rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2 bg-slate-100 border-b border-slate-200">
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                <Calculator className="w-3.5 h-3.5" /> Live Calculation Preview
+              </span>
+              <Select value={String(examplePlantIdx)} onValueChange={(v) => setExamplePlantIdx(Number(v))}>
+                <SelectTrigger className="h-7 text-xs w-52 bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {sitewiseLD.map((s, i) => (
+                    <SelectItem key={i} value={String(i)}>{s.siteName}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Left: Plant info + steps */}
+              <div className="space-y-3">
+                {/* Plant summary */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: "Contracted", value: `${exPlant.contractedGen.toLocaleString()} MWh`, color: "blue" },
+                    { label: "Actual", value: `${exPlant.actualGen.toLocaleString()} MWh`, color: "slate" },
+                    { label: "Shortfall", value: exShortfall > 0 ? `${exShortfall.toLocaleString()} MWh` : "Surplus", color: exShortfall > 0 ? "red" : "green" },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} className={`p-2 rounded-lg text-center border ${
+                      color === "blue" ? "bg-blue-50 border-blue-200" :
+                      color === "red" ? "bg-red-50 border-red-200" :
+                      color === "green" ? "bg-emerald-50 border-emerald-200" :
+                      "bg-slate-50 border-slate-200"
+                    }`}>
+                      <div className={`text-sm font-bold ${
+                        color === "blue" ? "text-blue-900" :
+                        color === "red" ? "text-red-700" :
+                        color === "green" ? "text-emerald-700" :
+                        "text-slate-900"
+                      }`}>{value}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">{label}</div>
                     </div>
-                  </div>
+                  ))}
                 </div>
+
+                {/* Threshold check */}
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border ${
+                  !exAboveThreshold
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                    : "bg-amber-50 border-amber-200 text-amber-800"
+                }`}>
+                  {exAboveThreshold
+                    ? <AlertCircle className="w-3.5 h-3.5" />
+                    : <CheckCircle className="w-3.5 h-3.5" />
+                  }
+                  Shortfall {exShortfallPct.toFixed(2)}%
+                  {exShortfall <= 0 ? " — Plant in surplus, no LD" :
+                    exAboveThreshold
+                    ? ` > ${ldThresholdPct}% threshold → LD applicable`
+                    : ` ≤ ${ldThresholdPct}% threshold → LD not triggered`}
+                </div>
+
+                {/* Calculation steps */}
+                {exAboveThreshold && (
+                  <div className="space-y-1.5">
+                    {exLDSteps.map((step, i) => (
+                      <div key={i} className="flex items-start justify-between gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                        <span className="text-slate-600 font-medium shrink-0">Step {i + 1}: {step.label}</span>
+                        <span className="font-mono font-semibold text-slate-900 text-right">{step.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="p-3 bg-orange-50 border border-orange-200 rounded text-xs">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-orange-900">Note:</p>
-                    <p className="text-orange-800 mt-1">
-                      LD rates vary by contract. Cumulative LD exposure is capped at 10% of contract value per annum.
+              {/* Right: Cap check + final result */}
+              <div className="space-y-3">
+                {exAboveThreshold && (
+                  <>
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1.5">
+                      <p className="font-bold text-slate-700 mb-2">Cap Check</p>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Computed LD:</span>
+                        <span className="font-mono font-semibold">₹{(exComputedLD / 100000).toFixed(3)} L</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Cap ({ldCapPct}% of contract):</span>
+                        <span className="font-mono font-semibold">₹{(exCapAmount / 100000).toFixed(2)} L</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between">
+                        <span className="font-semibold text-slate-700">Applied:</span>
+                        <span className={`font-mono font-bold ${exIsCapped ? "text-amber-700" : "text-slate-900"}`}>
+                          {exIsCapped ? `Cap applied ← ₹${(exCapAmount / 100000).toFixed(2)} L` : "Within cap"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-red-50 border-2 border-red-300 rounded-xl text-center">
+                      <p className="text-[11px] text-slate-600 mb-1">Final LD Amount</p>
+                      <p className="text-3xl font-bold text-red-600">₹{exFinalLDLakhs.toFixed(3)} L</p>
+                      <p className="text-[10px] text-slate-500 mt-1">
+                        ₹{exFinalLD.toLocaleString("en-IN", { maximumFractionDigits: 0 })} total
+                        {exIsCapped && <span className="ml-1 text-amber-600 font-semibold">(capped)</span>}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {!exAboveThreshold && (
+                  <div className="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-xl text-center">
+                    <CheckCircle className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
+                    <p className="text-sm font-bold text-emerald-800">No LD Applicable</p>
+                    <p className="text-xs text-emerald-600 mt-1">
+                      {exShortfall <= 0 ? "Plant generated surplus over contracted target." : `Shortfall below ${ldThresholdPct}% trigger threshold.`}
                     </p>
                   </div>
+                )}
+
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs flex gap-2">
+                  <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                  <p className="text-blue-800">
+                    Change the formula type, rate, cap, or threshold above to instantly see how the LD amount changes for this site.
+                  </p>
                 </div>
               </div>
             </div>
@@ -610,6 +878,196 @@ export function ContractLDAnalytics() {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* ── Client / Procurer-wise LD Dashboard ─────────────────────────── */}
+      <Card className="mb-6 border-2 border-slate-200">
+        <CardHeader className="border-b bg-gradient-to-r from-[#0A2E4A] to-[#0A2E4A]/80 py-3 rounded-t-xl">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-white" />
+            <div>
+              <CardTitle className="text-sm font-semibold text-white">Client / Procurer-wise LD Dashboard</CardTitle>
+              <p className="text-[11px] text-blue-100 mt-0.5">LD exposure grouped by energy procurer — Central PSUs & State Utilities</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4 space-y-4">
+
+          {/* Client cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {clientwiseLD.map((client, idx) => {
+              const statusColors = {
+                critical: { border: "border-red-300", bg: "bg-red-50", badge: "bg-red-100 text-red-800", dot: "bg-red-500" },
+                warning:  { border: "border-amber-300", bg: "bg-amber-50", badge: "bg-amber-100 text-amber-800", dot: "bg-amber-500" },
+                good:     { border: "border-emerald-300", bg: "bg-emerald-50", badge: "bg-emerald-100 text-emerald-800", dot: "bg-emerald-500" },
+              }[client.status] ?? { border: "border-slate-200", bg: "bg-slate-50", badge: "bg-slate-100 text-slate-700", dot: "bg-slate-400" };
+
+              return (
+                <Card key={idx} className={`border-2 ${statusColors.border} ${statusColors.bg}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <div className={`w-2 h-2 rounded-full ${statusColors.dot}`} />
+                          <span className="font-bold text-slate-900 text-sm">{client.clientName}</span>
+                        </div>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${statusColors.badge}`}>
+                          {client.procurerType}
+                        </span>
+                      </div>
+                      <Badge className={`text-[10px] font-bold ${statusColors.badge}`}>
+                        {client.status === "critical" ? "Critical" : client.status === "good" ? "Compliant" : "Warning"}
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Sites:</span>
+                        <span className="font-semibold text-slate-900">{client.sites}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Contracted:</span>
+                        <span className="font-mono font-semibold text-slate-900">{client.totalContractedMWh.toLocaleString()} MWh</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Actual:</span>
+                        <span className="font-mono font-semibold text-slate-900">{client.totalActualMWh.toLocaleString()} MWh</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Shortfall:</span>
+                        <span className={`font-mono font-bold ${client.totalShortfall > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                          {client.totalShortfall > 0 ? `-${client.totalShortfall}` : `+${Math.abs(client.totalShortfall)}`} MWh
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Contract Value:</span>
+                        <span className="font-semibold text-slate-700">{client.contractValue}</span>
+                      </div>
+                      <Separator className="my-1" />
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-slate-700">LD Exposure:</span>
+                        <span className={`font-bold text-base ${client.ldExposure > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                          {client.ldExposure > 0 ? `₹${client.ldExposure.toFixed(2)}L` : "₹0"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">Compliance:</span>
+                        <div className="flex items-center gap-1">
+                          {client.complianceRate === 100
+                            ? <CheckCircle className="w-3 h-3 text-emerald-600" />
+                            : client.complianceRate === 0
+                            ? <XCircle className="w-3 h-3 text-red-600" />
+                            : <AlertTriangle className="w-3 h-3 text-amber-600" />
+                          }
+                          <span className={`font-bold text-xs ${
+                            client.complianceRate === 100 ? "text-emerald-700" :
+                            client.complianceRate === 0 ? "text-red-700" : "text-amber-700"
+                          }`}>{client.complianceRate}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Client comparison bar chart */}
+          <div>
+            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">LD Exposure vs Shortfall by Client</h4>
+            <ResponsiveContainer width="100%" height={220}>
+              <ComposedChart data={clientwiseLD} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis dataKey="clientName" tick={{ fontSize: 10 }} stroke="#6B7280" />
+                <YAxis yAxisId="left" tick={{ fontSize: 10 }} stroke="#6B7280" label={{ value: 'Shortfall (MWh)', angle: -90, position: 'insideLeft', style: { fontSize: 9 } }} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} stroke="#6B7280" label={{ value: 'LD (₹ Lakhs)', angle: 90, position: 'insideRight', style: { fontSize: 9 } }} />
+                <Tooltip content={<CustomChartTooltip unit="" />} />
+                <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+                <Bar yAxisId="left" dataKey="totalShortfall" name="Shortfall (MWh)" radius={[3, 3, 0, 0]}>
+                  {clientwiseLD.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.totalShortfall > 0 ? "#EF4444" : "#10B981"} />
+                  ))}
+                </Bar>
+                <Line yAxisId="right" type="monotone" dataKey="ldExposure" name="LD Exposure (₹L)" stroke="#0A2E4A" strokeWidth={2.5} dot={{ r: 5, fill: "#0A2E4A" }} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Client-wise summary table */}
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50">
+                  <TableHead className="font-bold text-xs">Client / Procurer</TableHead>
+                  <TableHead className="font-bold text-xs">Type</TableHead>
+                  <TableHead className="font-bold text-xs text-right">Sites</TableHead>
+                  <TableHead className="font-bold text-xs text-right">Contracted (MWh)</TableHead>
+                  <TableHead className="font-bold text-xs text-right">Actual (MWh)</TableHead>
+                  <TableHead className="font-bold text-xs text-right">Shortfall</TableHead>
+                  <TableHead className="font-bold text-xs text-right">LD Exposure</TableHead>
+                  <TableHead className="font-bold text-xs text-right">Contract Value</TableHead>
+                  <TableHead className="font-bold text-xs text-center">Compliance</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {clientwiseLD.map((client, idx) => (
+                  <TableRow key={idx} className={
+                    client.status === "critical" ? "bg-red-50" :
+                    client.status === "good" ? "bg-emerald-50" : "hover:bg-slate-50"
+                  }>
+                    <TableCell className="font-bold text-slate-900">{client.clientName}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px]">{client.clientType}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-mono">{client.sites}</TableCell>
+                    <TableCell className="text-right font-mono text-slate-600">{client.totalContractedMWh.toLocaleString()}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold">{client.totalActualMWh.toLocaleString()}</TableCell>
+                    <TableCell className="text-right font-mono">
+                      <span className={`font-bold ${client.totalShortfall > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                        {client.totalShortfall > 0 ? `-${client.totalShortfall}` : `+${Math.abs(client.totalShortfall)}`}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      <span className={`font-bold ${client.ldExposure > 0 ? "text-red-600 text-base" : "text-emerald-600"}`}>
+                        {client.ldExposure > 0 ? `₹${client.ldExposure.toFixed(2)}L` : "—"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right text-slate-600 font-semibold">{client.contractValue}</TableCell>
+                    <TableCell className="text-center">
+                      {client.complianceRate === 100 ? (
+                        <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px]">
+                          <CheckCircle className="w-3 h-3 mr-1" />Compliant
+                        </Badge>
+                      ) : client.complianceRate === 0 ? (
+                        <Badge variant="destructive" className="text-[10px]">
+                          <XCircle className="w-3 h-3 mr-1" />Non-Compliant
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px]">
+                          <AlertTriangle className="w-3 h-3 mr-1" />{client.complianceRate}%
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {/* Totals */}
+                <TableRow className="bg-slate-100 border-t-2 border-slate-300 font-bold">
+                  <TableCell className="font-bold text-slate-900">Portfolio Total</TableCell>
+                  <TableCell />
+                  <TableCell className="text-right font-mono font-bold">5</TableCell>
+                  <TableCell className="text-right font-mono font-bold">11,300</TableCell>
+                  <TableCell className="text-right font-mono font-bold">10,780</TableCell>
+                  <TableCell className="text-right font-mono font-bold text-red-600">-520</TableCell>
+                  <TableCell className="text-right font-mono font-bold text-red-600 text-base">₹8.35L</TableCell>
+                  <TableCell className="text-right font-semibold text-slate-700">₹22.6 Cr</TableCell>
+                  <TableCell className="text-center">
+                    <Badge className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px]">40% avg</Badge>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
