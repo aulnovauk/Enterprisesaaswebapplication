@@ -37,6 +37,7 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
+import { CustomChartTooltip } from "../components/ChartTooltip";
 
 // Downtime categorization data
 const downtimeCategories = [
@@ -80,16 +81,16 @@ const downtimeCategories = [
 
 // Waterfall chart data: Budgeted → Expected → Actual → Evacuated
 const waterfallData = [
-  { name: "Budgeted Generation", value: 5200, cumulative: 5200, fill: "#0B3C5D" },
+  { name: "Budgeted Generation", value: 5200, cumulative: 5200, fill: "#0A2E4A" },
   { name: "Grid Curtailment", value: -180, cumulative: 5020, fill: "#EF4444" },
   { name: "Equipment Loss", value: -245, cumulative: 4775, fill: "#F59E0B" },
   { name: "Planned Shutdown", value: -125, cumulative: 4650, fill: "#10B981" },
   { name: "Force Majeure", value: -95, cumulative: 4555, fill: "#6366F1" },
-  { name: "Expected Generation", value: 4555, cumulative: 4555, fill: "#0B3C5D" },
+  { name: "Expected Generation", value: 4555, cumulative: 4555, fill: "#0A2E4A" },
   { name: "Additional Loss", value: -70, cumulative: 4485, fill: "#DC2626" },
   { name: "Actual Generation", value: 4485, cumulative: 4485, fill: "#059669" },
   { name: "Auxiliary Consumption", value: -35, cumulative: 4450, fill: "#9333EA" },
-  { name: "Net Evacuated", value: 4450, cumulative: 4450, fill: "#0B3C5D" },
+  { name: "Net Evacuated", value: 4450, cumulative: 4450, fill: "#0A2E4A" },
 ];
 
 // Loss bucketing table
@@ -229,66 +230,65 @@ export function OutageLossAnalytics() {
   const totalLoss = downtimeCategories.reduce((sum, cat) => sum + cat.energyLoss, 0);
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Outage & Loss Analytics</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Comprehensive loss analysis with root cause classification and deviation tracking
-            </p>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
+        <div className="px-6 py-2">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-[#0A2E4A] rounded-lg">
+                <TrendingDown className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-slate-900 leading-none">Outage & Loss Analytics</h1>
+                <p className="text-xs text-slate-600 mt-0.5">Comprehensive loss analysis with root cause classification and deviation tracking</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button style={{ backgroundColor: "#0A2E4A" }} className="text-white h-7 px-3 text-xs">
+                <Download className="w-4 h-4 mr-2" />
+                Export Report
+              </Button>
+            </div>
           </div>
-          <Button style={{ backgroundColor: "#0B3C5D" }} className="text-white">
-            <Download className="w-4 h-4 mr-2" />
-            Export Report
-          </Button>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-slate-600" />
+              <span className="text-xs font-medium text-slate-900">Filters:</span>
+            </div>
+            <div className="w-44">
+              <Select value={rootCauseFilter} onValueChange={setRootCauseFilter}>
+                <SelectTrigger className="h-7 text-xs">
+                  <SelectValue placeholder="Root Cause" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="grid">Grid Outage</SelectItem>
+                  <SelectItem value="equipment">Equipment Failure</SelectItem>
+                  <SelectItem value="planned">Planned Shutdown</SelectItem>
+                  <SelectItem value="force-majeure">Force Majeure</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-44">
+              <Select value={plantFilter} onValueChange={setPlantFilter}>
+                <SelectTrigger className="h-7 text-xs">
+                  <SelectValue placeholder="Plant Filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Plants</SelectItem>
+                  <SelectItem value="plant-a">Plant A - 10MW</SelectItem>
+                  <SelectItem value="plant-b">Plant B - 25MW</SelectItem>
+                  <SelectItem value="plant-c">Plant C - 50MW</SelectItem>
+                  <SelectItem value="plant-d">Plant D - 30MW</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button variant="outline" size="sm" className="h-7 px-3 text-xs">Reset</Button>
+          </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-gray-600" />
-              <span className="text-sm font-medium text-gray-900">Filters:</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-48">
-                <Select value={rootCauseFilter} onValueChange={setRootCauseFilter}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Root Cause" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="grid">Grid Outage</SelectItem>
-                    <SelectItem value="equipment">Equipment Failure</SelectItem>
-                    <SelectItem value="planned">Planned Shutdown</SelectItem>
-                    <SelectItem value="force-majeure">Force Majeure</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="w-48">
-                <Select value={plantFilter} onValueChange={setPlantFilter}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Plant Filter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Plants</SelectItem>
-                    <SelectItem value="plant-a">Plant A - 10MW</SelectItem>
-                    <SelectItem value="plant-b">Plant B - 25MW</SelectItem>
-                    <SelectItem value="plant-c">Plant C - 50MW</SelectItem>
-                    <SelectItem value="plant-d">Plant D - 30MW</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button variant="outline" size="sm">Reset</Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
+      <div className="flex-1 overflow-auto p-6">
       {/* Downtime Categorization Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         {downtimeCategories.map((category) => {
@@ -356,7 +356,7 @@ export function OutageLossAnalytics() {
                 stroke="#6B7280" 
               />
               <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" />
-              <Tooltip />
+              <Tooltip content={<CustomChartTooltip unit="MWh" />} />
               <Bar dataKey="value" stackId="a">
                 {waterfallData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -365,9 +365,9 @@ export function OutageLossAnalytics() {
               <Line 
                 type="stepAfter" 
                 dataKey="cumulative" 
-                stroke="#0B3C5D" 
+                stroke="#0A2E4A" 
                 strokeWidth={2}
-                dot={{ fill: "#0B3C5D", r: 4 }}
+                dot={{ fill: "#0A2E4A", r: 4 }}
                 name="Cumulative"
               />
             </ComposedChart>
@@ -396,7 +396,7 @@ export function OutageLossAnalytics() {
               </div>
               <div>
                 <div className="text-xs text-gray-600 mb-1">Net Evacuated</div>
-                <div className="text-xl font-bold" style={{ color: "#0B3C5D" }}>4,450</div>
+                <div className="text-xl font-bold" style={{ color: "#0A2E4A" }}>4,450</div>
                 <div className="text-xs text-gray-500">MWh</div>
               </div>
             </div>
@@ -488,9 +488,9 @@ export function OutageLossAnalytics() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6B7280" />
                 <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" />
-                <Tooltip />
+                <Tooltip content={<CustomChartTooltip unit="MWh" />} />
                 <Legend />
-                <Bar dataKey="budgeted" fill="#0B3C5D" name="Budgeted (MWh)" />
+                <Bar dataKey="budgeted" fill="#0A2E4A" name="Budgeted (MWh)" />
                 <Bar dataKey="actual" fill="#10B981" name="Actual (MWh)" />
                 <Line 
                   type="monotone" 
@@ -516,7 +516,7 @@ export function OutageLossAnalytics() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6B7280" />
                 <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" domain={[4000, 5000]} />
-                <Tooltip />
+                <Tooltip content={<CustomChartTooltip unit="MWh" />} />
                 <Bar dataKey="actual" name="Actual Generation (MWh)">
                   {yoyData.map((entry, index) => (
                     <Cell 
@@ -525,7 +525,7 @@ export function OutageLossAnalytics() {
                     />
                   ))}
                 </Bar>
-                <ReferenceLine y={4750} stroke="#0B3C5D" strokeDasharray="3 3" label="Baseline" />
+                <ReferenceLine y={4750} stroke="#0A2E4A" strokeDasharray="3 3" label="Baseline" />
               </BarChart>
             </ResponsiveContainer>
             <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-around">
@@ -583,12 +583,12 @@ export function OutageLossAnalytics() {
                 stroke="#6B7280"
                 label={{ value: 'Cumulative %', angle: 90, position: 'insideRight', style: { fontSize: 12 } }}
               />
-              <Tooltip />
+              <Tooltip content={<CustomChartTooltip unit="MWh" />} />
               <Legend />
               <Bar 
                 yAxisId="left" 
                 dataKey="energyLoss" 
-                fill="#0B3C5D" 
+                fill="#0A2E4A" 
                 name="Energy Loss (MWh)"
               />
               <Line 
@@ -703,6 +703,7 @@ export function OutageLossAnalytics() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "motion/react";
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   BarChart,
   Bar,
@@ -18,6 +18,7 @@ import {
   ResponsiveContainer,
   ComposedChart,
 } from "recharts";
+import { CustomChartTooltip } from "../components/ChartTooltip";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -271,7 +272,7 @@ const downtimeData = [
   { name: "Grid Outage", value: 38, color: "#EF4444" },
   { name: "Equipment Failure", value: 25, color: "#F59E0B" },
   { name: "Planned Shutdown", value: 18, color: "#10B981" },
-  { name: "Curtailment", value: 12, color: "#F4B400" },
+  { name: "Curtailment", value: 12, color: "#E8A800" },
   { name: "Force Majeure", value: 7, color: "#8B5CF6" },
 ];
 
@@ -337,9 +338,158 @@ const assetHealthBreakdown = [
   { component: "Compliance Score", value: 88.5, target: 95.0, weight: 15 },
 ];
 
+const kpiPreviewData: Record<string, {
+  title: string;
+  rows: { label: string; value: string; subValue?: string; status?: "green" | "yellow" | "red" }[];
+  chart?: { label: string; data: { name: string; value: number }[] };
+  footer?: string;
+}> = {
+  capacity: {
+    title: "Installed Capacity Breakdown",
+    rows: [
+      { label: "Maharashtra", value: "108 MW", subValue: "18 Plants", status: "green" },
+      { label: "Tamil Nadu", value: "85 MW", subValue: "15 Plants", status: "green" },
+      { label: "Goa", value: "15 MW", subValue: "5 Plants", status: "green" },
+      { label: "Rooftop", value: "7 MW", subValue: "4 Plants", status: "yellow" },
+      { label: "Ground Mount", value: "5 MW", subValue: "3 Plants", status: "green" },
+    ],
+    chart: {
+      label: "State-wise Capacity (MW)",
+      data: [
+        { name: "MH", value: 108 },
+        { name: "TN", value: 85 },
+        { name: "Goa", value: 15 },
+        { name: "Other", value: 12 },
+      ],
+    },
+    footer: "Last commissioned: Feb 2026 · Next planned: Q2 FY26",
+  },
+  "mtd-generation": {
+    title: "MTD Generation Details",
+    rows: [
+      { label: "Top: Chennai Coastal", value: "1,920 MWh", subValue: "+3.8% vs target", status: "green" },
+      { label: "Aurangabad Project", value: "2,380 MWh", subValue: "-2.9% vs target", status: "yellow" },
+      { label: "Pune Solar Park", value: "2,150 MWh", subValue: "+2.4% vs target", status: "green" },
+      { label: "Coimbatore Solar", value: "2,120 MWh", subValue: "-9.8% vs target", status: "red" },
+      { label: "Solapur SPV", value: "1,720 MWh", subValue: "+2.4% vs target", status: "green" },
+    ],
+    chart: {
+      label: "Daily Generation Trend (MWh)",
+      data: [
+        { name: "W1", value: 9800 },
+        { name: "W2", value: 10500 },
+        { name: "W3", value: 11200 },
+        { name: "W4", value: 11080 },
+      ],
+    },
+    footer: "Avg daily: 1,521 MWh · Peak: 1,680 MWh (Feb 12)",
+  },
+  "ytd-generation": {
+    title: "YTD Generation Summary",
+    rows: [
+      { label: "Q1 (Apr-Jun)", value: "128,500 MWh", subValue: "93% of target", status: "yellow" },
+      { label: "Q2 (Jul-Sep)", value: "124,800 MWh", subValue: "91% of target", status: "yellow" },
+      { label: "Q3 (Oct-Dec)", value: "132,940 MWh", subValue: "95% of target", status: "green" },
+      { label: "Q4 (Jan-Feb)", value: "99,000 MWh", subValue: "On track", status: "green" },
+    ],
+    chart: {
+      label: "Quarterly Generation (GWh)",
+      data: [
+        { name: "Q1", value: 128.5 },
+        { name: "Q2", value: 124.8 },
+        { name: "Q3", value: 132.9 },
+        { name: "Q4", value: 99.0 },
+      ],
+    },
+    footer: "Annual target: 520 GWh · Current pace: 93.3%",
+  },
+  "portfolio-cuf": {
+    title: "CUF Analysis by Cluster",
+    rows: [
+      { label: "Maharashtra Cluster", value: "22.8%", subValue: "Target: 24%", status: "yellow" },
+      { label: "Tamil Nadu Cluster", value: "21.5%", subValue: "Target: 24%", status: "red" },
+      { label: "Goa Cluster", value: "22.8%", subValue: "Target: 24%", status: "yellow" },
+      { label: "Best Plant: Chennai", value: "24.5%", subValue: "Above target", status: "green" },
+      { label: "Worst Plant: Trichy", value: "18.5%", subValue: "Below target", status: "red" },
+    ],
+    footer: "Portfolio weighted CUF: 22.1% · Gap to target: -1.9%",
+  },
+  "grid-availability": {
+    title: "Grid Availability Breakdown",
+    rows: [
+      { label: "Maharashtra Grid", value: "96.5%", subValue: "12 hrs downtime", status: "green" },
+      { label: "Tamil Nadu Grid", value: "98.2%", subValue: "6 hrs downtime", status: "green" },
+      { label: "Goa Grid", value: "99.1%", subValue: "2 hrs downtime", status: "green" },
+      { label: "Scheduled Outage", value: "1.2%", subValue: "8.6 hrs", status: "yellow" },
+      { label: "Unscheduled Outage", value: "1.0%", subValue: "7.2 hrs", status: "red" },
+    ],
+    footer: "Total grid hours: 672 · Available: 657.3 hrs",
+  },
+  "revenue-realized": {
+    title: "Revenue Breakdown (₹ Cr)",
+    rows: [
+      { label: "Energy Sale", value: "₹24.8 Cr", subValue: "87% of total", status: "green" },
+      { label: "REC Income", value: "₹2.1 Cr", subValue: "7.4% of total", status: "green" },
+      { label: "Incentives & Bonus", value: "₹1.6 Cr", subValue: "5.6% of total", status: "yellow" },
+      { label: "Pending Collection", value: "₹3.2 Cr", subValue: "Overdue: ₹0.8 Cr", status: "red" },
+    ],
+    footer: "Collection efficiency: 91.4% · DSO: 42 days",
+  },
+  "revenue-shortfall": {
+    title: "Revenue Shortfall Analysis",
+    rows: [
+      { label: "Generation Shortfall", value: "₹1.4 Cr", subValue: "52% of gap", status: "red" },
+      { label: "Grid Curtailment", value: "₹0.6 Cr", subValue: "22% of gap", status: "yellow" },
+      { label: "Equipment Downtime", value: "₹0.5 Cr", subValue: "19% of gap", status: "yellow" },
+      { label: "Force Majeure", value: "₹0.2 Cr", subValue: "7% of gap", status: "green" },
+    ],
+    footer: "Recoverable: ₹0.8 Cr via LD claims · Net exposure: ₹1.9 Cr",
+  },
+  "ld-exposure": {
+    title: "LD Exposure by Vendor",
+    rows: [
+      { label: "Vendor C", value: "₹0.54 Cr", subValue: "15 plants · High risk", status: "red" },
+      { label: "Vendor A", value: "₹0.42 Cr", subValue: "12 plants · Medium", status: "yellow" },
+      { label: "Vendor B", value: "₹0.28 Cr", subValue: "8 plants · Low", status: "yellow" },
+      { label: "Vendor D", value: "₹0.00 Cr", subValue: "10 plants · None", status: "green" },
+    ],
+    footer: "YTD total: ₹3.85 Cr · Current month: ₹1.24 Cr",
+  },
+  "asset-health": {
+    title: "Asset Health Components",
+    rows: [
+      { label: "Performance Ratio", value: "78.6 / 100", subValue: "Weight: 35%", status: "yellow" },
+      { label: "Availability Score", value: "96.2 / 100", subValue: "Weight: 30%", status: "green" },
+      { label: "Downtime Score", value: "85.5 / 100", subValue: "Weight: 20%", status: "yellow" },
+      { label: "Compliance Score", value: "88.5 / 100", subValue: "Weight: 15%", status: "green" },
+    ],
+    footer: "Weighted Index: 82.5 · Target: 90.0 · Gap: -7.5",
+  },
+  "co2-reduction": {
+    title: "CO₂ Reduction Breakdown",
+    rows: [
+      { label: "Maharashtra Plants", value: "187,200 T", subValue: "48.7% share", status: "green" },
+      { label: "Tamil Nadu Plants", value: "142,800 T", subValue: "37.1% share", status: "green" },
+      { label: "Goa Plants", value: "54,520 T", subValue: "14.2% share", status: "green" },
+      { label: "Equivalent Trees", value: "17.5M", subValue: "Trees planted equiv.", status: "green" },
+    ],
+    chart: {
+      label: "Monthly CO₂ Saved (kT)",
+      data: [
+        { name: "Oct", value: 32.5 },
+        { name: "Nov", value: 31.8 },
+        { name: "Dec", value: 33.2 },
+        { name: "Jan", value: 34.1 },
+        { name: "Feb", value: 32.8 },
+      ],
+    },
+    footer: "Grid emission factor: 0.82 tCO₂/MWh · Annual target: 410 kT",
+  },
+};
+
 const statusColors: any = {
   compliant: { bg: "#10B981", label: "Compliant" },
-  warning: { bg: "#F4B400", label: "Warning" },
+  warning: { bg: "#E8A800", label: "Warning" },
   "non-compliant": { bg: "#EF4444", label: "Non-Compliant" },
   shutdown: { bg: "#6B7280", label: "Shutdown" },
   curtailment: { bg: "#F59E0B", label: "Curtailment" },
@@ -351,6 +501,143 @@ const complianceColors: any = {
   red: "bg-rose-500",
   stable: "bg-slate-400",
 };
+
+const previewStatusColors: Record<string, string> = {
+  green: "bg-emerald-500",
+  yellow: "bg-amber-500",
+  red: "bg-rose-500",
+};
+
+function KpiCardWithPreview({ 
+  children, 
+  kpi, 
+  preview 
+}: { 
+  children: React.ReactNode; 
+  kpi: typeof strategicKPIs[0]; 
+  preview?: typeof kpiPreviewData[string];
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState<"right" | "left">("right");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoveringRef = useRef(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const handleEnter = () => {
+    hoveringRef.current = true;
+    timerRef.current = setTimeout(() => {
+      if (hoveringRef.current && cardRef.current) {
+        const rect = cardRef.current.getBoundingClientRect();
+        setPosition(window.innerWidth - rect.right >= 380 ? "right" : "left");
+        setIsOpen(true);
+      }
+    }, 1500);
+  };
+
+  const handleLeave = () => {
+    hoveringRef.current = false;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setTimeout(() => {
+      if (!hoveringRef.current) setIsOpen(false);
+    }, 200);
+  };
+
+  const handlePreviewEnter = () => { hoveringRef.current = true; };
+  const handlePreviewLeave = () => {
+    hoveringRef.current = false;
+    setTimeout(() => { if (!hoveringRef.current) setIsOpen(false); }, 200);
+  };
+
+  if (!preview) return <>{children}</>;
+
+  return (
+    <div ref={cardRef} className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      {children}
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 6 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 6 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="absolute z-50 top-0"
+              style={position === "right" ? { left: "100%", marginLeft: 10 } : { right: "100%", marginRight: 10 }}
+              onMouseEnter={handlePreviewEnter}
+              onMouseLeave={handlePreviewLeave}
+            >
+              <div className="w-[360px] max-h-[70vh] bg-white rounded-xl shadow-2xl border border-slate-200 ring-1 ring-black/5 flex flex-col overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-1.5 bg-gradient-to-r from-[#0A2E4A] to-[#0D3B5E] shrink-0">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[10px] font-semibold text-white/90 uppercase tracking-wider">Quick Preview</span>
+                  </div>
+                  <button onClick={() => setIsOpen(false)} className="p-0.5 rounded hover:bg-white/10 transition-colors">
+                    <span className="text-white/60 text-xs">✕</span>
+                  </button>
+                </div>
+
+                <div className="px-3 pt-2.5 pb-2 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                  <h3 className="text-xs font-bold text-slate-800">{preview.title}</h3>
+                </div>
+
+                <div className="flex-1 overflow-y-auto overscroll-contain" style={{ scrollbarWidth: "thin", scrollbarColor: "#cbd5e1 transparent" }}>
+                  <div className="divide-y divide-slate-100">
+                    {preview.rows.map((row, i) => (
+                      <div key={i} className="flex items-center justify-between px-3 py-2 hover:bg-slate-50/80 transition-colors">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${previewStatusColors[row.status || "green"]}`} />
+                          <span className="text-[11px] font-medium text-slate-700 truncate">{row.label}</span>
+                        </div>
+                        <div className="text-right flex-shrink-0 ml-3">
+                          <span className="text-[11px] font-bold text-slate-900">{row.value}</span>
+                          {row.subValue && (
+                            <p className={`text-[9px] mt-0.5 ${
+                              row.status === "red" ? "text-rose-600" : 
+                              row.status === "yellow" ? "text-amber-600" : "text-slate-500"
+                            }`}>{row.subValue}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {preview.chart && (
+                    <div className="px-3 pt-2 pb-1 border-t border-slate-100">
+                      <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-1">{preview.chart.label}</p>
+                      <div className="h-[80px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={preview.chart.data} barSize={20}>
+                            <XAxis dataKey="name" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+                            <Bar dataKey="value" fill="#0A2E4A" radius={[3, 3, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {preview.footer && (
+                  <div className="px-3 py-2 bg-slate-50 border-t border-slate-100 shrink-0">
+                    <p className="text-[9px] text-slate-500 leading-relaxed">{preview.footer}</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export function Dashboard() {
   const [financialYear, setFinancialYear] = useState("FY 2025-26");
@@ -368,7 +655,7 @@ export function Dashboard() {
           {/* Row 1: Title & Meta Info */}
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-[#0B3C5D] rounded-lg">
+              <div className="p-1.5 bg-[#0A2E4A] rounded-lg">
                 <BarChart3 className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -449,7 +736,7 @@ export function Dashboard() {
                   onClick={() => setDurationToggle(duration)}
                   className={`px-4 py-1 text-xs font-semibold rounded transition-all ${
                     durationToggle === duration
-                      ? "bg-[#0B3C5D] text-white shadow-sm"
+                      ? "bg-[#0A2E4A] text-white shadow-sm"
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
@@ -470,75 +757,73 @@ export function Dashboard() {
             {strategicKPIs.map((kpi) => {
               const Icon = kpi.icon;
               const progressPercent = (kpi.actual / kpi.target) * 100;
+              const preview = kpiPreviewData[kpi.id];
               
               return (
-                <motion.div
-                  key={kpi.id}
-                  whileHover={{ y: -2 }}
-                  className="cursor-pointer"
-                >
-                  <Card className="border-2 border-slate-200 hover:border-[#0B3C5D] hover:shadow-lg transition-all">
-                    <CardContent className="p-4">
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <p className="text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-1">
-                            {kpi.title}
-                          </p>
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="text-2xl font-bold text-slate-900">{kpi.value}</span>
-                            <span className="text-xs font-medium text-slate-600">{kpi.unit}</span>
+                <KpiCardWithPreview key={kpi.id} kpi={kpi} preview={preview}>
+                  <motion.div
+                    whileHover={{ y: -2 }}
+                    className="cursor-pointer"
+                  >
+                    <Card className="border-2 border-slate-200 hover:border-[#0A2E4A] hover:shadow-lg transition-all">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <p className="text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-1">
+                              {kpi.title}
+                            </p>
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="text-2xl font-bold text-slate-900">{kpi.value}</span>
+                              <span className="text-xs font-medium text-slate-600">{kpi.unit}</span>
+                            </div>
+                          </div>
+                          <div className={`w-2 h-2 rounded-full ${complianceColors[kpi.compliance]}`}></div>
+                        </div>
+
+                        <div className="mb-2">
+                          <div className="flex items-center justify-between text-[10px] mb-1">
+                            <span className="text-slate-600">Target: {kpi.target} {kpi.unit}</span>
+                            <span className="font-bold text-slate-900">{progressPercent.toFixed(0)}%</span>
+                          </div>
+                          <Progress value={progressPercent} className="h-1" />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1">
+                            {kpi.trend === "up" ? (
+                              <ArrowUp className="w-3 h-3 text-emerald-600" />
+                            ) : kpi.trend === "down" ? (
+                              <ArrowDown className="w-3 h-3 text-rose-600" />
+                            ) : (
+                              <div className="w-3 h-3" />
+                            )}
+                            <span className={`text-[10px] font-bold ${
+                              kpi.trend === "up" ? "text-emerald-600" : 
+                              kpi.trend === "down" ? "text-rose-600" : "text-slate-600"
+                            }`}>
+                              {kpi.change}
+                            </span>
+                            <span className="text-[10px] text-slate-500">MoM</span>
+                          </div>
+                          
+                          <div className="h-6 w-16">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart data={kpi.sparkline.map((val) => ({ value: val }))}>
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="value" 
+                                  stroke={kpi.compliance === "green" ? "#10B981" : kpi.compliance === "yellow" ? "#E8A800" : "#EF4444"}
+                                  strokeWidth={1.5}
+                                  dot={false}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
                           </div>
                         </div>
-                        <div className={`w-2 h-2 rounded-full ${complianceColors[kpi.compliance]}`}></div>
-                      </div>
-
-                      {/* Target Progress */}
-                      <div className="mb-2">
-                        <div className="flex items-center justify-between text-[10px] mb-1">
-                          <span className="text-slate-600">Target: {kpi.target} {kpi.unit}</span>
-                          <span className="font-bold text-slate-900">{progressPercent.toFixed(0)}%</span>
-                        </div>
-                        <Progress value={progressPercent} className="h-1" />
-                      </div>
-
-                      {/* Trend & Change */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          {kpi.trend === "up" ? (
-                            <ArrowUp className="w-3 h-3 text-emerald-600" />
-                          ) : kpi.trend === "down" ? (
-                            <ArrowDown className="w-3 h-3 text-rose-600" />
-                          ) : (
-                            <div className="w-3 h-3" />
-                          )}
-                          <span className={`text-[10px] font-bold ${
-                            kpi.trend === "up" ? "text-emerald-600" : 
-                            kpi.trend === "down" ? "text-rose-600" : "text-slate-600"
-                          }`}>
-                            {kpi.change}
-                          </span>
-                          <span className="text-[10px] text-slate-500">MoM</span>
-                        </div>
-                        
-                        {/* Mini Sparkline */}
-                        <div className="h-6 w-16">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={kpi.sparkline.map((val) => ({ value: val }))}>
-                              <Line 
-                                type="monotone" 
-                                dataKey="value" 
-                                stroke={kpi.compliance === "green" ? "#10B981" : kpi.compliance === "yellow" ? "#F4B400" : "#EF4444"}
-                                strokeWidth={1.5}
-                                dot={false}
-                              />
-                            </LineChart>
-                          </ResponsiveContainer>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </KpiCardWithPreview>
               );
             })}
           </div>
@@ -665,17 +950,10 @@ export function Dashboard() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis type="number" tick={{ fontSize: 10 }} stroke="#64748b" />
                       <YAxis dataKey="plant" type="category" tick={{ fontSize: 10 }} stroke="#64748b" width={100} />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: 'white',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
+                      <Tooltip content={<CustomChartTooltip unit="MWh" />} />
                       <Legend wrapperStyle={{ fontSize: '11px' }} />
                       <Bar dataKey="target" fill="#94A3B8" name="Target (MWh)" />
-                      <Bar dataKey="actual" fill="#0B3C5D" name="Actual (MWh)" />
+                      <Bar dataKey="actual" fill="#0A2E4A" name="Actual (MWh)" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -695,22 +973,15 @@ export function Dashboard() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="#64748b" />
                       <YAxis domain={[19, 25]} tick={{ fontSize: 10 }} stroke="#64748b" />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: 'white',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
+                      <Tooltip content={<CustomChartTooltip unit="%" />} />
                       <Legend wrapperStyle={{ fontSize: '11px' }} />
                       <Line 
                         type="monotone" 
                         dataKey="portfolio" 
-                        stroke="#0B3C5D" 
+                        stroke="#0A2E4A" 
                         strokeWidth={3}
                         name="Portfolio CUF (%)"
-                        dot={{ fill: '#0B3C5D', r: 4 }}
+                        dot={{ fill: '#0A2E4A', r: 4 }}
                       />
                       <Line 
                         type="monotone" 
@@ -750,7 +1021,7 @@ export function Dashboard() {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip content={<CustomChartTooltip unit="%" />} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -784,15 +1055,8 @@ export function Dashboard() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis dataKey="stage" tick={{ fontSize: 10 }} stroke="#64748b" />
                       <YAxis domain={[25, 33]} tick={{ fontSize: 10 }} stroke="#64748b" />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: 'white',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
-                      <Bar dataKey="value" fill="#0B3C5D" />
+                      <Tooltip content={<CustomChartTooltip unit="₹ Cr" />} />
+                      <Bar dataKey="value" fill="#0A2E4A" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -913,7 +1177,7 @@ export function Dashboard() {
                     {vendorRankingData.map((vendor) => (
                       <TableRow key={vendor.rank} className="hover:bg-slate-50 cursor-pointer">
                         <TableCell>
-                          <div className="w-7 h-7 rounded-lg bg-[#0B3C5D] text-white flex items-center justify-center font-bold text-xs">
+                          <div className="w-7 h-7 rounded-lg bg-[#0A2E4A] text-white flex items-center justify-center font-bold text-xs">
                             {vendor.rank}
                           </div>
                         </TableCell>
@@ -950,7 +1214,7 @@ export function Dashboard() {
               <CardContent className="p-4">
                 <div className="space-y-4">
                   {clusterComparisonData.map((cluster) => (
-                    <div key={cluster.state} className="p-4 bg-slate-50 rounded-lg border-2 border-slate-200 hover:border-[#0B3C5D] transition-all cursor-pointer">
+                    <div key={cluster.state} className="p-4 bg-slate-50 rounded-lg border-2 border-slate-200 hover:border-[#0A2E4A] transition-all cursor-pointer">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="text-sm font-bold text-slate-900">{cluster.state}</h4>
                         <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
@@ -1003,14 +1267,7 @@ export function Dashboard() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="#64748b" />
                       <YAxis domain={[0, 15]} tick={{ fontSize: 10 }} stroke="#64748b" />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: 'white',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
+                      <Tooltip content={<CustomChartTooltip unit="index" />} />
                       <Area 
                         type="monotone" 
                         dataKey="lpi" 
@@ -1066,7 +1323,7 @@ export function Dashboard() {
                   })}
                 </div>
 
-                <div className="mt-6 p-4 bg-gradient-to-r from-[#0B3C5D] to-[#0B3C5D]/80 rounded-lg text-white">
+                <div className="mt-6 p-4 bg-gradient-to-r from-[#0A2E4A] to-[#0A2E4A]/80 rounded-lg text-white">
                   <div className="text-xs font-semibold mb-2">Composite Asset Health Index</div>
                   <div className="text-4xl font-bold">82.5 <span className="text-xl">/100</span></div>
                   <div className="text-xs mt-2 flex items-center gap-1">

@@ -281,24 +281,23 @@ export function AuditGovernanceConsole() {
   const [activeTab, setActiveTab] = useState("activity");
 
   return (
-    <div className="p-8 bg-white min-h-screen">
-      {/* Page Header */}
-      <div className="mb-8 pb-6 border-b-2 border-gray-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3 mb-2">
-              <Shield className="w-7 h-7" style={{ color: '#0B3C5D' }} />
-              Audit & Governance Console
-            </h1>
-            <p className="text-sm text-gray-600">
-              Comprehensive audit trail, version control, and compliance monitoring
-            </p>
-          </div>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
+        <div className="px-6 py-2 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Badge className="bg-gray-100 text-gray-800 border border-gray-300 px-3 py-1.5 font-mono font-semibold">
+            <div className="p-1.5 bg-[#0A2E4A] rounded-lg">
+              <Shield className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h1 className="text-base font-bold text-slate-900 leading-none">Audit & Governance Console</h1>
+              <p className="text-xs text-slate-600 mt-0.5">Comprehensive audit trail, version control, and compliance monitoring</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge className="bg-gray-100 text-gray-800 border border-gray-300 px-3 py-1.5 font-mono font-semibold text-xs">
               Session: ADM-2026-02-28-14:32
             </Badge>
-            <Button variant="outline" className="border-2" style={{ borderColor: '#0B3C5D', color: '#0B3C5D' }}>
+            <Button variant="outline" className="h-7 px-3 text-xs border-2" style={{ borderColor: '#0A2E4A', color: '#0A2E4A' }}>
               <Download className="w-4 h-4 mr-2" />
               Export Audit Logs
             </Button>
@@ -306,22 +305,22 @@ export function AuditGovernanceConsole() {
         </div>
       </div>
 
-      {/* Main Tabs */}
+      <div className="flex-1 overflow-auto p-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-gray-100 border-2 border-gray-300">
-          <TabsTrigger value="activity" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'activity' ? '#0B3C5D' : 'transparent' }}>
+          <TabsTrigger value="activity" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'activity' ? '#0A2E4A' : 'transparent' }}>
             <Activity className="w-4 h-4 mr-2" />
             User Activity Log
           </TabsTrigger>
-          <TabsTrigger value="versions" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'versions' ? '#0B3C5D' : 'transparent' }}>
+          <TabsTrigger value="versions" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'versions' ? '#0A2E4A' : 'transparent' }}>
             <FileText className="w-4 h-4 mr-2" />
             JMR Version History
           </TabsTrigger>
-          <TabsTrigger value="email" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'email' ? '#0B3C5D' : 'transparent' }}>
+          <TabsTrigger value="email" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'email' ? '#0A2E4A' : 'transparent' }}>
             <Mail className="w-4 h-4 mr-2" />
             Email Dispatch Log
           </TabsTrigger>
-          <TabsTrigger value="dr" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'dr' ? '#0B3C5D' : 'transparent' }}>
+          <TabsTrigger value="dr" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'dr' ? '#0A2E4A' : 'transparent' }}>
             <Database className="w-4 h-4 mr-2" />
             DR Drill Records
           </TabsTrigger>
@@ -662,6 +661,7 @@ export function AuditGovernanceConsole() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

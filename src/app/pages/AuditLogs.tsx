@@ -345,32 +345,34 @@ export function AuditLogs() {
   const pendingJMRs = jmrSubmissions.filter(j => j.status === "Pending Review" || j.status === "Not Submitted").length;
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-3">
-              <Shield className="w-7 h-7 text-blue-600" />
-              Governance & Audit Dashboard
-            </h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Comprehensive audit trail, compliance tracking, and data governance management
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge className="bg-blue-100 text-blue-800 px-3 py-1">
-              <Clock className="w-3 h-3 mr-1" />
-              Last Updated: 28-Feb-2026 14:32
-            </Badge>
-            <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Export All Logs
-            </Button>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
+        <div className="px-6 py-2">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-[#0A2E4A] rounded-lg">
+                <FileSearch className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-slate-900 leading-none">Governance & Audit Dashboard</h1>
+                <p className="text-xs text-slate-600 mt-0.5">Comprehensive audit trail, compliance tracking, and data governance</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge className="bg-blue-100 text-blue-800 px-2 py-0.5 text-xs">
+                <Clock className="w-3 h-3 mr-1" />
+                Last Updated: 28-Feb-2026 14:32
+              </Badge>
+              <Button variant="outline" size="sm" className="h-7 px-3 text-xs">
+                <Download className="w-3.5 h-3.5 mr-1.5" />
+                Export All Logs
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
+      <div className="flex-1 overflow-auto p-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card className="border-2 border-red-200 bg-red-50">
@@ -857,6 +859,7 @@ export function AuditLogs() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

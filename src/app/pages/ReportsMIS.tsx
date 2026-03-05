@@ -423,11 +423,11 @@ function DraggableField({ field }: { field: typeof dataFields[0] }) {
       ref={drag}
       className={`group flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all cursor-move
         ${isDragging 
-          ? "opacity-40 border-[#0B3C5D] bg-blue-50" 
-          : "border-slate-200 bg-white hover:border-[#0B3C5D] hover:bg-blue-50 hover:shadow-sm"
+          ? "opacity-40 border-[#0A2E4A] bg-blue-50" 
+          : "border-slate-200 bg-white hover:border-[#0A2E4A] hover:bg-blue-50 hover:shadow-sm"
         }`}
     >
-      <GripVertical className="w-3 h-3 text-slate-400 group-hover:text-[#0B3C5D]" />
+      <GripVertical className="w-3 h-3 text-slate-400 group-hover:text-[#0A2E4A]" />
       <Icon className="w-3.5 h-3.5 text-slate-500" />
       <span className="text-xs font-medium text-slate-700 flex-1">{field.name}</span>
       <Badge 
@@ -468,7 +468,7 @@ function FieldWell({
       ref={drop}
       className={`rounded-xl border-2 transition-all min-h-[100px] p-4
         ${isOver && canDrop
-          ? "border-[#0B3C5D] bg-blue-50 shadow-lg" 
+          ? "border-[#0A2E4A] bg-blue-50 shadow-lg" 
           : canDrop
           ? "border-dashed border-slate-300 bg-slate-50"
           : "border-dashed border-slate-200 bg-white"
@@ -478,7 +478,7 @@ function FieldWell({
         <Icon className="w-4 h-4 text-slate-600" />
         <Label className="text-xs font-bold text-slate-700 uppercase tracking-wide">{title}</Label>
         {fields.length > 0 && (
-          <Badge variant="secondary" className="ml-auto text-xs bg-[#0B3C5D] text-white">
+          <Badge variant="secondary" className="ml-auto text-xs bg-[#0A2E4A] text-white">
             {fields.length}
           </Badge>
         )}
@@ -595,39 +595,41 @@ export function ReportsMIS() {
       <div className="h-screen bg-slate-50 flex flex-col font-sans overflow-hidden">
         
         {/* Enhanced Header */}
-        <div className="bg-white border-b border-slate-200 shadow-sm shrink-0 z-30">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-gradient-to-br from-[#0B3C5D] to-[#0B3C5D]/80 rounded-xl shadow-md">
-                  <FileBarChart className="w-6 h-6 text-white" />
+        <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 sticky top-0 z-20">
+          <div className="px-6 py-2">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 bg-[#0A2E4A] rounded-lg">
+                  <FileBarChart className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900 leading-none">Reports & MIS</h1>
-                  <p className="text-sm text-slate-600 mt-1">Management Information System · Power BI-Style Reporting</p>
+                  <h1 className="text-base font-bold text-slate-900 leading-none">Reports & MIS</h1>
+                  <p className="text-xs text-slate-600 mt-0.5">Management Information System · Power BI-Style Reporting</p>
                 </div>
               </div>
               
               <div className="flex items-center gap-3">
                 <Button 
                   variant="outline" 
-                  className="gap-2 border-slate-300"
+                  size="sm"
+                  className="gap-2 border-slate-300 h-7 px-3 text-xs"
                   onClick={() => setScheduleDialogOpen(true)}
                 >
-                  <Calendar className="w-4 h-4" />
+                  <Calendar className="w-3.5 h-3.5" />
                   Schedule Report
                 </Button>
                 
                 <Button 
-                  className="gap-2 bg-[#0B3C5D] hover:bg-[#082a42] text-white shadow-md"
+                  size="sm"
+                  className="gap-2 bg-[#0A2E4A] hover:bg-[#082a42] text-white shadow-md h-7 px-3 text-xs"
                   onClick={() => setViewMode("builder")}
                 >
-                  <Wand2 className="w-4 h-4" />
+                  <Wand2 className="w-3.5 h-3.5" />
                   Report Builder
                 </Button>
 
-                <Button variant="outline" size="icon" className="border-slate-300">
-                  <Settings className="w-4 h-4" />
+                <Button variant="outline" size="sm" className="border-slate-300 h-7 w-7 p-0">
+                  <Settings className="w-3.5 h-3.5" />
                 </Button>
               </div>
             </div>
@@ -752,7 +754,7 @@ export function ReportsMIS() {
                         whileHover={{ y: -4 }}
                         className="group"
                       >
-                        <Card className="border-2 border-slate-200 hover:border-[#0B3C5D] hover:shadow-xl transition-all cursor-pointer h-full">
+                        <Card className="border-2 border-slate-200 hover:border-[#0A2E4A] hover:shadow-xl transition-all cursor-pointer h-full">
                           <CardHeader className="pb-3">
                             {/* Thumbnail Preview */}
                             <div className={`h-32 rounded-lg mb-4 ${categoryStyle.bg} ${categoryStyle.border} border-2 flex items-center justify-center relative overflow-hidden`}>
@@ -760,7 +762,7 @@ export function ReportsMIS() {
                               <Icon className={`w-12 h-12 ${categoryStyle.text} relative z-10`} />
                               
                               {/* Hover Actions */}
-                              <div className="absolute inset-0 bg-[#0B3C5D]/90 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-20">
+                              <div className="absolute inset-0 bg-[#0A2E4A]/90 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-20">
                                 <Button
                                   size="sm"
                                   variant="secondary"
@@ -878,7 +880,7 @@ export function ReportsMIS() {
               
               {/* LEFT PANEL - Fields Palette */}
               <div className="w-80 bg-white border-r border-slate-200 flex flex-col shrink-0 shadow-sm">
-                <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-[#0B3C5D] to-[#0B3C5D]/90">
+                <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-[#0A2E4A] to-[#0A2E4A]/90">
                   <div className="flex items-center gap-2 mb-2">
                     <Database className="w-5 h-5 text-white" />
                     <h2 className="text-sm font-bold text-white">Data Fields</h2>
@@ -971,7 +973,7 @@ export function ReportsMIS() {
                       <Save className="w-4 h-4" />
                       Save
                     </Button>
-                    <Button size="sm" className="gap-2 bg-[#0B3C5D]">
+                    <Button size="sm" className="gap-2 bg-[#0A2E4A]">
                       <Play className="w-4 h-4" />
                       Generate Report
                     </Button>
@@ -1156,7 +1158,7 @@ export function ReportsMIS() {
                                       <Bar 
                                         key={field.id} 
                                         dataKey={field.id} 
-                                        fill={idx === 0 ? "#0B3C5D" : idx === 1 ? "#10B981" : "#F4B400"} 
+                                        fill={idx === 0 ? "#0A2E4A" : idx === 1 ? "#10B981" : "#E8A800"} 
                                         name={field.name}
                                       />
                                     ))}
@@ -1190,7 +1192,7 @@ export function ReportsMIS() {
                                         key={field.id} 
                                         type="monotone"
                                         dataKey={field.id} 
-                                        stroke={idx === 0 ? "#0B3C5D" : idx === 1 ? "#10B981" : "#F4B400"} 
+                                        stroke={idx === 0 ? "#0A2E4A" : idx === 1 ? "#10B981" : "#E8A800"} 
                                         strokeWidth={2}
                                         name={field.name}
                                       />
@@ -1206,8 +1208,8 @@ export function ReportsMIS() {
                                   <AreaChart data={sampleData}>
                                     <defs>
                                       <linearGradient id="colorField1" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#0B3C5D" stopOpacity={0.3}/>
-                                        <stop offset="95%" stopColor="#0B3C5D" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="#0A2E4A" stopOpacity={0.3}/>
+                                        <stop offset="95%" stopColor="#0A2E4A" stopOpacity={0}/>
                                       </linearGradient>
                                       <linearGradient id="colorField2" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
@@ -1235,7 +1237,7 @@ export function ReportsMIS() {
                                         key={field.id} 
                                         type="monotone"
                                         dataKey={field.id} 
-                                        stroke={idx === 0 ? "#0B3C5D" : "#10B981"} 
+                                        stroke={idx === 0 ? "#0A2E4A" : "#10B981"} 
                                         strokeWidth={2}
                                         fill={idx === 0 ? "url(#colorField1)" : "url(#colorField2)"}
                                         name={field.name}
@@ -1262,7 +1264,7 @@ export function ReportsMIS() {
                                       {sampleData.slice(0, 5).map((entry, index) => (
                                         <Cell 
                                           key={`cell-${index}`} 
-                                          fill={['#0B3C5D', '#10B981', '#F4B400', '#8B5CF6', '#EF4444'][index]}
+                                          fill={['#0A2E4A', '#10B981', '#E8A800', '#8B5CF6', '#EF4444'][index]}
                                         />
                                       ))}
                                     </Pie>
@@ -1310,7 +1312,7 @@ export function ReportsMIS() {
 
               {/* RIGHT PANEL - Settings & Export */}
               <div className="w-80 bg-white border-l border-slate-200 flex flex-col shrink-0 shadow-sm">
-                <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-[#0B3C5D] to-[#0B3C5D]/90">
+                <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-[#0A2E4A] to-[#0A2E4A]/90">
                   <div className="flex items-center gap-2 mb-2">
                     <Settings className="w-5 h-5 text-white" />
                     <h2 className="text-sm font-bold text-white">Settings & Export</h2>
@@ -1400,7 +1402,7 @@ export function ReportsMIS() {
 
                 {/* Save Actions */}
                 <div className="p-4 border-t border-slate-200 bg-slate-50 space-y-2">
-                  <Button className="w-full gap-2 bg-[#0B3C5D]">
+                  <Button className="w-full gap-2 bg-[#0A2E4A]">
                     <Save className="w-4 h-4" />
                     Save as Template
                   </Button>
@@ -1424,7 +1426,7 @@ export function ReportsMIS() {
                     <p className="text-slate-600 mt-1">Automated report generation and distribution</p>
                   </div>
                   <Button 
-                    className="gap-2 bg-[#0B3C5D]"
+                    className="gap-2 bg-[#0A2E4A]"
                     onClick={() => setScheduleDialogOpen(true)}
                   >
                     <Plus className="w-4 h-4" />
@@ -1689,8 +1691,8 @@ export function ReportsMIS() {
                         <AreaChart data={usageAnalytics}>
                           <defs>
                             <linearGradient id="colorReports" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#0B3C5D" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#0B3C5D" stopOpacity={0}/>
+                              <stop offset="5%" stopColor="#0A2E4A" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#0A2E4A" stopOpacity={0}/>
                             </linearGradient>
                             <linearGradient id="colorDownloads" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
@@ -1712,7 +1714,7 @@ export function ReportsMIS() {
                           <Area 
                             type="monotone" 
                             dataKey="reports" 
-                            stroke="#0B3C5D" 
+                            stroke="#0A2E4A" 
                             strokeWidth={2}
                             fill="url(#colorReports)" 
                             name="Reports Generated"
@@ -1870,7 +1872,7 @@ export function ReportsMIS() {
                   Cancel
                 </Button>
                 <Button 
-                  className="flex-1 bg-[#0B3C5D]"
+                  className="flex-1 bg-[#0A2E4A]"
                   onClick={() => {
                     toast.success("Report schedule created successfully");
                     setScheduleDialogOpen(false);
@@ -1901,7 +1903,7 @@ export function ReportsMIS() {
                       <Download className="w-4 h-4" />
                       Download Sample
                     </Button>
-                    <Button className="bg-[#0B3C5D] gap-2">
+                    <Button className="bg-[#0A2E4A] gap-2">
                       <Play className="w-4 h-4" />
                       Generate Now
                     </Button>

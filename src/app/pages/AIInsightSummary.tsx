@@ -192,31 +192,33 @@ export function AIInsightSummary() {
   const overallConfidence = 91.5;
 
   return (
-    <div className="p-8 bg-white min-h-screen">
-      {/* Page Header */}
-      <div className="mb-8 pb-6 border-b-2 border-gray-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-              <BrainCircuit className="w-7 h-7" style={{ color: '#0B3C5D' }} />
-              AI Insight Summary Dashboard
-            </h1>
-            <p className="text-sm text-gray-600 mt-2">
-              Machine learning insights and predictive analytics based on 36 months of historical data
-            </p>
-          </div>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
+        <div className="px-6 py-2 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Badge className="bg-gray-100 text-gray-800 border border-gray-300 px-3 py-1.5 font-semibold">
+            <div className="p-1.5 bg-[#0A2E4A] rounded-lg">
+              <BrainCircuit className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h1 className="text-base font-bold text-slate-900 leading-none">AI Insight Summary Dashboard</h1>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Machine learning insights and predictive analytics based on 36 months of historical data
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge className="bg-gray-100 text-gray-800 border border-gray-300 h-7 px-3 text-xs font-semibold">
               <Activity className="w-3 h-3 mr-1.5" />
               ML Model v2.4.1
             </Badge>
-            <Badge className="bg-gray-100 text-gray-800 border border-gray-300 px-3 py-1.5 font-semibold">
+            <Badge className="bg-gray-100 text-gray-800 border border-gray-300 h-7 px-3 text-xs font-semibold">
               Data through Feb 2026
             </Badge>
           </div>
         </div>
       </div>
 
+      <div className="flex-1 overflow-auto p-6">
       {/* TOP INSIGHT CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
         {topInsights.map((insight) => {
@@ -528,18 +530,18 @@ export function AIInsightSummary() {
           <Card className="border-2 sticky top-6">
             <CardHeader className="border-b bg-gray-50">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <BrainCircuit className="w-5 h-5" style={{ color: '#0B3C5D' }} />
+                <BrainCircuit className="w-5 h-5" style={{ color: '#0A2E4A' }} />
                 AI Confidence Indicator
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="text-center mb-4">
-                <div className="text-5xl font-bold mb-2" style={{ color: '#0B3C5D' }}>{overallConfidence}%</div>
+                <div className="text-5xl font-bold mb-2" style={{ color: '#0A2E4A' }}>{overallConfidence}%</div>
                 <div className="text-xs text-gray-600 mb-4">Overall Model Confidence</div>
                 <div className="w-full h-4 bg-gray-200 rounded overflow-hidden">
                   <div
                     className="h-full transition-all"
-                    style={{ width: `${overallConfidence}%`, backgroundColor: '#0B3C5D' }}
+                    style={{ width: `${overallConfidence}%`, backgroundColor: '#0A2E4A' }}
                   />
                 </div>
               </div>
@@ -569,7 +571,7 @@ export function AIInsightSummary() {
           <Card className="border-2">
             <CardHeader className="border-b bg-gray-50">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <BarChart3 className="w-5 h-5" style={{ color: '#0B3C5D' }} />
+                <BarChart3 className="w-5 h-5" style={{ color: '#0A2E4A' }} />
                 Model Logic Explanation
               </CardTitle>
             </CardHeader>
@@ -605,7 +607,7 @@ export function AIInsightSummary() {
                   </div>
                   <div className="col-span-2">
                     <div className="text-gray-600 mb-1">Training Data Points</div>
-                    <div className="text-sm font-bold" style={{ color: '#0B3C5D' }}>{modelExplanation.dataPoints}</div>
+                    <div className="text-sm font-bold" style={{ color: '#0A2E4A' }}>{modelExplanation.dataPoints}</div>
                   </div>
                 </div>
               </div>
@@ -630,11 +632,12 @@ export function AIInsightSummary() {
           </Card>
 
           {/* Action Button */}
-          <Button className="w-full hover:bg-opacity-90" style={{ backgroundColor: '#0B3C5D' }} size="lg">
+          <Button className="w-full hover:bg-opacity-90" style={{ backgroundColor: '#0A2E4A' }} size="lg">
             <BrainCircuit className="w-5 h-5 mr-2" />
             Generate Detailed AI Report
           </Button>
         </div>
+      </div>
       </div>
     </div>
   );

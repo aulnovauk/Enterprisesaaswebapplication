@@ -36,6 +36,7 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
+import { CustomChartTooltip } from "../components/ChartTooltip";
 
 // Portfolio summary data
 const portfolioSummary = {
@@ -222,99 +223,104 @@ export function ContractLDAnalytics() {
   const [selectedSite, setSelectedSite] = useState<typeof sitewiseLD[0] | null>(null);
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Contractual Compliance & LD Analytics</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Executive dashboard for contractual obligations, liquidated damages tracking, and vendor compliance
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Export LD Report
-            </Button>
-            <Button style={{ backgroundColor: "#0B3C5D" }} className="text-white">
-              <Bell className="w-4 h-4 mr-2" />
-              Configure Alerts
-            </Button>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
+        <div className="px-6 py-2">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-[#0A2E4A] rounded-lg">
+                <FileText className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-slate-900 leading-none">Contract & LD Analytics</h1>
+                <p className="text-xs text-slate-600 mt-0.5">Contractual obligations, liquidated damages tracking, and vendor compliance</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="sm" className="h-7 px-3 text-xs">
+                <Download className="w-4 h-4 mr-2" />
+                Export LD Report
+              </Button>
+              <Button size="sm" style={{ backgroundColor: "#0A2E4A" }} className="text-white h-7 px-3 text-xs">
+                <Bell className="w-4 h-4 mr-2" />
+                Configure Alerts
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
+      <div className="flex-1 overflow-auto p-6">
       {/* Portfolio-level Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="border-2 border-red-200 bg-red-50">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-red-600" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card className="border border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between mb-2">
+              <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-red-600" />
               </div>
-              <Badge variant="destructive" className="text-xs font-semibold">Current Month</Badge>
+              <Badge variant="destructive" className="text-[10px] font-semibold px-1.5 py-0.5">Current Month</Badge>
             </div>
-            <h3 className="text-xs font-medium text-gray-600 mb-2">Total LD Exposure</h3>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-red-600">₹{portfolioSummary.totalLDExposure}L</span>
+            <h3 className="text-[11px] font-medium text-gray-600 mb-1">Total LD Exposure</h3>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold text-red-600">₹{portfolioSummary.totalLDExposure}L</span>
             </div>
-            <p className="text-xs text-gray-600 mt-2">
+            <p className="text-[11px] text-gray-600 mt-1">
               YTD: <span className="font-semibold text-gray-900">₹{portfolioSummary.ytdLDExposure}L</span>
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-orange-200 bg-orange-50">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center">
-                <Shield className="w-6 h-6 text-orange-600" />
+        <Card className="border border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between mb-2">
+              <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center">
+                <Shield className="w-4 h-4 text-orange-600" />
               </div>
-              <Badge className="bg-orange-100 text-orange-800 text-xs font-semibold">Compliance</Badge>
+              <Badge className="bg-orange-100 text-orange-800 text-[10px] font-semibold px-1.5 py-0.5">Compliance</Badge>
             </div>
-            <h3 className="text-xs font-medium text-gray-600 mb-2">Portfolio Compliance Rate</h3>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-orange-600">{portfolioSummary.complianceRate}%</span>
+            <h3 className="text-[11px] font-medium text-gray-600 mb-1">Portfolio Compliance Rate</h3>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold text-orange-600">{portfolioSummary.complianceRate}%</span>
             </div>
-            <p className="text-xs text-gray-600 mt-2">
+            <p className="text-[11px] text-gray-600 mt-1">
               {portfolioSummary.compliantSites} of {portfolioSummary.totalSites} sites compliant
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-red-200 bg-red-50">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
+        <Card className="border border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between mb-2">
+              <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center">
+                <AlertTriangle className="w-4 h-4 text-red-600" />
               </div>
-              <Badge variant="destructive" className="text-xs font-semibold">Active</Badge>
+              <Badge variant="destructive" className="text-[10px] font-semibold px-1.5 py-0.5">Active</Badge>
             </div>
-            <h3 className="text-xs font-medium text-gray-600 mb-2">Critical Escalations</h3>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-red-600">{portfolioSummary.criticalEscalations}</span>
+            <h3 className="text-[11px] font-medium text-gray-600 mb-1">Critical Escalations</h3>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold text-red-600">{portfolioSummary.criticalEscalations}</span>
             </div>
-            <p className="text-xs text-gray-600 mt-2">
+            <p className="text-[11px] text-gray-600 mt-1">
               Requires immediate attention
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-gray-200">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-blue-600" />
+        <Card className="border border-gray-200">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between mb-2">
+              <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+                <Building2 className="w-4 h-4 text-blue-600" />
               </div>
-              <Badge className="bg-blue-100 text-blue-800 text-xs font-semibold">Portfolio</Badge>
+              <Badge className="bg-blue-100 text-blue-800 text-[10px] font-semibold px-1.5 py-0.5">Portfolio</Badge>
             </div>
-            <h3 className="text-xs font-medium text-gray-600 mb-2">Total Portfolio Capacity</h3>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-gray-900">{portfolioSummary.totalCapacity}</span>
-              <span className="text-sm text-gray-600">MW</span>
+            <h3 className="text-[11px] font-medium text-gray-600 mb-1">Total Portfolio Capacity</h3>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold text-gray-900">{portfolioSummary.totalCapacity}</span>
+              <span className="text-xs text-gray-600">MW</span>
             </div>
-            <p className="text-xs text-gray-600 mt-2">
+            <p className="text-[11px] text-gray-600 mt-1">
               Across {portfolioSummary.totalSites} sites
             </p>
           </CardContent>
@@ -322,14 +328,14 @@ export function ContractLDAnalytics() {
       </div>
 
       {/* Guaranteed vs Actual Generation Comparison */}
-      <Card className="mb-8">
-        <CardHeader className="border-b bg-gray-50">
+      <Card className="mb-6">
+        <CardHeader className="border-b bg-gray-50 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base font-semibold">Guaranteed vs Actual Performance Comparison</CardTitle>
-              <p className="text-xs text-gray-600 mt-1">February 2026 - Portfolio-wide metrics</p>
+              <CardTitle className="text-sm font-semibold">Guaranteed vs Actual Performance Comparison</CardTitle>
+              <p className="text-[11px] text-gray-600 mt-0.5">February 2026 - Portfolio-wide metrics</p>
             </div>
-            <Badge className="bg-red-100 text-red-800">3 of 5 parameters non-compliant</Badge>
+            <Badge className="bg-red-100 text-red-800 text-[10px]">3 of 5 parameters non-compliant</Badge>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -386,18 +392,18 @@ export function ContractLDAnalytics() {
       </Card>
 
       {/* LD Formula Application Panel */}
-      <Card className="mb-8">
-        <CardHeader className="border-b bg-blue-50">
-          <div className="flex items-center gap-3">
-            <Calculator className="w-5 h-5 text-blue-600" />
+      <Card className="mb-6">
+        <CardHeader className="border-b bg-blue-50 py-3">
+          <div className="flex items-center gap-2">
+            <Calculator className="w-4 h-4 text-blue-600" />
             <div>
-              <CardTitle className="text-base font-semibold">LD Formula Application</CardTitle>
-              <p className="text-xs text-gray-600 mt-1">Standard contractual formula for liquidated damages calculation</p>
+              <CardTitle className="text-sm font-semibold">LD Formula Application</CardTitle>
+              <p className="text-[11px] text-gray-600 mt-0.5">Standard contractual formula for liquidated damages calculation</p>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Formula Explanation */}
             <div className="space-y-4">
               <div>
@@ -451,7 +457,7 @@ export function ContractLDAnalytics() {
 
                   <div className="p-3 bg-red-100 border-2 border-red-300 rounded">
                     <div className="text-xs text-gray-600 mb-1">LD Amount (Final)</div>
-                    <div className="font-mono text-2xl font-bold text-red-600">
+                    <div className="font-mono text-lg font-bold text-red-600">
                       ₹3.6 Lakhs
                     </div>
                   </div>
@@ -475,9 +481,9 @@ export function ContractLDAnalytics() {
       </Card>
 
       {/* Site-wise LD Exposure Table */}
-      <Card className="mb-8">
-        <CardHeader className="border-b bg-gray-50">
-          <CardTitle className="text-base font-semibold">Site-wise LD Exposure & Compliance Status</CardTitle>
+      <Card className="mb-6">
+        <CardHeader className="border-b bg-gray-50 py-3">
+          <CardTitle className="text-sm font-semibold">Site-wise LD Exposure & Compliance Status</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -542,20 +548,20 @@ export function ContractLDAnalytics() {
       </Card>
 
       {/* Vendor-wise LD Dashboard */}
-      <Card className="mb-8">
-        <CardHeader className="border-b bg-gray-50">
-          <div className="flex items-center gap-3">
-            <Users className="w-5 h-5 text-gray-700" />
-            <CardTitle className="text-base font-semibold">Vendor-wise LD Dashboard</CardTitle>
+      <Card className="mb-6">
+        <CardHeader className="border-b bg-gray-50 py-3">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-gray-700" />
+            <CardTitle className="text-sm font-semibold">Vendor-wise LD Dashboard</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
             {vendorwiseLD.map((vendor, idx) => (
-              <Card key={idx} className={`border-2 ${vendor.status === "critical" ? "border-red-300 bg-red-50" : "border-orange-300 bg-orange-50"}`}>
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900 text-sm">{vendor.vendorName}</h3>
+              <Card key={idx} className={`border ${vendor.status === "critical" ? "border-red-300 bg-red-50" : "border-orange-300 bg-orange-50"}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold text-gray-900 text-xs">{vendor.vendorName}</h3>
                     <Badge className={vendor.status === "critical" ? "bg-red-100 text-red-800" : "bg-orange-100 text-orange-800"}>
                       {vendor.status === "critical" ? "Critical" : "Warning"}
                     </Badge>
@@ -582,7 +588,7 @@ export function ContractLDAnalytics() {
                     <Separator className="my-2" />
                     <div className="flex justify-between pt-1">
                       <span className="text-gray-700 font-medium">Total LD Exposure:</span>
-                      <span className="font-bold text-red-600 text-base">₹{vendor.totalLDAmount.toFixed(2)}L</span>
+                      <span className="font-bold text-red-600 text-sm">₹{vendor.totalLDAmount.toFixed(2)}L</span>
                     </div>
                   </div>
                 </CardContent>
@@ -591,12 +597,12 @@ export function ContractLDAnalytics() {
           </div>
 
           {/* Vendor comparison chart */}
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={vendorwiseLD}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis dataKey="vendorName" tick={{ fontSize: 11 }} stroke="#6B7280" />
-              <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" />
-              <Tooltip />
+              <XAxis dataKey="vendorName" tick={{ fontSize: 10 }} stroke="#6B7280" />
+              <YAxis tick={{ fontSize: 10 }} stroke="#6B7280" />
+              <Tooltip content={<CustomChartTooltip unit="₹ Lakhs" />} />
               <Bar dataKey="totalLDAmount" name="LD Amount (₹ Lakhs)">
                 {vendorwiseLD.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.status === "critical" ? "#DC2626" : "#F59E0B"} />
@@ -608,14 +614,14 @@ export function ContractLDAnalytics() {
       </Card>
 
       {/* Escalation Trigger Alerts */}
-      <Card className="mb-8">
-        <CardHeader className="border-b bg-red-50">
+      <Card className="mb-6">
+        <CardHeader className="border-b bg-red-50 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Bell className="w-5 h-5 text-red-600" />
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-red-600" />
               <div>
-                <CardTitle className="text-base font-semibold">Escalation Trigger Alerts</CardTitle>
-                <p className="text-xs text-gray-600 mt-1">Critical compliance issues requiring immediate action</p>
+                <CardTitle className="text-sm font-semibold">Escalation Trigger Alerts</CardTitle>
+                <p className="text-[11px] text-gray-600 mt-0.5">Critical compliance issues requiring immediate action</p>
               </div>
             </div>
             <Badge variant="destructive" className="text-xs font-semibold">
@@ -683,25 +689,26 @@ export function ContractLDAnalytics() {
 
       {/* Monthly LD Trend */}
       <Card>
-        <CardHeader className="border-b">
-          <CardTitle className="text-base font-semibold">Monthly LD Trend & Portfolio Compliance</CardTitle>
+        <CardHeader className="border-b py-3">
+          <CardTitle className="text-sm font-semibold">Monthly LD Trend & Portfolio Compliance</CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
-          <ResponsiveContainer width="100%" height={350}>
+        <CardContent className="p-4">
+          <ResponsiveContainer width="100%" height={250}>
             <ComposedChart data={monthlyLDTrend}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6B7280" />
-              <YAxis yAxisId="left" tick={{ fontSize: 12 }} stroke="#6B7280" label={{ value: 'LD Amount (₹ Lakhs)', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }} />
-              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fontSize: 12 }} stroke="#6B7280" label={{ value: 'Compliance Rate (%)', angle: 90, position: 'insideRight', style: { fontSize: 12 } }} />
-              <Tooltip />
+              <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="#6B7280" />
+              <YAxis yAxisId="left" tick={{ fontSize: 10 }} stroke="#6B7280" label={{ value: 'LD Amount (₹ Lakhs)', angle: -90, position: 'insideLeft', style: { fontSize: 10 } }} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fontSize: 10 }} stroke="#6B7280" label={{ value: 'Compliance Rate (%)', angle: 90, position: 'insideRight', style: { fontSize: 10 } }} />
+              <Tooltip content={<CustomChartTooltip unit="₹ Lakhs" />} />
               <Legend />
               <Bar yAxisId="left" dataKey="ldAmount" fill="#EF4444" name="LD Amount (₹ Lakhs)" />
-              <Line yAxisId="right" type="monotone" dataKey="complianceRate" stroke="#0B3C5D" strokeWidth={3} name="Compliance Rate (%)" dot={{ fill: "#0B3C5D", r: 5 }} />
+              <Line yAxisId="right" type="monotone" dataKey="complianceRate" stroke="#0A2E4A" strokeWidth={3} name="Compliance Rate (%)" dot={{ fill: "#0A2E4A", r: 5 }} />
               <ReferenceLine yAxisId="right" y={80} stroke="#F59E0B" strokeDasharray="5 5" label="Target: 80%" />
             </ComposedChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

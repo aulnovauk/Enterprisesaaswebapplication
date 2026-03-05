@@ -282,7 +282,7 @@ export function FormulaBuilder({ isOpen, onClose, kpi }: FormulaBuilderProps) {
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button className="bg-[#0B3C5D] text-white hover:bg-[#092e48] gap-2">
+                    <Button className="bg-[#0A2E4A] text-white hover:bg-[#092e48] gap-2">
                       <Save className="w-4 h-4" /> Save & Submit
                     </Button>
                   </div>

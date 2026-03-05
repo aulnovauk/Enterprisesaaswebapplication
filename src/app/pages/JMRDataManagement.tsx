@@ -76,6 +76,7 @@ import {
   Plus,
   Copy,
   ExternalLink,
+  RefreshCw,
 } from "lucide-react";
 import { Separator } from "../components/ui/separator";
 import { ScrollArea } from "../components/ui/scroll-area";
@@ -411,7 +412,7 @@ export function JMRDataManagement() {
           {/* Row 1: Title & Actions */}
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-gradient-to-br from-[#0B3C5D] to-[#0B3C5D]/80 rounded-xl shadow-md">
+              <div className="p-1.5 bg-gradient-to-br from-[#0A2E4A] to-[#0A2E4A]/80 rounded-xl shadow-md">
                 <Database className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -545,28 +546,28 @@ export function JMRDataManagement() {
               <TabsList className="bg-transparent h-12 p-0 gap-1">
                 <TabsTrigger
                   value="manual-entry"
-                  className="gap-2 data-[state=active]:bg-[#0B3C5D] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
+                  className="gap-2 data-[state=active]:bg-[#0A2E4A] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
                 >
                   <Edit3 className="w-4 h-4" />
                   Manual Entry
                 </TabsTrigger>
                 <TabsTrigger
                   value="bulk-upload"
-                  className="gap-2 data-[state=active]:bg-[#0B3C5D] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
+                  className="gap-2 data-[state=active]:bg-[#0A2E4A] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
                 >
                   <FileUp className="w-4 h-4" />
                   Excel Bulk Upload
                 </TabsTrigger>
                 <TabsTrigger
                   value="repository"
-                  className="gap-2 data-[state=active]:bg-[#0B3C5D] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
+                  className="gap-2 data-[state=active]:bg-[#0A2E4A] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
                 >
                   <Database className="w-4 h-4" />
                   JMR Repository
                 </TabsTrigger>
                 <TabsTrigger
                   value="audit"
-                  className="gap-2 data-[state=active]:bg-[#0B3C5D] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
+                  className="gap-2 data-[state=active]:bg-[#0A2E4A] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
                 >
                   <History className="w-4 h-4" />
                   Audit & Version History
@@ -604,7 +605,7 @@ export function JMRDataManagement() {
                                         isCompleted
                                           ? "bg-emerald-600 text-white"
                                           : isActive
-                                          ? "bg-[#0B3C5D] text-white"
+                                          ? "bg-[#0A2E4A] text-white"
                                           : "bg-slate-200 text-slate-500"
                                       }`}
                                     >
@@ -616,7 +617,7 @@ export function JMRDataManagement() {
                                     </div>
                                     <span
                                       className={`text-xs font-semibold mt-2 ${
-                                        isActive ? "text-[#0B3C5D]" : "text-slate-600"
+                                        isActive ? "text-[#0A2E4A]" : "text-slate-600"
                                       }`}
                                     >
                                       {step.label}
@@ -646,7 +647,7 @@ export function JMRDataManagement() {
                           <Card className="border-2 border-slate-200">
                             <CardHeader className="border-b border-slate-100">
                               <CardTitle className="flex items-center gap-2">
-                                <Building2 className="w-5 h-5 text-[#0B3C5D]" />
+                                <Building2 className="w-5 h-5 text-[#0A2E4A]" />
                                 Plant Metadata
                               </CardTitle>
                               <CardDescription>
@@ -825,7 +826,7 @@ export function JMRDataManagement() {
                               <RotateCcw className="w-4 h-4 mr-2" />
                               Reset
                             </Button>
-                            <Button onClick={() => setEntryStep(2)} className="bg-[#0B3C5D]">
+                            <Button onClick={() => setEntryStep(2)} className="bg-[#0A2E4A]">
                               Next Step
                               <ArrowRight className="w-4 h-4 ml-2" />
                             </Button>
@@ -843,7 +844,7 @@ export function JMRDataManagement() {
                           <Card className="border-2 border-slate-200">
                             <CardHeader className="border-b border-slate-100">
                               <CardTitle className="flex items-center gap-2">
-                                <Zap className="w-5 h-5 text-[#0B3C5D]" />
+                                <Zap className="w-5 h-5 text-[#0A2E4A]" />
                                 Operational Parameters
                               </CardTitle>
                               <CardDescription>Monthly generation and operational metrics</CardDescription>
@@ -852,7 +853,7 @@ export function JMRDataManagement() {
                               {/* Generation Metrics */}
                               <div>
                                 <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                  <div className="w-1 h-4 bg-[#0B3C5D] rounded"></div>
+                                  <div className="w-1 h-4 bg-[#0A2E4A] rounded"></div>
                                   Generation Metrics
                                 </h3>
                                 <div className="grid grid-cols-3 gap-4">
@@ -929,7 +930,7 @@ export function JMRDataManagement() {
                               {/* Availability Metrics */}
                               <div>
                                 <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                  <div className="w-1 h-4 bg-[#0B3C5D] rounded"></div>
+                                  <div className="w-1 h-4 bg-[#0A2E4A] rounded"></div>
                                   Availability Metrics
                                 </h3>
                                 <div className="grid grid-cols-3 gap-4">
@@ -994,7 +995,7 @@ export function JMRDataManagement() {
                               {/* Downtime Metrics */}
                               <div>
                                 <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                  <div className="w-1 h-4 bg-[#0B3C5D] rounded"></div>
+                                  <div className="w-1 h-4 bg-[#0A2E4A] rounded"></div>
                                   Downtime Hours
                                 </h3>
                                 <div className="grid grid-cols-4 gap-4">
@@ -1077,7 +1078,7 @@ export function JMRDataManagement() {
                               {/* Other Parameters */}
                               <div>
                                 <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                  <div className="w-1 h-4 bg-[#0B3C5D] rounded"></div>
+                                  <div className="w-1 h-4 bg-[#0A2E4A] rounded"></div>
                                   Other Parameters
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4">
@@ -1130,7 +1131,7 @@ export function JMRDataManagement() {
                                 <RotateCcw className="w-4 h-4 mr-2" />
                                 Reset
                               </Button>
-                              <Button onClick={() => setEntryStep(3)} className="bg-[#0B3C5D]">
+                              <Button onClick={() => setEntryStep(3)} className="bg-[#0A2E4A]">
                                 Next Step
                                 <ArrowRight className="w-4 h-4 ml-2" />
                               </Button>
@@ -1149,7 +1150,7 @@ export function JMRDataManagement() {
                           <Card className="border-2 border-slate-200">
                             <CardHeader className="border-b border-slate-100">
                               <CardTitle className="flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-[#0B3C5D]" />
+                                <TrendingUp className="w-5 h-5 text-[#0A2E4A]" />
                                 Commercial Parameters
                               </CardTitle>
                               <CardDescription>Revenue and contractual compliance data</CardDescription>
@@ -1282,7 +1283,7 @@ export function JMRDataManagement() {
                                 <RotateCcw className="w-4 h-4 mr-2" />
                                 Reset
                               </Button>
-                              <Button onClick={() => setEntryStep(4)} className="bg-[#0B3C5D]">
+                              <Button onClick={() => setEntryStep(4)} className="bg-[#0A2E4A]">
                                 Next Step
                                 <ArrowRight className="w-4 h-4 ml-2" />
                               </Button>
@@ -1302,7 +1303,7 @@ export function JMRDataManagement() {
                           <Card className="border-2 border-slate-200">
                             <CardHeader className="border-b border-slate-100">
                               <CardTitle className="flex items-center gap-2">
-                                <ShieldCheck className="w-5 h-5 text-[#0B3C5D]" />
+                                <ShieldCheck className="w-5 h-5 text-[#0A2E4A]" />
                                 Validation & Compliance Check
                               </CardTitle>
                               <CardDescription>
@@ -1597,7 +1598,7 @@ export function JMRDataManagement() {
                   {!showWorkflowPanel && (
                     <Button
                       onClick={() => setShowWorkflowPanel(true)}
-                      className="fixed right-0 top-1/2 -translate-y-1/2 rounded-l-lg rounded-r-none h-32 w-10 bg-[#0B3C5D] hover:bg-[#082a42] shadow-lg z-20"
+                      className="fixed right-0 top-1/2 -translate-y-1/2 rounded-l-lg rounded-r-none h-32 w-10 bg-[#0A2E4A] hover:bg-[#082a42] shadow-lg z-20"
                       style={{ writingMode: "vertical-rl" }}
                     >
                       <span className="transform rotate-180">Workflow Panel</span>
@@ -1936,7 +1937,7 @@ export function JMRDataManagement() {
                           </SelectContent>
                         </Select>
 
-                        <Button className="bg-[#0B3C5D] gap-2">
+                        <Button className="bg-[#0A2E4A] gap-2">
                           <GitCompare className="w-4 h-4" />
                           Compare
                         </Button>
@@ -1996,7 +1997,7 @@ function BulkUploadContent() {
                 Download the standardized Excel template with all required fields
               </p>
             </div>
-            <Button className="bg-[#0B3C5D] gap-2">
+            <Button className="bg-[#0A2E4A] gap-2">
               <Download className="w-4 h-4" />
               Download Template
             </Button>
@@ -2013,7 +2014,7 @@ function BulkUploadContent() {
         <CardContent className="p-6">
           <label
             htmlFor="file-upload"
-            className="block border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-[#0B3C5D] hover:bg-blue-50 transition-all"
+            className="block border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-[#0A2E4A] hover:bg-blue-50 transition-all"
           >
             <input
               id="file-upload"

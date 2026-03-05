@@ -104,7 +104,7 @@ export function KPIDetailView({ kpi, onEditFormula }: KPIDetailViewProps) {
           <p className="text-slate-600 max-w-4xl text-sm leading-relaxed">{kpi.description}</p>
         </div>
         <div className="flex gap-2">
-           <Button onClick={onEditFormula} className="bg-[#0B3C5D] text-white hover:bg-[#092e48] gap-2 shadow-sm h-9">
+           <Button onClick={onEditFormula} className="bg-[#0A2E4A] text-white hover:bg-[#092e48] gap-2 shadow-sm h-9">
              <Edit3 className="w-4 h-4" /> Edit Configuration
            </Button>
         </div>
@@ -123,7 +123,7 @@ export function KPIDetailView({ kpi, onEditFormula }: KPIDetailViewProps) {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {/* Current Value */}
             <Card className="border-none shadow-sm ring-1 ring-slate-200 bg-white relative overflow-hidden group">
-               <div className="absolute top-0 left-0 w-1 h-full bg-[#0B3C5D]" />
+               <div className="absolute top-0 left-0 w-1 h-full bg-[#0A2E4A]" />
                <CardContent className="p-4">
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Current Value</p>
                   <div className="flex items-baseline gap-1">
@@ -135,7 +135,7 @@ export function KPIDetailView({ kpi, onEditFormula }: KPIDetailViewProps) {
 
             {/* Target Benchmark */}
             <Card className="border-none shadow-sm ring-1 ring-slate-200 bg-white relative overflow-hidden">
-               <div className="absolute top-0 left-0 w-1 h-full bg-[#F4B400]" />
+               <div className="absolute top-0 left-0 w-1 h-full bg-[#E8A800]" />
                <CardContent className="p-4">
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Target Benchmark</p>
                   <div className="flex items-baseline gap-1">
@@ -255,8 +255,8 @@ export function KPIDetailView({ kpi, onEditFormula }: KPIDetailViewProps) {
                      <AreaChart data={kpi.history || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                        <defs>
                          <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                           <stop offset="5%" stopColor="#0B3C5D" stopOpacity={0.1}/>
-                           <stop offset="95%" stopColor="#0B3C5D" stopOpacity={0}/>
+                           <stop offset="5%" stopColor="#0A2E4A" stopOpacity={0.1}/>
+                           <stop offset="95%" stopColor="#0A2E4A" stopOpacity={0}/>
                          </linearGradient>
                        </defs>
                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -281,16 +281,16 @@ export function KPIDetailView({ kpi, onEditFormula }: KPIDetailViewProps) {
                        <Area 
                          type="monotone" 
                          dataKey="value" 
-                         stroke="#0B3C5D" 
+                         stroke="#0A2E4A" 
                          strokeWidth={2} 
                          fillOpacity={1} 
                          fill="url(#colorValue)" 
-                         activeDot={{ r: 4, strokeWidth: 0, fill: '#0B3C5D' }}
+                         activeDot={{ r: 4, strokeWidth: 0, fill: '#0A2E4A' }}
                        />
                        <Area 
                          type="step" 
                          dataKey="target" 
-                         stroke="#F4B400" 
+                         stroke="#E8A800" 
                          strokeWidth={2} 
                          strokeDasharray="4 4" 
                          fill="none" 
@@ -424,7 +424,7 @@ export function KPIDetailView({ kpi, onEditFormula }: KPIDetailViewProps) {
                             (kpi.waterfallData || []).map((entry, index) => (
                               <Cell 
                                 key={`cell-${index}`} 
-                                fill={entry.type === 'decrease' ? '#ef4444' : entry.type === 'increase' ? '#10b981' : '#0B3C5D'} 
+                                fill={entry.type === 'decrease' ? '#ef4444' : entry.type === 'increase' ? '#10b981' : '#0A2E4A'} 
                               />
                             ))
                           }

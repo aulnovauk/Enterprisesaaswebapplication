@@ -8,16 +8,24 @@ import { Settings as SettingsIcon, Bell, Shield, Database, Mail } from "lucide-r
 
 export function Settings() {
   return (
-    <div className="p-8">
-      {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Configure system preferences and application settings
-        </p>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
+        <div className="px-6 py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-[#0A2E4A] rounded-lg">
+                <SettingsIcon className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-slate-900 leading-none">Settings</h1>
+                <p className="text-xs text-slate-600 mt-0.5">Configure system preferences and application settings</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Settings Tabs */}
+      <div className="flex-1 overflow-auto p-6">
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
@@ -73,7 +81,7 @@ export function Settings() {
 
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="outline">Reset to Defaults</Button>
-                <Button style={{ backgroundColor: "#0B3C5D" }} className="text-white">
+                <Button style={{ backgroundColor: "#0A2E4A" }} className="text-white">
                   Save Changes
                 </Button>
               </div>
@@ -143,7 +151,7 @@ export function Settings() {
 
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="outline">Reset to Defaults</Button>
-                <Button style={{ backgroundColor: "#0B3C5D" }} className="text-white">
+                <Button style={{ backgroundColor: "#0A2E4A" }} className="text-white">
                   Save Changes
                 </Button>
               </div>
@@ -206,7 +214,7 @@ export function Settings() {
 
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="outline">Reset to Defaults</Button>
-                <Button style={{ backgroundColor: "#0B3C5D" }} className="text-white">
+                <Button style={{ backgroundColor: "#0A2E4A" }} className="text-white">
                   Save Changes
                 </Button>
               </div>
@@ -264,7 +272,7 @@ export function Settings() {
 
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="outline">Reset to Defaults</Button>
-                <Button style={{ backgroundColor: "#0B3C5D" }} className="text-white">
+                <Button style={{ backgroundColor: "#0A2E4A" }} className="text-white">
                   Save Changes
                 </Button>
               </div>
@@ -272,6 +280,7 @@ export function Settings() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

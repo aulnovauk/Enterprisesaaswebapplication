@@ -40,6 +40,7 @@ import {
   ReferenceLine,
   Cell,
 } from "recharts";
+import { CustomChartTooltip } from "../components/ChartTooltip";
 
 // Multi-year generation trend (3 years of monthly data)
 const generationTrend = [
@@ -188,7 +189,7 @@ const aiInsights = [
     id: 3,
     type: "Pattern",
     icon: Sparkles,
-    color: "#F4B400",
+    color: "#E8A800",
     title: "Curtailment Pattern Identified",
     description: "Grid curtailment peaks during Dec-Jan (avg 200 MWh/month). Correlates with regional demand dips.",
     confidence: 96,
@@ -214,31 +215,33 @@ export function AITrendAnalytics() {
   const criticalInsights = aiInsights.filter((i) => i.type === "Critical").length;
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-3">
-              <BrainCircuit className="w-7 h-7 text-purple-600" />
-              AI Trend Analytics
-            </h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Historical data analysis with AI-powered insights, forecasting, and optimization recommendations
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge className="bg-purple-100 text-purple-800 px-3 py-1">
-              <Sparkles className="w-3 h-3 mr-1" />
-              AI Model v2.4.1
-            </Badge>
-            <Badge className="bg-blue-100 text-blue-800 px-3 py-1">
-              Last Updated: Feb 28, 2026
-            </Badge>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
+        <div className="px-6 py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-[#0A2E4A] rounded-lg">
+                <BrainCircuit className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-slate-900 leading-none">AI & Trend Analytics</h1>
+                <p className="text-xs text-slate-600 mt-0.5">AI-powered insights, forecasting, and optimization recommendations</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge className="bg-purple-100 text-purple-800 px-3 py-1">
+                <Sparkles className="w-3 h-3 mr-1" />
+                AI Model v2.4.1
+              </Badge>
+              <Badge className="bg-blue-100 text-blue-800 px-3 py-1">
+                Last Updated: Feb 28, 2026
+              </Badge>
+            </div>
           </div>
         </div>
       </div>
 
+      <div className="flex-1 overflow-auto p-6">
       {/* AI-Generated Insights Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white">
@@ -393,15 +396,15 @@ export function AITrendAnalytics() {
                 stroke="#6B7280"
               />
               <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" label={{ value: 'Generation (MWh)', angle: -90, position: 'insideLeft' }} />
-              <Tooltip />
+              <Tooltip content={<CustomChartTooltip unit="MWh" />} />
               <Legend />
-              <Area type="monotone" dataKey="generation" fill="#0B3C5D20" stroke="none" />
+              <Area type="monotone" dataKey="generation" fill="#0A2E4A20" stroke="none" />
               <Line
                 type="monotone"
                 dataKey="generation"
-                stroke="#0B3C5D"
+                stroke="#0A2E4A"
                 strokeWidth={2}
-                dot={{ fill: "#0B3C5D", r: 3 }}
+                dot={{ fill: "#0A2E4A", r: 3 }}
                 name="Monthly Generation"
               />
               <ReferenceLine y={4900} stroke="#F59E0B" strokeDasharray="5 5" label="Avg: 4,900 MWh" />
@@ -465,16 +468,16 @@ export function AITrendAnalytics() {
                   stroke="#6B7280"
                   label={{ value: 'Degradation (%)', angle: 90, position: 'insideRight', style: { fontSize: 11 } }}
                 />
-                <Tooltip />
+                <Tooltip content={<CustomChartTooltip unit="%" />} />
                 <Legend />
                 <Bar yAxisId="right" dataKey="degradation" fill="#F59E0B" name="Cumulative Degradation (%)" />
                 <Line
                   yAxisId="left"
                   type="monotone"
                   dataKey="performance"
-                  stroke="#0B3C5D"
+                  stroke="#0A2E4A"
                   strokeWidth={3}
-                  dot={{ fill: "#0B3C5D", r: 5 }}
+                  dot={{ fill: "#0A2E4A", r: 5 }}
                   name="Performance (%)"
                 />
                 <ReferenceLine yAxisId="left" y={98} stroke="#EF4444" strokeDasharray="5 5" label="Warning: 98%" />
@@ -509,7 +512,7 @@ export function AITrendAnalytics() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#6B7280" />
                 <YAxis tick={{ fontSize: 11 }} stroke="#6B7280" label={{ value: 'Curtailment (MWh)', angle: -90, position: 'insideLeft', style: { fontSize: 11 } }} />
-                <Tooltip />
+                <Tooltip content={<CustomChartTooltip unit="MWh" />} />
                 <Bar dataKey="curtailment" name="Curtailment (MWh)" radius={[8, 8, 0, 0]}>
                   {curtailmentPatterns.map((entry, index) => (
                     <Cell
@@ -575,7 +578,7 @@ export function AITrendAnalytics() {
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6B7280" />
               <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" domain={[4000, 6000]} />
-              <Tooltip />
+              <Tooltip content={<CustomChartTooltip unit="MWh" />} />
               <Legend />
               <Area
                 type="monotone"
@@ -598,9 +601,9 @@ export function AITrendAnalytics() {
               <Line
                 type="monotone"
                 dataKey="actual"
-                stroke="#0B3C5D"
+                stroke="#0A2E4A"
                 strokeWidth={3}
-                dot={{ fill: "#0B3C5D", r: 5 }}
+                dot={{ fill: "#0A2E4A", r: 5 }}
                 name="Actual"
               />
               <Line
@@ -715,8 +718,8 @@ export function AITrendAnalytics() {
                 <PolarGrid stroke="#E5E7EB" />
                 <PolarAngleAxis dataKey="site" tick={{ fontSize: 10 }} />
                 <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 10 }} />
-                <Radar name="Efficiency Score" dataKey="efficiency" stroke="#0B3C5D" fill="#0B3C5D" fillOpacity={0.6} />
-                <Tooltip />
+                <Radar name="Efficiency Score" dataKey="efficiency" stroke="#0A2E4A" fill="#0A2E4A" fillOpacity={0.6} />
+                <Tooltip content={<CustomChartTooltip unit="index" />} />
               </RadarChart>
             </ResponsiveContainer>
             <div className="mt-4 pt-4 border-t border-gray-200">
@@ -801,6 +804,7 @@ export function AITrendAnalytics() {
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   );
