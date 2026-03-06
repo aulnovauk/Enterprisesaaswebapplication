@@ -522,6 +522,579 @@ function FieldWell({
 
 type ViewMode = "gallery" | "builder" | "scheduled" | "history" | "analytics";
 
+// ── Per-template preview mock data ────────────────────────────────────────
+const PREVIEW_MONTHLY_PLANTS = [
+  { plant: "Pune Solar Park",     gen: 2150, target: 2100, cuf: 23.5, avail: 97.2, status: "Compliant" },
+  { plant: "Aurangabad Project",  gen: 2380, target: 2450, cuf: 24.1, avail: 96.8, status: "Warning" },
+  { plant: "Solapur SPV",         gen: 1720, target: 1680, cuf: 23.8, avail: 97.5, status: "Compliant" },
+  { plant: "Chennai Coastal",     gen: 1920, target: 1850, cuf: 24.5, avail: 98.1, status: "Compliant" },
+  { plant: "Coimbatore Solar",    gen: 2120, target: 2350, cuf: 20.8, avail: 93.5, status: "Non-Compliant" },
+  { plant: "Nagpur Plant",        gen: 1310, target: 1580, cuf: 19.5, avail: 91.2, status: "Non-Compliant" },
+];
+const PREVIEW_MONTHLY_CHART = [
+  { month: "Sep", gen: 38200, target: 40000 },
+  { month: "Oct", gen: 39500, target: 40000 },
+  { month: "Nov", gen: 37800, target: 40000 },
+  { month: "Dec", gen: 36200, target: 40000 },
+  { month: "Jan", gen: 38900, target: 42000 },
+  { month: "Feb", gen: 42580, target: 45000 },
+];
+const PREVIEW_REVENUE_CHART = [
+  { month: "Sep", realized: 7.1, target: 8.0 },
+  { month: "Oct", realized: 7.4, target: 8.0 },
+  { month: "Nov", realized: 7.0, target: 8.0 },
+  { month: "Dec", realized: 6.8, target: 8.0 },
+  { month: "Jan", realized: 7.3, target: 9.0 },
+  { month: "Feb", realized: 7.7, target: 9.0 },
+];
+const PREVIEW_VENDOR_DATA = [
+  { vendor: "Vendor A", cuf: 22.1, avail: 96.2, ld: 0.42, plants: 3 },
+  { vendor: "Vendor B", cuf: 23.4, avail: 97.5, ld: 0.00, plants: 2 },
+  { vendor: "Vendor C", cuf: 19.8, avail: 91.5, ld: 1.24, plants: 3 },
+  { vendor: "Vendor D", cuf: 23.7, avail: 97.8, ld: 0.00, plants: 3 },
+];
+const PREVIEW_OUTAGE_LOG = [
+  { date: "Feb 18", plant: "Nagpur Plant",    type: "Grid Curtailment",   duration: "6.2 hrs", loss: "184 MWh", severity: "high" },
+  { date: "Feb 14", plant: "Trichy Site B",   type: "Equipment Fault",    duration: "4.0 hrs", loss: "95 MWh",  severity: "high" },
+  { date: "Feb 11", plant: "Coimbatore",      type: "Scheduled Maint.",   duration: "3.5 hrs", loss: "72 MWh",  severity: "medium" },
+  { date: "Feb 07", plant: "Nashik Site A",   type: "Transmission Loss",  duration: "2.0 hrs", loss: "48 MWh",  severity: "medium" },
+  { date: "Feb 03", plant: "Aurangabad",      type: "Force Majeure",      duration: "1.5 hrs", loss: "38 MWh",  severity: "low" },
+];
+const PREVIEW_FORECAST_DATA = [
+  { day: "Mar 6",  actual: null,  forecast: 1540, upper: 1620, lower: 1460 },
+  { day: "Mar 7",  actual: null,  forecast: 1610, upper: 1700, lower: 1520 },
+  { day: "Mar 8",  actual: null,  forecast: 1490, upper: 1580, lower: 1400 },
+  { day: "Mar 9",  actual: null,  forecast: 1580, upper: 1660, lower: 1490 },
+  { day: "Mar 10", actual: null,  forecast: 1650, upper: 1740, lower: 1550 },
+  { day: "Mar 11", actual: null,  forecast: 1720, upper: 1810, lower: 1620 },
+  { day: "Mar 12", actual: null,  forecast: 1680, upper: 1770, lower: 1580 },
+];
+const PREVIEW_JMR_RECORDS = [
+  { id: "JMR-2026-02-001", plant: "Jodhpur Solar Park",  gross: 4520, net: 4418, avail: 97.2, status: "approved" },
+  { id: "JMR-2026-02-002", plant: "Chennai Coastal",     gross: 1920, net: 1882, avail: 98.1, status: "approved" },
+  { id: "JMR-2026-02-003", plant: "Nagpur Plant",        gross: 1310, net: 1274, avail: 91.2, status: "pending" },
+  { id: "JMR-2026-02-004", plant: "Coimbatore Solar",    gross: 2120, net: 2066, avail: 93.5, status: "review" },
+  { id: "JMR-2026-02-005", plant: "Pune Solar Park",     gross: 2150, net: 2107, avail: 97.2, status: "approved" },
+];
+const PREVIEW_LD_DATA = [
+  { vendor: "Vendor C", plant: "Nagpur Plant",     clause: "Cl. 8.2 – CUF",    breach: "4.5%", penalty: "₹0.55 Cr", risk: "high" },
+  { vendor: "Vendor C", plant: "Trichy Site B",    clause: "Cl. 8.2 – CUF",    breach: "5.5%", penalty: "₹0.69 Cr", risk: "high" },
+  { vendor: "Vendor A", plant: "Nashik Site A",    clause: "Cl. 9.1 – Avail",  breach: "3.5%", penalty: "₹0.28 Cr", risk: "medium" },
+  { vendor: "Vendor C", plant: "Coimbatore Solar", clause: "Cl. 8.2 – CUF",    breach: "3.2%", penalty: "₹0.20 Cr", risk: "medium" },
+  { vendor: "Vendor D", plant: "Pune Solar Park",  clause: "—",                 breach: "—",    penalty: "₹0.00 Cr", risk: "none" },
+];
+
+function ReportPreviewContent({ template }: { template: typeof reportTemplates[0] | null }) {
+  if (!template) return null;
+
+  const KpiMini = ({ label, value, sub, color = "blue" }: { label: string; value: string; sub?: string; color?: string }) => {
+    const border = color === "green" ? "border-emerald-400" : color === "red" ? "border-rose-400" : color === "amber" ? "border-amber-400" : "border-blue-400";
+    return (
+      <div className={`bg-white border-l-4 ${border} rounded-lg p-3 shadow-sm`}>
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</p>
+        <p className="text-xl font-bold text-slate-900 mt-0.5">{value}</p>
+        {sub && <p className="text-[10px] text-slate-500 mt-0.5">{sub}</p>}
+      </div>
+    );
+  };
+
+  const SectionHeader = ({ title, icon }: { title: string; icon?: React.ReactNode }) => (
+    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200">
+      {icon}
+      <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">{title}</h3>
+    </div>
+  );
+
+  const complianceBadge = (s: string) => {
+    if (s === "approved" || s === "Compliant") return <span className="px-2 py-0.5 text-[10px] rounded-full font-bold bg-emerald-100 text-emerald-700">✓ {s === "approved" ? "Approved" : "Compliant"}</span>;
+    if (s === "pending" || s === "Warning")    return <span className="px-2 py-0.5 text-[10px] rounded-full font-bold bg-amber-100 text-amber-700">⚠ {s === "pending" ? "Pending" : "Warning"}</span>;
+    if (s === "review")                        return <span className="px-2 py-0.5 text-[10px] rounded-full font-bold bg-blue-100 text-blue-700">↻ Under Review</span>;
+    return <span className="px-2 py-0.5 text-[10px] rounded-full font-bold bg-rose-100 text-rose-700">✗ Non-Compliant</span>;
+  };
+  const riskBadge = (r: string) => {
+    if (r === "none")   return <span className="px-2 py-0.5 text-[10px] rounded-full font-bold bg-emerald-100 text-emerald-700">None</span>;
+    if (r === "medium") return <span className="px-2 py-0.5 text-[10px] rounded-full font-bold bg-amber-100 text-amber-700">Medium</span>;
+    if (r === "high")   return <span className="px-2 py-0.5 text-[10px] rounded-full font-bold bg-rose-100 text-rose-700">High</span>;
+    return null;
+  };
+
+  switch (template.id) {
+    // ── Monthly Performance ──────────────────────────────────────────────
+    case "monthly-perf":
+      return (
+        <div className="space-y-5">
+          <div className="grid grid-cols-4 gap-3">
+            <KpiMini label="MTD Generation" value="42,580 MWh" sub="95% of target" color="blue" />
+            <KpiMini label="Portfolio CUF"  value="22.3 %"     sub="Target: 24%" color="amber" />
+            <KpiMini label="Grid Availability" value="95.1 %" sub="Target: 98%" color="amber" />
+            <KpiMini label="Revenue Realized"  value="₹7.7 Cr" sub="86% of target" color="green" />
+          </div>
+          <div>
+            <SectionHeader title="Monthly Generation vs Target (MWh)" />
+            <div className="h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={PREVIEW_MONTHLY_CHART} margin={{ left: 0, right: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} width={50} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6 }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="gen" name="Actual (MWh)" fill="#0A2E4A" radius={[3,3,0,0]} />
+                  <Bar dataKey="target" name="Target (MWh)" fill="#E8A800" opacity={0.6} radius={[3,3,0,0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div>
+            <SectionHeader title="Plant-wise Performance" />
+            <table className="w-full text-xs">
+              <thead className="bg-slate-50">
+                <tr>{["Plant","Generation","vs Target","CUF","Availability","Status"].map(h => <th key={h} className="text-left px-3 py-2 font-semibold text-slate-600">{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {PREVIEW_MONTHLY_PLANTS.map((r, i) => {
+                  const pct = ((r.gen - r.target) / r.target * 100);
+                  return (
+                    <tr key={i} className="border-t border-slate-100 hover:bg-slate-50">
+                      <td className="px-3 py-2 font-medium text-slate-800">{r.plant}</td>
+                      <td className="px-3 py-2 font-mono">{r.gen.toLocaleString()} MWh</td>
+                      <td className={`px-3 py-2 font-bold ${pct >= 0 ? "text-emerald-600" : "text-rose-600"}`}>{pct >= 0 ? "+" : ""}{pct.toFixed(1)}%</td>
+                      <td className="px-3 py-2">{r.cuf}%</td>
+                      <td className="px-3 py-2">{r.avail}%</td>
+                      <td className="px-3 py-2">{complianceBadge(r.status)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+
+    // ── Executive Dashboard ──────────────────────────────────────────────
+    case "exec-dashboard":
+      return (
+        <div className="space-y-5">
+          <div className="grid grid-cols-4 gap-3">
+            <KpiMini label="Total Revenue"   value="₹7.7 Cr"  sub="MTD realized" color="green" />
+            <KpiMini label="Portfolio CUF"   value="22.3 %"   sub="⚠ Below 24% target" color="amber" />
+            <KpiMini label="LD Exposure"     value="₹1.24 Cr" sub="2 high-risk plants" color="red" />
+            <KpiMini label="Asset Health"    value="90.5 / 100" sub="Good" color="blue" />
+          </div>
+          <div>
+            <SectionHeader title="6-Month KPI Trend" />
+            <div className="h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <RLineChart data={PREVIEW_MONTHLY_CHART} margin={{ left: 0, right: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} width={50} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6 }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey="gen" name="Generation (MWh)" stroke="#0A2E4A" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="target" name="Target (MWh)" stroke="#E8A800" strokeDasharray="4 4" strokeWidth={1.5} dot={false} />
+                </RLineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3 text-xs">
+            {[
+              { label: "✗ Non-Compliant Plants", value: "2 plants", color: "bg-rose-50 border-rose-200" },
+              { label: "⚠ Pending JMR Submissions", value: "3 plants", color: "bg-amber-50 border-amber-200" },
+              { label: "✓ On-track for Annual Target", value: "7 of 11 plants", color: "bg-emerald-50 border-emerald-200" },
+            ].map(item => (
+              <div key={item.label} className={`${item.color} border rounded-lg p-3`}>
+                <p className="font-semibold text-slate-700">{item.label}</p>
+                <p className="text-xl font-bold text-slate-900 mt-1">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+
+    // ── LD & Compliance ──────────────────────────────────────────────────
+    case "ld-compliance":
+      return (
+        <div className="space-y-5">
+          <div className="grid grid-cols-4 gap-3">
+            <KpiMini label="Total LD Exposure" value="₹1.24 Cr" sub="Current month" color="red" />
+            <KpiMini label="YTD LD Paid"       value="₹3.85 Cr" sub="+18% vs last FY" color="red" />
+            <KpiMini label="Non-Compliant"     value="2 plants"  sub="High risk" color="red" />
+            <KpiMini label="Compliant Plants"  value="7 / 11"    sub="63.6%" color="green" />
+          </div>
+          <div>
+            <SectionHeader title="LD Breach Log — February 2026" />
+            <table className="w-full text-xs">
+              <thead className="bg-slate-50">
+                <tr>{["Vendor","Plant","PPA Clause","Breach","Penalty","Risk"].map(h => <th key={h} className="text-left px-3 py-2 font-semibold text-slate-600">{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {PREVIEW_LD_DATA.map((r, i) => (
+                  <tr key={i} className="border-t border-slate-100 hover:bg-slate-50">
+                    <td className="px-3 py-2 font-medium">{r.vendor}</td>
+                    <td className="px-3 py-2 text-slate-700">{r.plant}</td>
+                    <td className="px-3 py-2 text-slate-500">{r.clause}</td>
+                    <td className={`px-3 py-2 font-bold ${r.breach !== "—" ? "text-rose-600" : "text-slate-400"}`}>{r.breach}</td>
+                    <td className="px-3 py-2 font-bold text-slate-900">{r.penalty}</td>
+                    <td className="px-3 py-2">{riskBadge(r.risk)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <SectionHeader title="LD Exposure by Vendor (₹ Cr)" />
+            <div className="h-44">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={PREVIEW_VENDOR_DATA} layout="vertical" margin={{ left: 60, right: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                  <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+                  <YAxis type="category" dataKey="vendor" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} width={60} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6 }} />
+                  <Bar dataKey="ld" name="LD Exposure (₹ Cr)" fill="#ef4444" radius={[0,3,3,0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      );
+
+    // ── Vendor Comparison ────────────────────────────────────────────────
+    case "vendor-comparison":
+      return (
+        <div className="space-y-5">
+          <div className="grid grid-cols-4 gap-3">
+            <KpiMini label="Best CUF"     value="Vendor D" sub="23.7% avg CUF" color="green" />
+            <KpiMini label="Best Avail."  value="Vendor D" sub="97.8% avg" color="green" />
+            <KpiMini label="Most LD"      value="Vendor C" sub="₹1.24 Cr exposure" color="red" />
+            <KpiMini label="Total Plants" value="11 plants" sub="Across 4 vendors" color="blue" />
+          </div>
+          <div>
+            <SectionHeader title="Vendor Performance Scorecard" />
+            <div className="h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={PREVIEW_VENDOR_DATA} margin={{ left: 0, right: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="vendor" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6 }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="cuf" name="CUF %" fill="#0A2E4A" radius={[3,3,0,0]} />
+                  <Bar dataKey="avail" name="Availability %" fill="#10B981" radius={[3,3,0,0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div>
+            <SectionHeader title="Detailed Comparison" />
+            <table className="w-full text-xs">
+              <thead className="bg-slate-50">
+                <tr>{["Vendor","Plants","CUF","Availability","LD Exposure","Ranking"].map(h => <th key={h} className="text-left px-3 py-2 font-semibold text-slate-600">{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {[...PREVIEW_VENDOR_DATA].sort((a,b) => b.cuf - a.cuf).map((r, i) => (
+                  <tr key={i} className="border-t border-slate-100 hover:bg-slate-50">
+                    <td className="px-3 py-2 font-medium">{r.vendor}</td>
+                    <td className="px-3 py-2">{r.plants}</td>
+                    <td className={`px-3 py-2 font-bold ${r.cuf >= 23 ? "text-emerald-600" : r.cuf >= 21 ? "text-amber-600" : "text-rose-600"}`}>{r.cuf}%</td>
+                    <td className={`px-3 py-2 font-bold ${r.avail >= 97 ? "text-emerald-600" : r.avail >= 95 ? "text-amber-600" : "text-rose-600"}`}>{r.avail}%</td>
+                    <td className={`px-3 py-2 font-bold ${r.ld > 0.5 ? "text-rose-600" : r.ld > 0 ? "text-amber-600" : "text-emerald-600"}`}>₹{r.ld} Cr</td>
+                    <td className="px-3 py-2 font-bold">#{i + 1}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+
+    // ── JMR Summary ──────────────────────────────────────────────────────
+    case "jmr-summary":
+      return (
+        <div className="space-y-5">
+          <div className="grid grid-cols-4 gap-3">
+            <KpiMini label="Total Submissions" value="11 plants"  sub="February 2026" color="blue" />
+            <KpiMini label="Approved"          value="3 records"  sub="27.3%" color="green" />
+            <KpiMini label="Pending / Review"  value="2 records"  sub="Awaiting checker" color="amber" />
+            <KpiMini label="Data Coverage"     value="100%"       sub="All plants submitted" color="green" />
+          </div>
+          <div>
+            <SectionHeader title="JMR Records — February 2026" />
+            <table className="w-full text-xs">
+              <thead className="bg-slate-50">
+                <tr>{["JMR ID","Plant","Gross Gen (MWh)","Net Export (MWh)","Availability","Status"].map(h => <th key={h} className="text-left px-3 py-2 font-semibold text-slate-600">{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {PREVIEW_JMR_RECORDS.map((r, i) => (
+                  <tr key={i} className="border-t border-slate-100 hover:bg-slate-50">
+                    <td className="px-3 py-2 font-mono text-slate-500">{r.id}</td>
+                    <td className="px-3 py-2 font-medium">{r.plant}</td>
+                    <td className="px-3 py-2 font-mono">{r.gross.toLocaleString()}</td>
+                    <td className="px-3 py-2 font-mono">{r.net.toLocaleString()}</td>
+                    <td className="px-3 py-2">{r.avail}%</td>
+                    <td className="px-3 py-2">{complianceBadge(r.status)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="bg-slate-50 rounded-lg p-3 text-xs text-slate-600 border border-slate-200">
+            <p className="font-semibold text-slate-800 mb-1">Data Quality Summary</p>
+            <div className="grid grid-cols-3 gap-4">
+              <span>Total Gross Generation: <strong>11,900 MWh</strong></span>
+              <span>Total Net Export: <strong>11,647 MWh</strong></span>
+              <span>Portfolio Availability: <strong>95.1%</strong></span>
+            </div>
+          </div>
+        </div>
+      );
+
+    // ── Revenue Analysis ─────────────────────────────────────────────────
+    case "revenue-analysis":
+      return (
+        <div className="space-y-5">
+          <div className="grid grid-cols-4 gap-3">
+            <KpiMini label="MTD Revenue"   value="₹7.7 Cr"  sub="86% of target" color="amber" />
+            <KpiMini label="YTD Revenue"   value="₹48.2 Cr" sub="On track" color="green" />
+            <KpiMini label="Shortfall"     value="₹1.3 Cr"  sub="Current month" color="red" />
+            <KpiMini label="Collection %"  value="91.4%"    sub="DSO: 42 days" color="blue" />
+          </div>
+          <div>
+            <SectionHeader title="Revenue vs Target — 6 Months (₹ Cr)" />
+            <div className="h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={PREVIEW_REVENUE_CHART} margin={{ left: 0, right: 10 }}>
+                  <defs>
+                    <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} width={40} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6 }} formatter={(v: number) => [`₹${v} Cr`]} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Area type="monotone" dataKey="realized" name="Realized (₹ Cr)" stroke="#10B981" strokeWidth={2} fill="url(#revGrad)" />
+                  <Line type="monotone" dataKey="target" name="Target (₹ Cr)" stroke="#E8A800" strokeDasharray="4 4" strokeWidth={1.5} dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3 text-xs">
+            {[
+              { label: "Energy Sale", pct: "87%", value: "₹6.7 Cr" },
+              { label: "REC Income", pct: "7.4%", value: "₹0.57 Cr" },
+              { label: "Incentives & Bonus", pct: "5.6%", value: "₹0.43 Cr" },
+            ].map(item => (
+              <div key={item.label} className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                <p className="text-slate-500">{item.label}</p>
+                <p className="text-xl font-bold text-slate-900">{item.value}</p>
+                <p className="text-slate-400">{item.pct} of total</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+
+    // ── Outage & Loss Analysis ───────────────────────────────────────────
+    case "outage-analysis":
+      return (
+        <div className="space-y-5">
+          <div className="grid grid-cols-4 gap-3">
+            <KpiMini label="Total Outage Events" value="5"         sub="February 2026" color="red" />
+            <KpiMini label="Energy Lost"         value="437 MWh"  sub="1.02% of potential" color="red" />
+            <KpiMini label="Revenue Impact"      value="₹0.52 Cr" sub="Unrecovered" color="amber" />
+            <KpiMini label="Grid Availability"   value="95.1%"    sub="Target: 98%" color="amber" />
+          </div>
+          <div>
+            <SectionHeader title="Outage Event Log — February 2026" />
+            <table className="w-full text-xs">
+              <thead className="bg-slate-50">
+                <tr>{["Date","Plant","Type","Duration","Energy Lost","Severity"].map(h => <th key={h} className="text-left px-3 py-2 font-semibold text-slate-600">{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {PREVIEW_OUTAGE_LOG.map((r, i) => (
+                  <tr key={i} className="border-t border-slate-100 hover:bg-slate-50">
+                    <td className="px-3 py-2 text-slate-500">{r.date}</td>
+                    <td className="px-3 py-2 font-medium">{r.plant}</td>
+                    <td className="px-3 py-2 text-slate-700">{r.type}</td>
+                    <td className="px-3 py-2 font-mono">{r.duration}</td>
+                    <td className="px-3 py-2 font-bold text-rose-600">{r.loss}</td>
+                    <td className="px-3 py-2">{riskBadge(r.severity)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <SectionHeader title="Loss Breakdown by Type (MWh)" />
+            <div className="h-36">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={[
+                  { type: "Grid Curtailment", loss: 184 },
+                  { type: "Equipment Fault", loss: 95 },
+                  { type: "Sched. Maintenance", loss: 72 },
+                  { type: "Transmission", loss: 48 },
+                  { type: "Force Majeure", loss: 38 },
+                ]} layout="vertical" margin={{ left: 120, right: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                  <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+                  <YAxis type="category" dataKey="type" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} width={120} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6 }} />
+                  <Bar dataKey="loss" name="Energy Lost (MWh)" fill="#ef4444" radius={[0,3,3,0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      );
+
+    // ── Generation Forecast ──────────────────────────────────────────────
+    case "forecast-report":
+      return (
+        <div className="space-y-5">
+          <div className="grid grid-cols-4 gap-3">
+            <KpiMini label="7-Day Forecast"   value="11,270 MWh" sub="Avg 1,610 MWh/day" color="blue" />
+            <KpiMini label="AI Confidence"    value="87.4%"      sub="High confidence" color="green" />
+            <KpiMini label="Weather Risk"     value="Low"        sub="Clear skies forecast" color="green" />
+            <KpiMini label="Expected Revenue" value="₹1.35 Cr"   sub="Next 7 days" color="blue" />
+          </div>
+          <div>
+            <SectionHeader title="7-Day Generation Forecast (MWh/day)" />
+            <div className="h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={PREVIEW_FORECAST_DATA} margin={{ left: 0, right: 10 }}>
+                  <defs>
+                    <linearGradient id="fcstGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} width={50} domain={[1300, 1900]} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6 }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Area type="monotone" dataKey="upper" name="Upper Bound" stroke="transparent" fill="url(#fcstGrad)" legendType="none" />
+                  <Area type="monotone" dataKey="lower" name="Lower Bound" stroke="transparent" fill="#fff" legendType="none" />
+                  <Line type="monotone" dataKey="forecast" name="Forecast (MWh)" stroke="#3B82F6" strokeWidth={2.5} dot={{ r: 4 }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div>
+            <SectionHeader title="Daily Forecast Breakdown" />
+            <table className="w-full text-xs">
+              <thead className="bg-slate-50">
+                <tr>{["Date","Forecast (MWh)","Lower","Upper","Confidence","Revenue Est."].map(h => <th key={h} className="text-left px-3 py-2 font-semibold text-slate-600">{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {PREVIEW_FORECAST_DATA.map((r, i) => (
+                  <tr key={i} className="border-t border-slate-100 hover:bg-slate-50">
+                    <td className="px-3 py-2 text-slate-700 font-medium">{r.day}</td>
+                    <td className="px-3 py-2 font-mono font-bold text-blue-700">{r.forecast.toLocaleString()}</td>
+                    <td className="px-3 py-2 font-mono text-slate-400">{r.lower.toLocaleString()}</td>
+                    <td className="px-3 py-2 font-mono text-slate-400">{r.upper.toLocaleString()}</td>
+                    <td className="px-3 py-2 text-emerald-600 font-bold">87%</td>
+                    <td className="px-3 py-2 text-emerald-700 font-bold">₹{(r.forecast * 0.00012).toFixed(2)} Cr</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+
+    default:
+      return (
+        <div className="text-center py-16">
+          <div className="text-6xl mb-4">📊</div>
+          <h3 className="text-lg font-bold text-slate-800 mb-2">{template.name}</h3>
+          <p className="text-slate-500 text-sm">{template.description}</p>
+        </div>
+      );
+  }
+}
+
+// ── HTML report generator for download ────────────────────────────────────
+function buildReportHTML(template: typeof reportTemplates[0]): string {
+  const now = new Date().toLocaleString("en-IN", { dateStyle: "long", timeStyle: "short" });
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>${template.name} — E-SAMMP</title>
+<style>
+  body{font-family:Arial,sans-serif;margin:0;padding:40px;color:#1e293b;background:#f8fafc;}
+  h1{color:#0A2E4A;font-size:24px;margin-bottom:4px;}
+  .sub{color:#64748b;font-size:13px;margin-bottom:24px;}
+  .badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:#e0f2fe;color:#0369a1;}
+  .kpi-row{display:flex;gap:16px;margin-bottom:28px;}
+  .kpi{flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:14px;border-left:4px solid #0A2E4A;}
+  .kpi label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;}
+  .kpi .val{font-size:22px;font-weight:800;color:#0f172a;margin-top:4px;}
+  table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border-radius:8px;overflow:hidden;margin-bottom:24px;}
+  th{background:#f1f5f9;text-align:left;padding:9px 12px;font-weight:700;color:#475569;border-bottom:2px solid #e2e8f0;}
+  td{padding:8px 12px;border-bottom:1px solid #f1f5f9;}
+  .footer{margin-top:32px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px;}
+  @media print{body{padding:20px;}button{display:none;}}
+</style>
+</head>
+<body>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+  <div>
+    <h1>${template.name}</h1>
+    <p class="sub">${template.description} &nbsp;|&nbsp; <span class="badge">${template.category}</span></p>
+  </div>
+  <div style="text-align:right;font-size:12px;color:#64748b;">
+    <div style="font-weight:700;color:#0A2E4A;font-size:15px;">E-SAMMP</div>
+    <div>EESL Solar Asset Management</div>
+    <div>Generated: ${now}</div>
+    <button onclick="window.print()" style="margin-top:8px;padding:5px 12px;background:#0A2E4A;color:#fff;border:none;border-radius:5px;cursor:pointer;">Print / Save PDF</button>
+  </div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi"><label>Report Period</label><div class="val">Feb 2026</div></div>
+  <div class="kpi"><label>Plants Covered</label><div class="val">11</div></div>
+  <div class="kpi"><label>Frequency</label><div class="val">${template.frequency}</div></div>
+  <div class="kpi"><label>Estimated Pages</label><div class="val">~12 pg</div></div>
+</div>
+
+<h2 style="font-size:15px;color:#0A2E4A;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:16px;">${template.name} — Summary Data</h2>
+
+<table>
+  <tr><th>Metric</th><th>Current</th><th>Target</th><th>Status</th></tr>
+  <tr><td>MTD Generation</td><td>42,580 MWh</td><td>45,000 MWh</td><td>⚠ 94.6%</td></tr>
+  <tr><td>Portfolio CUF</td><td>22.3%</td><td>24.0%</td><td>⚠ Warning</td></tr>
+  <tr><td>Grid Availability</td><td>95.1%</td><td>98.0%</td><td>⚠ Warning</td></tr>
+  <tr><td>Revenue Realized</td><td>₹7.7 Cr</td><td>₹9.0 Cr</td><td>⚠ 85.6%</td></tr>
+  <tr><td>LD Exposure</td><td>₹1.24 Cr</td><td>₹0 Cr</td><td>✗ Alert</td></tr>
+  <tr><td>Asset Health Index</td><td>90.5 / 100</td><td>90.0 / 100</td><td>✓ On Target</td></tr>
+</table>
+
+<h2 style="font-size:15px;color:#0A2E4A;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:16px;">Plant-wise Breakdown</h2>
+<table>
+  <tr><th>Plant</th><th>State</th><th>Capacity (MW)</th><th>Generation (MWh)</th><th>CUF (%)</th><th>Availability (%)</th></tr>
+  <tr><td>Pune Solar Park</td><td>Maharashtra</td><td>25</td><td>2,150</td><td>23.5</td><td>97.2</td></tr>
+  <tr><td>Nashik Site A</td><td>Maharashtra</td><td>15</td><td>1,180</td><td>21.2</td><td>94.5</td></tr>
+  <tr><td>Aurangabad Project</td><td>Maharashtra</td><td>30</td><td>2,380</td><td>24.1</td><td>96.8</td></tr>
+  <tr><td>Solapur SPV</td><td>Maharashtra</td><td>20</td><td>1,720</td><td>23.8</td><td>97.5</td></tr>
+  <tr><td>Nagpur Plant</td><td>Maharashtra</td><td>18</td><td>1,310</td><td>19.5</td><td>91.2</td></tr>
+  <tr><td>Chennai Coastal</td><td>Tamil Nadu</td><td>22</td><td>1,920</td><td>24.5</td><td>98.1</td></tr>
+  <tr><td>Coimbatore Solar</td><td>Tamil Nadu</td><td>28</td><td>2,120</td><td>20.8</td><td>93.5</td></tr>
+</table>
+
+<p class="footer">
+  Report generated by E-SAMMP · EESL Solar Asset Management &amp; Monitoring Platform ·
+  This report contains confidential data intended for authorized recipients only. ·
+  Tags: ${template.tags.join(", ")} · Recipients: ${template.recipients} · Last generated: ${template.lastGenerated}
+</p>
+</body>
+</html>`;
+}
+
 export function ReportsMIS() {
   const [viewMode, setViewMode] = useState<ViewMode>("gallery");
   const [searchTerm, setSearchTerm] = useState("");
@@ -529,6 +1102,55 @@ export function ReportsMIS() {
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<typeof reportTemplates[0] | null>(null);
+
+  // Generate state (T: Reports Generate)
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateProgress, setGenerateProgress] = useState(0);
+  const [generateStep, setGenerateStep] = useState("");
+  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
+  const [generatingName, setGeneratingName] = useState("");
+  const [templateLastGenerated, setTemplateLastGenerated] = useState<Record<string, string>>({});
+
+  const handleGenerate = (template: typeof reportTemplates[0]) => {
+    setGeneratingName(template.name);
+    setGenerateProgress(0);
+    setGenerateStep("Fetching data…");
+    setIsGenerating(true);
+    setGenerateDialogOpen(true);
+
+    const steps: Array<[number, string]> = [
+      [15, "Fetching data…"],
+      [35, "Processing plant records…"],
+      [55, "Applying filters & aggregations…"],
+      [75, "Rendering report layout…"],
+      [90, "Packaging document…"],
+      [100, "Complete!"],
+    ];
+
+    let i = 0;
+    const tick = () => {
+      if (i < steps.length) {
+        const [pct, label] = steps[i];
+        setGenerateProgress(pct);
+        setGenerateStep(label);
+        i++;
+        setTimeout(tick, i === steps.length ? 600 : 520);
+      } else {
+        setIsGenerating(false);
+        const html = buildReportHTML(template);
+        const blob = new Blob([html], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${template.name.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.html`;
+        a.click();
+        URL.revokeObjectURL(url);
+        setTemplateLastGenerated(prev => ({ ...prev, [template.id]: "Just now" }));
+        toast.success(`${template.name} downloaded successfully`);
+      }
+    };
+    setTimeout(tick, 300);
+  };
 
   // Report Builder State
   const [rowFields, setRowFields] = useState<any[]>([]);
@@ -781,7 +1403,7 @@ export function ReportsMIS() {
                                   className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    toast.success(`Generating ${template.name}...`);
+                                    handleGenerate(template);
                                   }}
                                 >
                                   <Play className="w-4 h-4" />
@@ -837,7 +1459,9 @@ export function ReportsMIS() {
                               </div>
                               <div className="flex items-center justify-between">
                                 <span className="text-slate-600">Last Generated:</span>
-                                <span className="font-medium text-slate-700">{template.lastGenerated}</span>
+                                <span className={`font-medium ${templateLastGenerated[template.id] ? "text-emerald-600" : "text-slate-700"}`}>
+                                  {templateLastGenerated[template.id] || template.lastGenerated}
+                                </span>
                               </div>
                               <div className="flex items-center justify-between">
                                 <span className="text-slate-600">Est. Time:</span>
@@ -1887,30 +2511,83 @@ export function ReportsMIS() {
 
         {/* Preview Dialog */}
         <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
-          <DialogContent className="max-w-5xl h-[85vh]">
-            <DialogHeader>
-              <DialogTitle className="text-xl">{selectedTemplate?.name}</DialogTitle>
-              <DialogDescription>{selectedTemplate?.description}</DialogDescription>
-            </DialogHeader>
-            <ScrollArea className="flex-1">
-              <div className="p-6">
-                <div className="text-center py-20">
-                  <Eye className="w-16 h-16 text-blue-500 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold text-slate-900 mb-2">Report Preview</h3>
-                  <p className="text-slate-600 mb-6">Interactive preview of {selectedTemplate?.name}</p>
-                  <div className="flex gap-3 justify-center">
-                    <Button variant="outline" className="gap-2">
-                      <Download className="w-4 h-4" />
-                      Download Sample
-                    </Button>
-                    <Button className="bg-[#0A2E4A] gap-2">
-                      <Play className="w-4 h-4" />
-                      Generate Now
-                    </Button>
-                  </div>
+          <DialogContent className="max-w-5xl h-[88vh] flex flex-col">
+            <DialogHeader className="shrink-0 border-b border-slate-100 pb-3">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <DialogTitle className="text-xl text-[#0A2E4A]">{selectedTemplate?.name}</DialogTitle>
+                  <DialogDescription className="mt-0.5">{selectedTemplate?.description}</DialogDescription>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => {
+                      if (selectedTemplate) handleGenerate(selectedTemplate);
+                      setPreviewDialogOpen(false);
+                    }}
+                  >
+                    <Play className="w-3.5 h-3.5 text-emerald-600" />
+                    Generate & Download
+                  </Button>
                 </div>
               </div>
+              {selectedTemplate && (
+                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Period: Feb 2026</span>
+                  <span className="text-slate-200">|</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Frequency: {selectedTemplate.frequency}</span>
+                  <span className="text-slate-200">|</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Est. {selectedTemplate.estimatedTime}</span>
+                  {selectedTemplate.tags.map(t => (
+                    <span key={t} className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-semibold">{t}</span>
+                  ))}
+                </div>
+              )}
+            </DialogHeader>
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="p-6">
+                <ReportPreviewContent template={selectedTemplate} />
+              </div>
             </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Generate Progress Dialog */}
+        <Dialog open={generateDialogOpen} onOpenChange={(open) => { if (!isGenerating) setGenerateDialogOpen(open); }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-[#0A2E4A]">
+                {generateProgress < 100 ? (
+                  <><div className="w-5 h-5 border-2 border-[#0A2E4A] border-t-transparent rounded-full animate-spin" /> Generating Report…</>
+                ) : (
+                  <><CheckCircle className="w-5 h-5 text-emerald-600" /> Report Ready</>
+                )}
+              </DialogTitle>
+              <DialogDescription>{generatingName}</DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              <Progress value={generateProgress} className="h-2.5" />
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-600">{generateStep}</span>
+                <span className="font-bold text-[#0A2E4A]">{generateProgress}%</span>
+              </div>
+              {generateProgress === 100 && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm text-emerald-800 flex items-center gap-2">
+                  <Download className="w-4 h-4 shrink-0" />
+                  Report downloaded to your device. Check your Downloads folder.
+                </div>
+              )}
+            </div>
+            {generateProgress === 100 && (
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setGenerateDialogOpen(false)}>Close</Button>
+                <Button className="bg-[#0A2E4A] gap-2" onClick={() => { setGenerateDialogOpen(false); setPreviewDialogOpen(true); }}>
+                  <Eye className="w-4 h-4" /> View Preview
+                </Button>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>

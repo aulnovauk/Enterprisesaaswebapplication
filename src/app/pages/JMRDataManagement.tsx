@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { PageExportMenu } from "../components/PageExportMenu";
 import { motion, AnimatePresence } from "motion/react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
@@ -213,6 +213,15 @@ const auditRecords = [
   },
 ];
 
+const plants = [...new Set(jmrRecords.map(r => r.plant))];
+const APPROVAL_OPTIONS = [
+  { value: "all", label: "All Status" },
+  { value: "approved", label: "Approved" },
+  { value: "pending", label: "Pending Review" },
+  { value: "draft", label: "Draft" },
+  { value: "rejected", label: "Rejected" },
+];
+
 const getStatusConfig = (status: string) => {
   switch (status) {
     case "approved":
@@ -264,14 +273,13 @@ export function JMRDataManagement() {
   const [activeTab, setActiveTab] = useState("manual-entry");
   const [selectedFY, setSelectedFY] = useState("FY 2025-26");
   const [selectedMonth, setSelectedMonth] = useState("February");
-  const [selectedState, setSelectedState] = useState("Maharashtra");
+  const [selectedPlant, setSelectedPlant] = useState("All Plants");
   const [selectedVendor, setSelectedVendor] = useState("All Vendors");
-  const [selectedPPAType, setSelectedPPAType] = useState("All PPA Types");
+  const [selectedStatus, setSelectedStatus] = useState("all");
   const [showWorkflowPanel, setShowWorkflowPanel] = useState(true);
   const pageRef = useRef<HTMLDivElement>(null);
   const [entryStep, setEntryStep] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
 
   // Form State - Plant Metadata
   const [plantMetadata, setPlantMetadata] = useState({
@@ -312,6 +320,30 @@ export function JMRDataManagement() {
   // Validation state
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
+
+  // T001: Workflow state machine
+  const [workflowStage, setWorkflowStage] = useState<"draft" | "submitted" | "under_review" | "approved" | "rejected" | "locked">("draft");
+  const [checkerComment, setCheckerComment] = useState("");
+  const [rejectionReason, setRejectionReason] = useState("");
+
+  // T005: PDF dialog state
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
+  const [pdfDialogRecord, setPdfDialogRecord] = useState<(typeof jmrRecords)[0] | null>(null);
+  const [pdfUploadedSet, setPdfUploadedSet] = useState<Set<string>>(
+    new Set(jmrRecords.filter(r => r.pdfUploaded).map(r => r.id))
+  );
+
+  // T006: Version comparison
+  const [compareV1, setCompareV1] = useState("1");
+  const [compareV2, setCompareV2] = useState("2");
+  const [showDiff, setShowDiff] = useState(false);
+
+  // T007: Custom additional parameters
+  const [customParams, setCustomParams] = useState([
+    { id: 1, label: "Reactive Power Import (kVAR)", value: "45.2", unit: "kVAR" },
+  ]);
+
+  const isLocked = workflowStage === "locked";
 
   // Computed values
   const auxiliaryConsumption = operationalData.grossGeneration && operationalData.netExportEnergy
@@ -363,7 +395,8 @@ export function JMRDataManagement() {
 
   const handleSubmitForReview = () => {
     if (validateForm()) {
-      toast.success("Submitted for review successfully");
+      setWorkflowStage("submitted");
+      toast.success("JMR submitted for Checker review");
     } else {
       toast.error("Please fix validation errors before submitting");
     }
@@ -394,17 +427,43 @@ export function JMRDataManagement() {
     toast.info("Form reset");
   };
 
-  // Filter JMR records
-  const filteredJMRRecords = jmrRecords.filter((record) => {
+  const isFiltered = selectedFY !== "FY 2025-26" || selectedMonth !== "February" || selectedPlant !== "All Plants" || selectedVendor !== "All Vendors" || selectedStatus !== "all";
+
+  const resetAllFilters = () => {
+    setSelectedFY("FY 2025-26");
+    setSelectedMonth("February");
+    setSelectedPlant("All Plants");
+    setSelectedVendor("All Vendors");
+    setSelectedStatus("all");
+    setSearchTerm("");
+    toast.info("All filters reset");
+  };
+
+  const filteredJMRRecords = useMemo(() => jmrRecords.filter((record) => {
+    const matchesFY = record.fy === selectedFY;
+    const matchesMonth = record.month === selectedMonth;
+    const matchesPlant = selectedPlant === "All Plants" || record.plant === selectedPlant;
+    const matchesVendor = selectedVendor === "All Vendors" || record.vendor === selectedVendor;
+    const matchesStatus = selectedStatus === "all" || record.approvalStatus === selectedStatus;
     const matchesSearch =
+      !searchTerm ||
       record.plant.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.vendor.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = statusFilter === "all" || record.approvalStatus === statusFilter;
+    return matchesFY && matchesMonth && matchesPlant && matchesVendor && matchesStatus && matchesSearch;
+  }), [selectedFY, selectedMonth, selectedPlant, selectedVendor, selectedStatus, searchTerm]);
 
-    return matchesSearch && matchesStatus;
-  });
+  const statusCounts = useMemo(() => {
+    const byPeriod = jmrRecords.filter(r => r.fy === selectedFY && r.month === selectedMonth);
+    return {
+      approved: byPeriod.filter(r => r.approvalStatus === "approved").length,
+      pending: byPeriod.filter(r => r.approvalStatus === "pending").length,
+      draft: byPeriod.filter(r => r.approvalStatus === "draft").length,
+      rejected: byPeriod.filter(r => r.approvalStatus === "rejected").length,
+      total: byPeriod.length,
+    };
+  }, [selectedFY, selectedMonth]);
 
   return (
     <div ref={pageRef} className="min-h-screen bg-slate-50 flex flex-col">
@@ -477,67 +536,89 @@ export function JMRDataManagement() {
                 </Select>
               </div>
 
-              <Select value={selectedState} onValueChange={setSelectedState}>
-                <SelectTrigger className="w-28 h-7 text-xs">
-                  <SelectValue placeholder="State" />
+              <Select value={selectedPlant} onValueChange={setSelectedPlant}>
+                <SelectTrigger className="w-40 h-7 text-xs">
+                  <SelectValue placeholder="Plant" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="All States">All States</SelectItem>
-                  {states.map((state) => (
-                    <SelectItem key={state} value={state}>
-                      {state}
-                    </SelectItem>
+                  <SelectItem value="All Plants">All Plants</SelectItem>
+                  {plants.map((p) => (
+                    <SelectItem key={p} value={p}>{p}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
               <Select value={selectedVendor} onValueChange={setSelectedVendor}>
-                <SelectTrigger className="w-28 h-7 text-xs">
+                <SelectTrigger className="w-32 h-7 text-xs">
                   <SelectValue placeholder="Vendor" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All Vendors">All Vendors</SelectItem>
                   {vendors.map((vendor) => (
-                    <SelectItem key={vendor} value={vendor}>
-                      {vendor}
-                    </SelectItem>
+                    <SelectItem key={vendor} value={vendor}>{vendor}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
-              <Select value={selectedPPAType} onValueChange={setSelectedPPAType}>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                 <SelectTrigger className="w-32 h-7 text-xs">
-                  <SelectValue placeholder="PPA Type" />
+                  <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="All PPA Types">All PPA Types</SelectItem>
-                  {ppaTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
+                  {APPROVAL_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+
+              {isFiltered && (
+                <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-rose-600 hover:bg-rose-50" onClick={resetAllFilters}>
+                  <RotateCcw className="w-3 h-3" /> Reset
+                </Button>
+              )}
             </div>
 
-            {/* Status Summary - Compact Badges */}
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1 px-2 py-1 bg-emerald-50 rounded border border-emerald-200">
                 <CheckCircle className="w-3 h-3 text-emerald-600" />
-                <span className="text-xs font-medium text-emerald-700">Completed</span>
+                <span className="text-xs font-medium text-emerald-700">{statusCounts.approved} Approved</span>
               </div>
               <div className="flex items-center gap-1 px-2 py-1 bg-amber-50 rounded border border-amber-200">
                 <Clock className="w-3 h-3 text-amber-600" />
-                <span className="text-xs font-medium text-amber-700">Pending</span>
+                <span className="text-xs font-medium text-amber-700">{statusCounts.pending} Pending</span>
               </div>
-              <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 rounded border border-blue-200">
-                <Unlock className="w-3 h-3 text-blue-600" />
-                <span className="text-xs font-medium text-blue-700">Unlocked</span>
+              <div className="flex items-center gap-1 px-2 py-1 bg-slate-50 rounded border border-slate-200">
+                <FileText className="w-3 h-3 text-slate-500" />
+                <span className="text-xs font-medium text-slate-600">{statusCounts.draft} Draft</span>
               </div>
+              {statusCounts.rejected > 0 && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-rose-50 rounded border border-rose-200">
+                  <XCircle className="w-3 h-3 text-rose-600" />
+                  <span className="text-xs font-medium text-rose-700">{statusCounts.rejected} Rejected</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {isFiltered && (
+        <div className="bg-blue-50 border-b border-blue-200 px-6 py-1.5 flex items-center gap-2 shrink-0">
+          <Filter className="w-3 h-3 text-blue-600 shrink-0" />
+          <span className="text-xs text-blue-800 font-medium">Active Filters:</span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {selectedFY !== "FY 2025-26" && <Badge variant="outline" className="text-[10px] h-5 bg-blue-100 text-blue-700 border-blue-300">{selectedFY}</Badge>}
+            {selectedMonth !== "February" && <Badge variant="outline" className="text-[10px] h-5 bg-blue-100 text-blue-700 border-blue-300">{selectedMonth}</Badge>}
+            {selectedPlant !== "All Plants" && <Badge variant="outline" className="text-[10px] h-5 bg-blue-100 text-blue-700 border-blue-300">{selectedPlant}</Badge>}
+            {selectedVendor !== "All Vendors" && <Badge variant="outline" className="text-[10px] h-5 bg-blue-100 text-blue-700 border-blue-300">{selectedVendor}</Badge>}
+            {selectedStatus !== "all" && <Badge variant="outline" className="text-[10px] h-5 bg-blue-100 text-blue-700 border-blue-300">{APPROVAL_OPTIONS.find(o => o.value === selectedStatus)?.label}</Badge>}
+          </div>
+          <span className="text-xs text-blue-600 ml-1">({filteredJMRRecords.length} records)</span>
+          <Button variant="ghost" size="sm" className="h-5 text-[10px] text-blue-600 hover:bg-blue-100 ml-auto px-2" onClick={resetAllFilters}>
+            Clear All
+          </Button>
+        </div>
+      )}
 
       {/* MAIN CONTENT */}
       <div className="flex-1 flex overflow-hidden">
@@ -640,6 +721,22 @@ export function JMRDataManagement() {
                         </CardContent>
                       </Card>
 
+                      {/* T002: Locked banner — shown on ALL steps */}
+                      {workflowStage === "locked" && entryStep !== 4 && (
+                        <div className="flex items-center justify-between px-4 py-3 bg-amber-50 border-2 border-amber-400 rounded-xl">
+                          <div className="flex items-center gap-3">
+                            <Lock className="w-5 h-5 text-amber-700 shrink-0" />
+                            <div>
+                              <p className="text-sm font-bold text-amber-900">This JMR is approved and locked.</p>
+                              <p className="text-xs text-amber-700">Contact your administrator to request an amendment.</p>
+                            </div>
+                          </div>
+                          <Button size="sm" variant="outline" className="gap-1.5 border-amber-400 text-amber-700 hover:bg-amber-100 text-xs shrink-0" onClick={() => toast.info("Unlock request sent to Approver")}>
+                            <Unlock className="w-3 h-3" /> Request Unlock
+                          </Button>
+                        </div>
+                      )}
+
                       {/* SECTION 1: Plant Metadata */}
                       {entryStep === 1 && (
                         <motion.div
@@ -658,7 +755,7 @@ export function JMRDataManagement() {
                               </CardDescription>
                             </CardHeader>
                             <CardContent className="p-6 space-y-6">
-                              <div className="grid grid-cols-2 gap-6">
+                              <div className={`grid grid-cols-2 gap-6 ${isLocked ? "opacity-60 pointer-events-none" : ""}`}>
                                 <div className="space-y-2">
                                   <Label htmlFor="state" className="text-xs font-bold uppercase text-slate-700">
                                     State <span className="text-rose-600">*</span>
@@ -668,6 +765,7 @@ export function JMRDataManagement() {
                                     onValueChange={(val) =>
                                       setPlantMetadata({ ...plantMetadata, state: val })
                                     }
+                                    disabled={isLocked}
                                   >
                                     <SelectTrigger id="state">
                                       <SelectValue />
@@ -693,6 +791,7 @@ export function JMRDataManagement() {
                                       setPlantMetadata({ ...plantMetadata, district: e.target.value })
                                     }
                                     placeholder="Enter district"
+                                    disabled={isLocked}
                                   />
                                 </div>
 
@@ -707,6 +806,7 @@ export function JMRDataManagement() {
                                       setPlantMetadata({ ...plantMetadata, plantName: e.target.value })
                                     }
                                     placeholder="Enter plant name"
+                                    disabled={isLocked}
                                   />
                                 </div>
 
@@ -722,6 +822,7 @@ export function JMRDataManagement() {
                                       setPlantMetadata({ ...plantMetadata, capacity: e.target.value })
                                     }
                                     placeholder="Enter capacity"
+                                    disabled={isLocked}
                                   />
                                 </div>
 
@@ -736,6 +837,7 @@ export function JMRDataManagement() {
                                     onChange={(e) =>
                                       setPlantMetadata({ ...plantMetadata, cod: e.target.value })
                                     }
+                                    disabled={isLocked}
                                   />
                                 </div>
 
@@ -748,6 +850,7 @@ export function JMRDataManagement() {
                                     onValueChange={(val) =>
                                       setPlantMetadata({ ...plantMetadata, vendor: val })
                                     }
+                                    disabled={isLocked}
                                   >
                                     <SelectTrigger id="vendor">
                                       <SelectValue />
@@ -773,6 +876,7 @@ export function JMRDataManagement() {
                                       setPlantMetadata({ ...plantMetadata, procurer: e.target.value })
                                     }
                                     placeholder="e.g., EESL, SECI"
+                                    disabled={isLocked}
                                   />
                                 </div>
 
@@ -785,6 +889,7 @@ export function JMRDataManagement() {
                                     onValueChange={(val) =>
                                       setPlantMetadata({ ...plantMetadata, contractType: val })
                                     }
+                                    disabled={isLocked}
                                   >
                                     <SelectTrigger id="contractType">
                                       <SelectValue />
@@ -807,6 +912,7 @@ export function JMRDataManagement() {
                                     onValueChange={(val) =>
                                       setPlantMetadata({ ...plantMetadata, ppaType: val })
                                     }
+                                    disabled={isLocked}
                                   >
                                     <SelectTrigger id="ppaType">
                                       <SelectValue />
@@ -825,10 +931,12 @@ export function JMRDataManagement() {
                           </Card>
 
                           <div className="flex justify-end gap-3">
-                            <Button variant="outline" onClick={handleReset}>
-                              <RotateCcw className="w-4 h-4 mr-2" />
-                              Reset
-                            </Button>
+                            {!isLocked && (
+                              <Button variant="outline" onClick={handleReset}>
+                                <RotateCcw className="w-4 h-4 mr-2" />
+                                Reset
+                              </Button>
+                            )}
                             <Button onClick={() => setEntryStep(2)} className="bg-[#0A2E4A]">
                               Next Step
                               <ArrowRight className="w-4 h-4 ml-2" />
@@ -852,7 +960,7 @@ export function JMRDataManagement() {
                               </CardTitle>
                               <CardDescription>Monthly generation and operational metrics</CardDescription>
                             </CardHeader>
-                            <CardContent className="p-6 space-y-6">
+                            <CardContent className={`p-6 space-y-6 ${isLocked ? "opacity-60 pointer-events-none" : ""}`}>
                               {/* Generation Metrics */}
                               <div>
                                 <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -875,6 +983,7 @@ export function JMRDataManagement() {
                                         })
                                       }
                                       placeholder="0.00"
+                                      disabled={isLocked}
                                     />
                                   </div>
 
@@ -1122,6 +1231,63 @@ export function JMRDataManagement() {
                                   </div>
                                 </div>
                               </div>
+
+                              {/* T007: Additional Custom Parameters */}
+                              <div>
+                                <div className="flex items-center justify-between mb-3">
+                                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                    <div className="w-1 h-4 bg-purple-600 rounded"></div>
+                                    Additional Parameters (EESL Defined)
+                                  </h3>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1.5 text-xs border-purple-300 text-purple-700 hover:bg-purple-50"
+                                    onClick={() => setCustomParams(prev => [...prev, { id: Date.now(), label: "", value: "", unit: "—" }])}
+                                  >
+                                    <Plus className="w-3 h-3" /> Add Parameter
+                                  </Button>
+                                </div>
+                                <div className="space-y-2">
+                                  {customParams.map((param) => (
+                                    <div key={param.id} className="flex items-center gap-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
+                                      <Input
+                                        className="flex-1 h-7 text-xs"
+                                        placeholder="Parameter name..."
+                                        value={param.label}
+                                        onChange={e => setCustomParams(prev => prev.map(p => p.id === param.id ? { ...p, label: e.target.value } : p))}
+                                      />
+                                      <Input
+                                        className="w-24 h-7 text-xs"
+                                        placeholder="Value"
+                                        value={param.value}
+                                        onChange={e => setCustomParams(prev => prev.map(p => p.id === param.id ? { ...p, value: e.target.value } : p))}
+                                      />
+                                      <Select value={param.unit} onValueChange={val => setCustomParams(prev => prev.map(p => p.id === param.id ? { ...p, unit: val } : p))}>
+                                        <SelectTrigger className="w-20 h-7 text-xs">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {["kVAR", "kWh", "MWh", "MW", "%", "hrs", "Units", "—"].map(u => (
+                                            <SelectItem key={u} value={u}>{u}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-7 w-7 text-rose-500 hover:bg-rose-50 shrink-0"
+                                        onClick={() => setCustomParams(prev => prev.filter(p => p.id !== param.id))}
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                  {customParams.length === 0 && (
+                                    <p className="text-xs text-slate-400 italic text-center py-3">No custom parameters. Click "+ Add Parameter" to add one.</p>
+                                  )}
+                                </div>
+                              </div>
                             </CardContent>
                           </Card>
 
@@ -1130,10 +1296,12 @@ export function JMRDataManagement() {
                               Previous
                             </Button>
                             <div className="flex gap-3">
-                              <Button variant="outline" onClick={handleReset}>
-                                <RotateCcw className="w-4 h-4 mr-2" />
-                                Reset
-                              </Button>
+                              {!isLocked && (
+                                <Button variant="outline" onClick={handleReset}>
+                                  <RotateCcw className="w-4 h-4 mr-2" />
+                                  Reset
+                                </Button>
+                              )}
                               <Button onClick={() => setEntryStep(3)} className="bg-[#0A2E4A]">
                                 Next Step
                                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -1158,7 +1326,7 @@ export function JMRDataManagement() {
                               </CardTitle>
                               <CardDescription>Revenue and contractual compliance data</CardDescription>
                             </CardHeader>
-                            <CardContent className="p-6 space-y-6">
+                            <CardContent className={`p-6 space-y-6 ${isLocked ? "opacity-60 pointer-events-none" : ""}`}>
                               <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                   <Label className="text-xs font-bold uppercase text-slate-700">
@@ -1282,10 +1450,12 @@ export function JMRDataManagement() {
                               Previous
                             </Button>
                             <div className="flex gap-3">
-                              <Button variant="outline" onClick={handleReset}>
-                                <RotateCcw className="w-4 h-4 mr-2" />
-                                Reset
-                              </Button>
+                              {!isLocked && (
+                                <Button variant="outline" onClick={handleReset}>
+                                  <RotateCcw className="w-4 h-4 mr-2" />
+                                  Reset
+                                </Button>
+                              )}
                               <Button onClick={() => setEntryStep(4)} className="bg-[#0A2E4A]">
                                 Next Step
                                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -1302,6 +1472,21 @@ export function JMRDataManagement() {
                           animate={{ opacity: 1, x: 0 }}
                           className="space-y-6"
                         >
+                          {/* T002: Locked banner */}
+                          {workflowStage === "locked" && (
+                            <div className="flex items-center justify-between px-4 py-3 bg-amber-50 border-2 border-amber-400 rounded-xl">
+                              <div className="flex items-center gap-3">
+                                <Lock className="w-5 h-5 text-amber-700 shrink-0" />
+                                <div>
+                                  <p className="text-sm font-bold text-amber-900">This JMR is approved and locked.</p>
+                                  <p className="text-xs text-amber-700">Contact your administrator to request an amendment.</p>
+                                </div>
+                              </div>
+                              <Button size="sm" variant="outline" className="gap-1.5 border-amber-400 text-amber-700 hover:bg-amber-100 text-xs shrink-0" onClick={() => toast.info("Unlock request sent to Approver")}>
+                                <Unlock className="w-3 h-3" /> Request Unlock
+                              </Button>
+                            </div>
+                          )}
                           {/* Validation Panel */}
                           <Card className="border-2 border-slate-200">
                             <CardHeader className="border-b border-slate-100">
@@ -1450,26 +1635,34 @@ export function JMRDataManagement() {
 
                           {/* Action Buttons */}
                           <div className="flex justify-between gap-3">
-                            <Button variant="outline" onClick={() => setEntryStep(3)}>
+                            <Button variant="outline" onClick={() => setEntryStep(3)} disabled={workflowStage === "locked"}>
                               Previous
                             </Button>
-                            <div className="flex gap-3">
-                              <Button variant="outline" onClick={handleReset}>
-                                <RotateCcw className="w-4 h-4 mr-2" />
-                                Reset All
+                            {workflowStage === "locked" ? (
+                              <Button variant="outline" className="gap-2 border-amber-400 text-amber-700 hover:bg-amber-50" onClick={() => toast.info("Unlock request sent to Approver")}>
+                                <Unlock className="w-4 h-4" />
+                                Request Unlock
                               </Button>
-                              <Button variant="outline" onClick={handleSaveDraft} className="gap-2">
-                                <Save className="w-4 h-4" />
-                                Save Draft
-                              </Button>
-                              <Button
-                                onClick={handleSubmitForReview}
-                                className="bg-emerald-600 hover:bg-emerald-700 gap-2"
-                              >
-                                <Send className="w-4 h-4" />
-                                Submit for Review
-                              </Button>
-                            </div>
+                            ) : (
+                              <div className="flex gap-3">
+                                <Button variant="outline" onClick={handleReset} className="gap-2">
+                                  <RotateCcw className="w-4 h-4" />
+                                  Reset All
+                                </Button>
+                                <Button variant="outline" onClick={handleSaveDraft} className="gap-2" disabled={workflowStage !== "draft"}>
+                                  <Save className="w-4 h-4" />
+                                  Save Draft
+                                </Button>
+                                <Button
+                                  onClick={handleSubmitForReview}
+                                  className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+                                  disabled={workflowStage !== "draft"}
+                                >
+                                  <Send className="w-4 h-4" />
+                                  Submit for Review
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </motion.div>
                       )}
@@ -1494,105 +1687,213 @@ export function JMRDataManagement() {
                         </Button>
                       </div>
                       <ScrollArea className="h-[calc(100vh-200px)]">
-                        <div className="p-4 space-y-6">
-                          {/* Maker */}
+                        <div className="p-4 space-y-4">
+                          {/* LOCKED badge */}
+                          {workflowStage === "locked" && (
+                            <div className="flex items-center justify-center gap-2 py-2 px-4 bg-yellow-400 rounded-lg border-2 border-yellow-500">
+                              <Lock className="w-4 h-4 text-yellow-900" />
+                              <span className="text-sm font-black text-yellow-900 tracking-widest uppercase">Locked</span>
+                            </div>
+                          )}
+                          {workflowStage === "rejected" && (
+                            <div className="flex items-center gap-2 py-2 px-3 bg-rose-100 rounded-lg border border-rose-300">
+                              <Ban className="w-4 h-4 text-rose-700" />
+                              <span className="text-xs font-bold text-rose-700">JMR Rejected</span>
+                            </div>
+                          )}
+
+                          {/* ── MAKER STAGE ── */}
                           <div className="space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                                <User className="w-4 h-4 text-blue-600" />
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${workflowStage === "draft" ? "bg-blue-100" : "bg-emerald-100"}`}>
+                                {workflowStage === "draft" ? (
+                                  <User className="w-4 h-4 text-blue-600" />
+                                ) : (
+                                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                                )}
                               </div>
                               <div>
                                 <h4 className="text-xs font-bold text-slate-600 uppercase">Maker</h4>
                                 <p className="text-sm font-semibold text-slate-900">Data Entry</p>
                               </div>
+                              {workflowStage !== "draft" && (
+                                <Badge className="ml-auto bg-emerald-100 text-emerald-700 border-emerald-300 text-[10px]">Submitted ✓</Badge>
+                              )}
                             </div>
-                            <div className="ml-4 pl-4 border-l-2 border-blue-200 space-y-2">
-                              <div className="text-sm">
-                                <span className="text-slate-600">Entered by:</span>{" "}
-                                <span className="font-semibold">Current User</span>
-                              </div>
-                              <div className="text-sm">
-                                <span className="text-slate-600">Date:</span>{" "}
-                                <span className="font-semibold">Mar 2, 2026 10:30</span>
-                              </div>
-                              <Badge className="bg-blue-100 text-blue-700 border-blue-200">
-                                In Progress
-                              </Badge>
+                            <div className={`ml-4 pl-4 border-l-2 space-y-2 ${workflowStage === "draft" ? "border-blue-200" : "border-emerald-200"}`}>
+                              <div className="text-sm"><span className="text-slate-600">Entered by:</span> <span className="font-semibold">Current User</span></div>
+                              <div className="text-sm"><span className="text-slate-600">Date:</span> <span className="font-semibold">Mar 5, 2026 10:30</span></div>
+                              {workflowStage === "draft" && (
+                                <>
+                                  <Badge className="bg-blue-100 text-blue-700 border-blue-200">In Progress</Badge>
+                                  <div className="flex flex-col gap-2 pt-1">
+                                    <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={handleSaveDraft}>
+                                      <Save className="w-3 h-3" /> Save Draft
+                                    </Button>
+                                    <Button size="sm" className="gap-1 text-xs bg-[#0A2E4A] hover:bg-[#082a42]" onClick={handleSubmitForReview}>
+                                      <Send className="w-3 h-3" /> Submit for Review
+                                    </Button>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           </div>
 
                           <Separator />
 
-                          {/* Checker */}
+                          {/* ── CHECKER STAGE ── */}
                           <div className="space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                                <UserCheck className="w-4 h-4 text-amber-600" />
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                workflowStage === "draft" ? "bg-slate-100" :
+                                workflowStage === "submitted" || workflowStage === "under_review" ? "bg-amber-100" :
+                                workflowStage === "rejected" ? "bg-rose-100" : "bg-emerald-100"
+                              }`}>
+                                {workflowStage === "draft" ? (
+                                  <UserCheck className="w-4 h-4 text-slate-400" />
+                                ) : workflowStage === "submitted" || workflowStage === "under_review" ? (
+                                  <UserCheck className="w-4 h-4 text-amber-600" />
+                                ) : workflowStage === "rejected" ? (
+                                  <Ban className="w-4 h-4 text-rose-600" />
+                                ) : (
+                                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                                )}
                               </div>
                               <div>
                                 <h4 className="text-xs font-bold text-slate-600 uppercase">Checker</h4>
                                 <p className="text-sm font-semibold text-slate-900">Technical Review</p>
                               </div>
+                              {(workflowStage === "approved" || workflowStage === "locked") && (
+                                <Badge className="ml-auto bg-emerald-100 text-emerald-700 border-emerald-300 text-[10px]">Approved ✓</Badge>
+                              )}
                             </div>
-                            <div className="ml-4 pl-4 border-l-2 border-slate-200 space-y-2">
-                              <div className="text-sm text-slate-500">Pending submission</div>
+                            <div className={`ml-4 pl-4 border-l-2 space-y-2 ${
+                              workflowStage === "draft" ? "border-slate-200 opacity-50" :
+                              workflowStage === "rejected" ? "border-rose-200" :
+                              (workflowStage === "approved" || workflowStage === "locked") ? "border-emerald-200" : "border-amber-200"
+                            }`}>
+                              {workflowStage === "draft" ? (
+                                <div className="text-xs text-slate-400 italic">Awaiting submission</div>
+                              ) : workflowStage === "submitted" ? (
+                                <>
+                                  <div className="text-sm"><span className="text-slate-600">Reviewer:</span> <span className="font-semibold">Priya Mehta</span></div>
+                                  <div className="text-sm"><span className="text-slate-600">Assigned:</span> <span className="font-semibold">Mar 5, 2026 11:00</span></div>
+                                  <Textarea
+                                    value={checkerComment}
+                                    onChange={e => setCheckerComment(e.target.value)}
+                                    placeholder="Add checker comment..."
+                                    className="min-h-16 text-xs"
+                                  />
+                                  <div className="flex flex-col gap-2 pt-1">
+                                    <Button size="sm" className="gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => { setWorkflowStage("under_review"); toast.success("Checker approved — sent to Approver"); }}>
+                                      <CheckCircle className="w-3 h-3" /> Approve →
+                                    </Button>
+                                    <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => { setWorkflowStage("draft"); toast.info("Sent back to Maker for revision"); }}>
+                                      <RotateCcw className="w-3 h-3" /> Send Back
+                                    </Button>
+                                    <Button size="sm" variant="outline" className="gap-1 text-xs border-rose-300 text-rose-600 hover:bg-rose-50" onClick={() => { setWorkflowStage("rejected"); setRejectionReason(checkerComment || "Rejected by Checker"); toast.error("JMR rejected by Checker"); }}>
+                                      <Ban className="w-3 h-3" /> Reject
+                                    </Button>
+                                  </div>
+                                </>
+                              ) : workflowStage === "rejected" ? (
+                                <>
+                                  <Badge className="bg-rose-100 text-rose-700 border-rose-200 text-xs">Rejected</Badge>
+                                  {rejectionReason && <div className="text-xs text-rose-700 mt-1">Reason: {rejectionReason}</div>}
+                                  <Button size="sm" variant="outline" className="gap-1 text-xs mt-2 w-full" onClick={() => { setWorkflowStage("draft"); setRejectionReason(""); toast.info("JMR reset to draft"); }}>
+                                    <RotateCcw className="w-3 h-3" /> Reset to Draft
+                                  </Button>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="text-sm"><span className="text-slate-600">Reviewer:</span> <span className="font-semibold">Priya Mehta</span></div>
+                                  {checkerComment && <div className="text-xs text-slate-600 italic">"{checkerComment}"</div>}
+                                </>
+                              )}
                             </div>
                           </div>
 
                           <Separator />
 
-                          {/* Approver */}
+                          {/* ── APPROVER STAGE ── */}
                           <div className="space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                                <ShieldCheck className="w-4 h-4 text-slate-400" />
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                workflowStage === "under_review" ? "bg-purple-100" :
+                                (workflowStage === "approved" || workflowStage === "locked") ? "bg-emerald-100" : "bg-slate-100"
+                              }`}>
+                                {workflowStage === "under_review" ? (
+                                  <ShieldCheck className="w-4 h-4 text-purple-600" />
+                                ) : (workflowStage === "approved" || workflowStage === "locked") ? (
+                                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                                ) : (
+                                  <ShieldCheck className="w-4 h-4 text-slate-400" />
+                                )}
                               </div>
                               <div>
                                 <h4 className="text-xs font-bold text-slate-600 uppercase">Approver</h4>
                                 <p className="text-sm font-semibold text-slate-900">Final Approval</p>
                               </div>
+                              {workflowStage === "approved" && (
+                                <Badge className="ml-auto bg-emerald-100 text-emerald-700 border-emerald-300 text-[10px]">Approved ✓</Badge>
+                              )}
+                              {workflowStage === "locked" && (
+                                <Badge className="ml-auto bg-emerald-100 text-emerald-700 border-emerald-300 text-[10px]">Locked ✓</Badge>
+                              )}
                             </div>
-                            <div className="ml-4 pl-4 border-l-2 border-slate-200 space-y-2">
-                              <div className="text-sm text-slate-500">Awaiting review</div>
+                            <div className={`ml-4 pl-4 border-l-2 space-y-2 ${
+                              workflowStage === "under_review" ? "border-purple-200" :
+                              (workflowStage === "approved" || workflowStage === "locked") ? "border-emerald-200" : "border-slate-200 opacity-50"
+                            }`}>
+                              {workflowStage !== "under_review" && workflowStage !== "approved" && workflowStage !== "locked" ? (
+                                <div className="text-xs text-slate-400 italic">{workflowStage === "submitted" ? "Awaiting checker approval" : "Awaiting submission"}</div>
+                              ) : workflowStage === "under_review" ? (
+                                <>
+                                  <div className="text-sm"><span className="text-slate-600">Approver:</span> <span className="font-semibold">Rahul Sharma</span></div>
+                                  <div className="text-sm"><span className="text-slate-600">Escalated:</span> <span className="font-semibold">Mar 5, 2026 11:45</span></div>
+                                  <div className="flex flex-col gap-2 pt-1">
+                                    <Button size="sm" className="gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => { setWorkflowStage("approved"); toast.success("JMR approved by Approver"); }}>
+                                      <CheckCircle className="w-3 h-3" /> Approve
+                                    </Button>
+                                    <Button size="sm" className="gap-1 text-xs bg-[#0A2E4A] hover:bg-[#082a42]" onClick={() => { setWorkflowStage("locked"); toast.success("JMR approved and locked"); }}>
+                                      <Lock className="w-3 h-3" /> Approve & Lock
+                                    </Button>
+                                    <Button size="sm" variant="outline" className="gap-1 text-xs border-rose-300 text-rose-600 hover:bg-rose-50" onClick={() => { setWorkflowStage("rejected"); setRejectionReason("Rejected by Approver"); toast.error("JMR rejected by Approver"); }}>
+                                      <Ban className="w-3 h-3" /> Reject
+                                    </Button>
+                                  </div>
+                                </>
+                              ) : workflowStage === "approved" ? (
+                                <>
+                                  <div className="text-sm"><span className="text-slate-600">Approver:</span> <span className="font-semibold">Rahul Sharma</span></div>
+                                  <div className="text-sm"><span className="text-slate-600">Approved:</span> <span className="font-semibold">Mar 5, 2026 12:10</span></div>
+                                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs">Approved</Badge>
+                                  <Button size="sm" className="gap-1 text-xs bg-[#0A2E4A] hover:bg-[#082a42] mt-1" onClick={() => { setWorkflowStage("locked"); toast.success("JMR record locked"); }}>
+                                    <Lock className="w-3 h-3" /> Lock Record
+                                  </Button>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="text-sm"><span className="text-slate-600">Approver:</span> <span className="font-semibold">Rahul Sharma</span></div>
+                                  <div className="text-sm"><span className="text-slate-600">Approved:</span> <span className="font-semibold">Mar 5, 2026 12:10</span></div>
+                                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs">Finalised & Locked</Badge>
+                                </>
+                              )}
                             </div>
-                          </div>
-
-                          <Separator />
-
-                          {/* Comments Section */}
-                          <div className="space-y-3">
-                            <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                              <MessageSquare className="w-4 h-4" />
-                              Comments
-                            </h4>
-                            <Textarea
-                              placeholder="Add review comments..."
-                              className="min-h-24 text-sm"
-                            />
-                          </div>
-
-                          {/* Actions */}
-                          <div className="space-y-2">
-                            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2">
-                              <CheckCircle className="w-4 h-4" />
-                              Approve
-                            </Button>
-                            <Button variant="outline" className="w-full gap-2 border-rose-300 text-rose-600 hover:bg-rose-50">
-                              <Ban className="w-4 h-4" />
-                              Reject
-                            </Button>
                           </div>
 
                           {/* Escalation Alert */}
-                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                            <div className="flex items-start gap-2">
-                              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                              <div className="text-xs text-amber-700">
-                                <p className="font-semibold mb-1">Escalation Note</p>
-                                <p>Records pending review for &gt;5 days will be auto-escalated</p>
+                          {(workflowStage === "submitted" || workflowStage === "under_review") && (
+                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                              <div className="flex items-start gap-2">
+                                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                <div className="text-xs text-amber-700">
+                                  <p className="font-semibold mb-1">Escalation Note</p>
+                                  <p>Records pending review for &gt;5 days will be auto-escalated</p>
+                                </div>
                               </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       </ScrollArea>
                     </motion.div>
@@ -1620,7 +1921,7 @@ export function JMRDataManagement() {
               {/* TAB 3: JMR REPOSITORY */}
               <TabsContent value="repository" className="m-0 p-6">
                 <div className="max-w-7xl mx-auto space-y-6">
-                  {/* Search & Filter Bar */}
+                  {/* Search Bar */}
                   <Card className="border-2 border-slate-200">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-4">
@@ -1633,18 +1934,9 @@ export function JMRDataManagement() {
                             className="pl-10"
                           />
                         </div>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                          <SelectTrigger className="w-48">
-                            <SelectValue placeholder="Filter by status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Status</SelectItem>
-                            <SelectItem value="approved">Approved</SelectItem>
-                            <SelectItem value="pending">Pending Review</SelectItem>
-                            <SelectItem value="draft">Draft</SelectItem>
-                            <SelectItem value="rejected">Rejected</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Badge variant="outline" className="text-xs px-3 py-1.5 shrink-0">
+                          {filteredJMRRecords.length} of {jmrRecords.length} records
+                        </Badge>
                         <Button variant="outline" className="gap-2">
                           <Download className="w-4 h-4" />
                           Export Table
@@ -1732,10 +2024,33 @@ export function JMRDataManagement() {
                                     </Badge>
                                   </TableCell>
                                   <TableCell className="text-center">
-                                    {record.pdfUploaded ? (
-                                      <CheckCircle className="w-4 h-4 text-emerald-600 mx-auto" />
+                                    {pdfUploadedSet.has(record.id) ? (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="gap-1.5 text-xs h-7 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                                        onClick={() => { setPdfDialogRecord(record); setPdfDialogOpen(true); }}
+                                      >
+                                        <Eye className="w-3 h-3" /> View PDF
+                                      </Button>
                                     ) : (
-                                      <XCircle className="w-4 h-4 text-slate-300 mx-auto" />
+                                      <label className="cursor-pointer">
+                                        <input
+                                          type="file"
+                                          accept=".pdf"
+                                          className="hidden"
+                                          onChange={() => {
+                                            toast.loading("Uploading PDF...", { id: `pdf-${record.id}` });
+                                            setTimeout(() => {
+                                              setPdfUploadedSet(prev => new Set([...prev, record.id]));
+                                              toast.success("PDF uploaded successfully", { id: `pdf-${record.id}` });
+                                            }, 1500);
+                                          }}
+                                        />
+                                        <span className="inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded-md border border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-slate-400 transition-colors font-medium">
+                                          <FileUp className="w-3 h-3" /> Upload PDF
+                                        </span>
+                                      </label>
                                     )}
                                   </TableCell>
                                   <TableCell>
@@ -1918,97 +2233,207 @@ export function JMRDataManagement() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex items-center gap-4">
-                        <Select defaultValue="1">
+                        <Select value={compareV1} onValueChange={v => { setCompareV1(v); setShowDiff(false); }}>
                           <SelectTrigger className="w-48 bg-white">
                             <SelectValue placeholder="Version 1" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="1">Version 1</SelectItem>
-                            <SelectItem value="2">Version 2</SelectItem>
+                            <SelectItem value="1">Version 1 — Draft (Mar 1)</SelectItem>
+                            <SelectItem value="2">Version 2 — Approved (Mar 5)</SelectItem>
                           </SelectContent>
                         </Select>
 
                         <span className="text-blue-900 font-semibold">vs</span>
 
-                        <Select defaultValue="2">
+                        <Select value={compareV2} onValueChange={v => { setCompareV2(v); setShowDiff(false); }}>
                           <SelectTrigger className="w-48 bg-white">
                             <SelectValue placeholder="Version 2" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="1">Version 1</SelectItem>
-                            <SelectItem value="2">Version 2</SelectItem>
+                            <SelectItem value="1">Version 1 — Draft (Mar 1)</SelectItem>
+                            <SelectItem value="2">Version 2 — Approved (Mar 5)</SelectItem>
                           </SelectContent>
                         </Select>
 
-                        <Button className="bg-[#0A2E4A] gap-2">
+                        <Button className="bg-[#0A2E4A] gap-2" onClick={() => { if (compareV1 !== compareV2) { setShowDiff(true); } else { toast.warning("Please select two different versions"); } }}>
                           <GitCompare className="w-4 h-4" />
                           Compare
                         </Button>
                       </div>
+
+                      {/* T006: Diff Table */}
+                      {showDiff && compareV1 !== compareV2 && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-2">
+                          <div className="bg-white rounded-xl border-2 border-blue-200 overflow-hidden">
+                            <div className="grid grid-cols-[1fr_120px_16px_120px] bg-[#0A2E4A] text-white text-xs font-bold px-4 py-2.5 gap-2">
+                              <span>Parameter</span>
+                              <span className="text-center">Version {compareV1 < compareV2 ? compareV1 : compareV2}</span>
+                              <span></span>
+                              <span className="text-center">Version {compareV1 < compareV2 ? compareV2 : compareV1}</span>
+                            </div>
+                            {[
+                              { param: "Gross Generation (MWh)", v1: "4,380", v2: "4,520", changed: true },
+                              { param: "Net Export Energy (MWh)", v1: "4,342", v2: "4,478", changed: true },
+                              { param: "Grid Availability (%)", v1: "96.5", v2: "96.5", changed: false },
+                              { param: "Plant Availability (%)", v1: "95.2", v2: "97.8", changed: true },
+                              { param: "Revenue Realized (₹ L)", v1: "41.86", v2: "43.19", changed: true },
+                              { param: "Contractual Target (MWh)", v1: "4,600", v2: "4,600", changed: false },
+                              { param: "LD Risk", v1: "Medium", v2: "Low", changed: true },
+                              { param: "Approval Status", v1: "Pending", v2: "Approved", changed: true },
+                              { param: "CUF (%)", v1: "20.1", v2: "20.8", changed: true },
+                              { param: "Curtailment (MWh)", v1: "45.2", v2: "45.2", changed: false },
+                            ].map((row, idx) => (
+                              <div key={idx} className={`grid grid-cols-[1fr_120px_16px_120px] px-4 py-2 gap-2 items-center border-b border-slate-100 text-sm ${idx % 2 === 0 ? "bg-white" : "bg-slate-50"}`}>
+                                <span className="font-medium text-slate-700 text-xs">{row.param}</span>
+                                {row.changed ? (
+                                  <>
+                                    <span className="text-center text-xs font-semibold text-rose-600 line-through">{row.v1}</span>
+                                    <span className="text-center text-slate-400">→</span>
+                                    <span className="text-center text-xs font-semibold text-emerald-700 bg-emerald-50 rounded px-1">{row.v2}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="text-center text-xs text-slate-400">{row.v1}</span>
+                                    <span className="text-center text-slate-300 text-xs">—</span>
+                                    <span className="text-center text-xs text-slate-400">{row.v2}</span>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-xs text-blue-700 mt-2 flex items-center gap-1">
+                            <Info className="w-3 h-3" />
+                            <span className="text-rose-600 font-semibold line-through">Red strikethrough</span> = old value &nbsp;·&nbsp; <span className="text-emerald-700 font-semibold">Green</span> = new value &nbsp;·&nbsp; Grey = unchanged
+                          </p>
+                        </motion.div>
+                      )}
                     </CardContent>
                   </Card>
+
                 </div>
               </TabsContent>
             </div>
           </Tabs>
         </div>
       </div>
+      {/* T005: PDF Preview Dialog — rendered at root level so it works from any tab */}
+      <Dialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-[#0A2E4A]" />
+              PDF Document Preview
+            </DialogTitle>
+            <DialogDescription>
+              {pdfDialogRecord ? `${pdfDialogRecord.plant} · ${pdfDialogRecord.month} · v${pdfDialogRecord.version}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-slate-100 rounded-xl border-2 border-slate-200 p-8 text-center space-y-3">
+            <FileImage className="w-14 h-14 text-slate-400 mx-auto" />
+            <p className="text-sm font-semibold text-slate-700">
+              {pdfDialogRecord ? `JMR_${pdfDialogRecord.plant.replace(/ /g,"_")}_${pdfDialogRecord.month}_v${pdfDialogRecord.version}.pdf` : ""}
+            </p>
+            <div className="flex justify-center gap-4 text-xs text-slate-500">
+              <span>Size: 1.4 MB</span>
+              <span>·</span>
+              <span>Uploaded: Mar 5, 2026</span>
+              <span>·</span>
+              <span>Pages: 6</span>
+            </div>
+            <div className="mt-2 px-8 py-6 bg-white border border-slate-200 rounded-lg text-xs text-slate-400 italic">
+              PDF preview pane — document renders here in production
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPdfDialogOpen(false)}>Close</Button>
+            <Button className="bg-[#0A2E4A] gap-2" onClick={() => { toast.success("Downloading PDF…"); }}>
+              <Download className="w-4 h-4" /> Download
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
 // Bulk Upload Component
+const EXCEL_HEADERS = [
+  { col: "Plant ID", system: "Plant Identifier" },
+  { col: "Month", system: "Reporting Month" },
+  { col: "Gross Gen (MWh)", system: "Gross Generation" },
+  { col: "Net Export", system: "Net Export Energy" },
+  { col: "Avail %", system: "Grid Availability" },
+  { col: "Plant Avail %", system: "Plant Availability" },
+  { col: "Curtail (MWh)", system: "Curtailment Units" },
+  { col: "Revenue (L)", system: "Revenue Realized" },
+  { col: "Contract Target", system: "Contractual Target" },
+  { col: "PR Ratio", system: "— Ignore —" },
+];
+
+const SYSTEM_FIELDS = [
+  "Plant Identifier", "Reporting Month", "Gross Generation", "Net Export Energy",
+  "Grid Availability", "Plant Availability", "Curtailment Units", "Revenue Realized",
+  "Contractual Target", "O&M Deviation Amount", "— Ignore —",
+];
+
+const VALID_PREVIEW_ROWS = [
+  { row: 2, plant: "Sangli Solar Farm", month: "Feb", gross: "2,150", net: "2,120", revenue: "20.42", status: "valid" },
+  { row: 3, plant: "Nashik Site A", month: "Feb", gross: "1,180", net: "1,162", revenue: "11.18", status: "valid" },
+  { row: 4, plant: "Aurangabad Project", month: "Feb", gross: "2,380", net: "2,345", revenue: "22.56", status: "valid" },
+  { row: 5, plant: "Solapur SPV", month: "Feb", gross: "1,720", net: "1,695", revenue: "16.31", status: "warning" },
+  { row: 6, plant: "Chennai Coastal", month: "Feb", gross: "1,920", net: "1,892", revenue: "18.20", status: "valid" },
+];
+
 function BulkUploadContent() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [uploadStats, setUploadStats] = useState({
-    total: 0,
-    valid: 0,
-    errors: 0,
-    duplicates: 0,
-    warnings: 0,
-  });
+  const [uploadStats, setUploadStats] = useState({ total: 0, valid: 0, errors: 0, duplicates: 0, warnings: 0 });
+  const [showMapping, setShowMapping] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [showValidPreview, setShowValidPreview] = useState(true);
+  const [columnMappings, setColumnMappings] = useState<Record<string, string>>(
+    Object.fromEntries(EXCEL_HEADERS.map(h => [h.col, h.system]))
+  );
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setUploadedFile(file);
-      // Simulate processing
+      setShowResults(false);
+      setShowMapping(false);
       setTimeout(() => {
-        setUploadStats({
-          total: 25,
-          valid: 20,
-          errors: 3,
-          duplicates: 1,
-          warnings: 1,
-        });
-        setShowResults(true);
-        toast.success("File processed successfully");
-      }, 1500);
+        setShowMapping(true);
+        toast.info("File parsed — review column mappings before validating");
+      }, 800);
     }
+  };
+
+  const handleConfirmMapping = () => {
+    setShowMapping(false);
+    setTimeout(() => {
+      setUploadStats({ total: 25, valid: 20, errors: 3, duplicates: 1, warnings: 1 });
+      setShowResults(true);
+      toast.success("Validation complete — 20 valid, 3 errors, 1 warning");
+    }, 1200);
   };
 
   return (
     <div className="space-y-6">
-      {/* Download Template */}
+      {/* Step 1: Download Template */}
       <Card className="border-2 border-blue-200 bg-blue-50">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-bold text-blue-900 mb-1">Step 1: Download Template</h3>
-              <p className="text-sm text-blue-700">
-                Download the standardized Excel template with all required fields
-              </p>
+              <p className="text-sm text-blue-700">Download the standardized Excel template with all required fields</p>
             </div>
-            <Button className="bg-[#0A2E4A] gap-2">
-              <Download className="w-4 h-4" />
-              Download Template
+            <Button className="bg-[#0A2E4A] gap-2" onClick={() => toast.success("Template downloaded")}>
+              <Download className="w-4 h-4" /> Download Template
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Upload Zone */}
+      {/* Step 2: Upload Zone */}
       <Card className="border-2 border-slate-200">
         <CardHeader className="border-b border-slate-100">
           <CardTitle>Step 2: Upload Completed File</CardTitle>
@@ -2019,19 +2444,10 @@ function BulkUploadContent() {
             htmlFor="file-upload"
             className="block border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-[#0A2E4A] hover:bg-blue-50 transition-all"
           >
-            <input
-              id="file-upload"
-              type="file"
-              accept=".xlsx,.xls,.csv"
-              className="hidden"
-              onChange={handleFileUpload}
-            />
+            <input id="file-upload" type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileUpload} />
             <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <p className="text-sm font-semibold text-slate-900 mb-1">
-              Drop Excel file here or click to upload
-            </p>
+            <p className="text-sm font-semibold text-slate-900 mb-1">Drop Excel file here or click to upload</p>
             <p className="text-xs text-slate-600">Supports .xlsx, .xls, .csv files (Max 10MB)</p>
-
             {uploadedFile && (
               <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-emerald-200 rounded-lg">
                 <FileCheck className="w-5 h-5 text-emerald-600" />
@@ -2042,87 +2458,181 @@ function BulkUploadContent() {
         </CardContent>
       </Card>
 
-      {/* Upload Results */}
+      {/* Step 2.5: Column Mapping Engine (T003) */}
+      {showMapping && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="border-2 border-purple-200 bg-purple-50">
+            <CardHeader className="border-b border-purple-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-purple-900 flex items-center gap-2">
+                    <GitCompare className="w-5 h-5" />
+                    Step 2.5: Column Mapping
+                  </CardTitle>
+                  <CardDescription className="text-purple-700">
+                    Map detected Excel columns to system fields. Auto-matched where possible — adjust if needed.
+                  </CardDescription>
+                </div>
+                <Badge className="bg-purple-100 text-purple-800 border-purple-300">{EXCEL_HEADERS.length} columns detected</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="rounded-lg overflow-hidden border border-purple-200">
+                <div className="grid grid-cols-[1fr_1fr_80px] bg-purple-700 text-white text-xs font-bold px-4 py-2.5 gap-4">
+                  <span>Detected Excel Column</span>
+                  <span>Map to System Field</span>
+                  <span className="text-center">Status</span>
+                </div>
+                {EXCEL_HEADERS.map((h, idx) => {
+                  const mapped = columnMappings[h.col];
+                  const isIgnored = mapped === "— Ignore —";
+                  return (
+                    <div key={h.col} className={`grid grid-cols-[1fr_1fr_80px] px-4 py-2.5 gap-4 items-center border-b border-purple-100 text-sm ${idx % 2 === 0 ? "bg-white" : "bg-purple-50"}`}>
+                      <span className="font-mono text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">{h.col}</span>
+                      <Select value={mapped} onValueChange={val => setColumnMappings(prev => ({ ...prev, [h.col]: val }))}>
+                        <SelectTrigger className="h-7 text-xs bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SYSTEM_FIELDS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex justify-center">
+                        {isIgnored ? (
+                          <Badge className="bg-slate-100 text-slate-500 border-slate-300 text-[10px]">Ignored</Badge>
+                        ) : mapped === h.system ? (
+                          <Badge className="bg-emerald-100 text-emerald-700 border-emerald-300 text-[10px]">Auto ✓</Badge>
+                        ) : (
+                          <Badge className="bg-blue-100 text-blue-700 border-blue-300 text-[10px]">Manual</Badge>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex justify-end mt-4">
+                <Button className="bg-[#0A2E4A] gap-2" onClick={handleConfirmMapping}>
+                  <CheckCircle className="w-4 h-4" /> Confirm Mapping & Validate
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Step 3: Upload Results (T004 included) */}
       {showResults && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="border-2 border-slate-200">
             <CardHeader className="border-b border-slate-100">
-              <CardTitle>Upload Results</CardTitle>
-              <CardDescription>Validation summary and error details</CardDescription>
+              <CardTitle>Step 3: Validation Results</CardTitle>
+              <CardDescription>Summary, errors, and valid record preview</CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               {/* Statistics */}
               <div className="grid grid-cols-5 gap-4">
-                <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-blue-900">{uploadStats.total}</div>
-                  <div className="text-xs font-semibold text-blue-700 mt-1">Total Records</div>
-                </div>
-                <div className="p-4 bg-emerald-50 border-2 border-emerald-200 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-emerald-900">{uploadStats.valid}</div>
-                  <div className="text-xs font-semibold text-emerald-700 mt-1">Valid</div>
-                </div>
-                <div className="p-4 bg-rose-50 border-2 border-rose-200 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-rose-900">{uploadStats.errors}</div>
-                  <div className="text-xs font-semibold text-rose-700 mt-1">Errors</div>
-                </div>
-                <div className="p-4 bg-amber-50 border-2 border-amber-200 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-amber-900">{uploadStats.warnings}</div>
-                  <div className="text-xs font-semibold text-amber-700 mt-1">Warnings</div>
-                </div>
-                <div className="p-4 bg-slate-50 border-2 border-slate-200 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-slate-900">{uploadStats.duplicates}</div>
-                  <div className="text-xs font-semibold text-slate-700 mt-1">Duplicates</div>
-                </div>
+                {[
+                  { n: uploadStats.total, label: "Total Records", cls: "blue" },
+                  { n: uploadStats.valid, label: "Valid", cls: "emerald" },
+                  { n: uploadStats.errors, label: "Errors", cls: "rose" },
+                  { n: uploadStats.warnings, label: "Warnings", cls: "amber" },
+                  { n: uploadStats.duplicates, label: "Duplicates", cls: "slate" },
+                ].map(s => (
+                  <div key={s.label} className={`p-4 bg-${s.cls}-50 border-2 border-${s.cls}-200 rounded-lg text-center`}>
+                    <div className={`text-2xl font-bold text-${s.cls}-900`}>{s.n}</div>
+                    <div className={`text-xs font-semibold text-${s.cls}-700 mt-1`}>{s.label}</div>
+                  </div>
+                ))}
               </div>
 
               {/* Error Details */}
               {uploadStats.errors > 0 && (
                 <div className="p-4 bg-rose-50 border-2 border-rose-200 rounded-lg">
                   <h4 className="font-bold text-rose-900 mb-3 flex items-center gap-2">
-                    <XCircle className="w-5 h-5" />
-                    Error Records ({uploadStats.errors})
+                    <XCircle className="w-5 h-5" /> Error Records ({uploadStats.errors})
                   </h4>
                   <div className="space-y-2">
-                    <div className="bg-white p-3 rounded border border-rose-100">
-                      <div className="flex items-start justify-between mb-1">
-                        <span className="text-sm font-semibold text-slate-900">Row 7</span>
-                        <Badge variant="outline" className="bg-rose-100 text-rose-700 border-rose-200 text-xs">
-                          Invalid Data
-                        </Badge>
+                    {[
+                      { row: 7, type: "Invalid Data", msg: "Gross Generation cannot be empty (required field)" },
+                      { row: 14, type: "Validation Error", msg: "Net Export (2500) exceeds Gross Generation (2400)" },
+                      { row: 21, type: "Duplicate", msg: "Record for Sangli Solar Farm / Feb 2026 already exists" },
+                    ].map(err => (
+                      <div key={err.row} className="bg-white p-3 rounded border border-rose-100 flex items-start justify-between">
+                        <div>
+                          <span className="text-sm font-semibold text-slate-900">Row {err.row}</span>
+                          <p className="text-xs text-rose-700 mt-0.5">{err.msg}</p>
+                        </div>
+                        <Badge variant="outline" className="bg-rose-100 text-rose-700 border-rose-200 text-xs shrink-0 ml-3">{err.type}</Badge>
                       </div>
-                      <p className="text-xs text-rose-700">
-                        Gross Generation cannot be empty (required field)
-                      </p>
-                    </div>
-                    <div className="bg-white p-3 rounded border border-rose-100">
-                      <div className="flex items-start justify-between mb-1">
-                        <span className="text-sm font-semibold text-slate-900">Row 14</span>
-                        <Badge variant="outline" className="bg-rose-100 text-rose-700 border-rose-200 text-xs">
-                          Validation Error
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-rose-700">
-                        Net Export (2500) exceeds Gross Generation (2400)
-                      </p>
-                    </div>
+                    ))}
                   </div>
                 </div>
               )}
 
+              {/* T004: Valid Records Preview */}
+              <div className="border-2 border-emerald-200 rounded-lg overflow-hidden">
+                <button
+                  className="w-full flex items-center justify-between px-4 py-3 bg-emerald-50 text-sm font-bold text-emerald-900 hover:bg-emerald-100 transition-colors"
+                  onClick={() => setShowValidPreview(p => !p)}
+                >
+                  <span className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    Preview: Valid Records ({uploadStats.valid})
+                  </span>
+                  <ChevronRight className={`w-4 h-4 transition-transform ${showValidPreview ? "rotate-90" : ""}`} />
+                </button>
+                {showValidPreview && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-emerald-700 text-white">
+                          {["Row #", "Plant", "Month", "Gross Gen", "Net Export", "Revenue (₹ L)", "Status"].map(h => (
+                            <th key={h} className="px-3 py-2 text-left font-semibold whitespace-nowrap">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {VALID_PREVIEW_ROWS.map((r, idx) => (
+                          <tr key={r.row} className={`border-b border-emerald-100 ${r.status === "warning" ? "bg-amber-50" : idx % 2 === 0 ? "bg-white" : "bg-emerald-50"}`}>
+                            <td className="px-3 py-2 font-mono text-slate-500">#{r.row}</td>
+                            <td className="px-3 py-2 font-semibold text-slate-800">{r.plant}</td>
+                            <td className="px-3 py-2 text-slate-600">{r.month}</td>
+                            <td className="px-3 py-2 font-semibold">{r.gross}</td>
+                            <td className="px-3 py-2">{r.net}</td>
+                            <td className="px-3 py-2">₹{r.revenue}</td>
+                            <td className="px-3 py-2">
+                              {r.status === "warning" ? (
+                                <Badge className="bg-amber-100 text-amber-700 border-amber-300 text-[10px]">⚠ Warning</Badge>
+                              ) : (
+                                <Badge className="bg-emerald-100 text-emerald-700 border-emerald-300 text-[10px]">✓ Valid</Badge>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="bg-slate-100 text-slate-500 italic">
+                          <td className="px-3 py-2" colSpan={7}>…and {uploadStats.valid - VALID_PREVIEW_ROWS.length} more valid records</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
               {/* Actions */}
               <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-                <Button variant="outline" className="gap-2">
-                  <Download className="w-4 h-4" />
-                  Download Error Report
+                <Button variant="outline" className="gap-2" onClick={() => toast.success("Error report downloaded")}>
+                  <Download className="w-4 h-4" /> Download Error Report
                 </Button>
                 <div className="flex gap-3">
-                  <Button variant="outline">Fix & Re-upload</Button>
+                  <Button variant="outline" onClick={() => { setShowResults(false); setShowMapping(false); setUploadedFile(null); }}>
+                    Fix & Re-upload
+                  </Button>
                   <Button
                     className="bg-emerald-600 hover:bg-emerald-700 gap-2"
-                    disabled={uploadStats.errors > 0}
+                    disabled={uploadStats.valid === 0}
+                    onClick={() => toast.success(`${uploadStats.valid} valid records submitted for Checker review`)}
                   >
-                    <Send className="w-4 h-4" />
-                    Submit All for Review
+                    <Send className="w-4 h-4" /> Submit {uploadStats.valid} Valid for Review
                   </Button>
                 </div>
               </div>

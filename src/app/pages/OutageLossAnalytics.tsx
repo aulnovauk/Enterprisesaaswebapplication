@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { PageExportMenu } from "../components/PageExportMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
@@ -250,12 +250,234 @@ const getEventColor = (type: string) => {
   }
 };
 
+const CATEGORY_ID_MAP: Record<string, string> = {
+  "grid": "grid-outage",
+  "equipment": "equipment-failure",
+  "planned": "planned-shutdown",
+  "force-majeure": "force-majeure",
+};
+
+const CATEGORY_LOSS_KEY_MAP: Record<string, string> = {
+  "grid-outage": "Grid Outage Loss",
+  "equipment-failure": "Equipment Loss",
+  "planned-shutdown": "Planned Shutdown",
+  "force-majeure": "Force Majeure",
+};
+
+const CATEGORY_GANTT_MAP: Record<string, string> = {
+  "grid-outage": "Grid Outage",
+  "equipment-failure": "Equipment Failure",
+  "planned-shutdown": "Planned Shutdown",
+  "force-majeure": "Force Majeure",
+};
+
+const CATEGORY_YTD_FIELD_MAP: Record<string, string> = {
+  "grid-outage": "Grid Outage",
+  "equipment-failure": "Equipment Failure",
+  "planned-shutdown": "Planned Shutdown",
+  "force-majeure": "Force Majeure",
+};
+
+const CATEGORY_WATERFALL_MAP: Record<string, string> = {
+  "grid-outage": "Grid Curtailment",
+  "equipment-failure": "Equipment Loss",
+  "planned-shutdown": "Planned Shutdown",
+  "force-majeure": "Force Majeure",
+};
+
+const PLANT_SCALE: Record<string, { factor: number; label: string }> = {
+  "all":     { factor: 1.0,   label: "All Plants" },
+  "plant-a": { factor: 0.087, label: "Plant A - 10MW" },
+  "plant-b": { factor: 0.217, label: "Plant B - 25MW" },
+  "plant-c": { factor: 0.435, label: "Plant C - 50MW" },
+  "plant-d": { factor: 0.261, label: "Plant D - 30MW" },
+};
+
+const PLANT_GANTT_MAP: Record<string, string> = {
+  "plant-a": "Plant A",
+  "plant-b": "Plant B",
+  "plant-c": "Plant C",
+  "plant-d": "Plant D",
+};
+
 export function OutageLossAnalytics() {
   const [rootCauseFilter, setRootCauseFilter] = useState("all");
   const [plantFilter, setPlantFilter] = useState("all");
   const pageRef = useRef<HTMLDivElement>(null);
 
-  const totalLoss = downtimeCategories.reduce((sum, cat) => sum + cat.energyLoss, 0);
+  const plantFactor = PLANT_SCALE[plantFilter]?.factor ?? 1.0;
+  const scale = (v: number) => Math.round(v * plantFactor * 10) / 10;
+
+  const filteredCategories = useMemo(() => {
+    let cats = downtimeCategories;
+    if (rootCauseFilter !== "all") {
+      const targetId = CATEGORY_ID_MAP[rootCauseFilter];
+      if (targetId) cats = cats.filter(c => c.id === targetId);
+    }
+    if (plantFilter !== "all") {
+      cats = cats.map(c => ({
+        ...c,
+        incidents: Math.round(c.incidents * plantFactor),
+        hours: Math.round(c.hours * plantFactor * 10) / 10,
+        energyLoss: Math.round(c.energyLoss * plantFactor),
+      }));
+    }
+    return cats;
+  }, [rootCauseFilter, plantFilter, plantFactor]);
+
+  const totalLoss = filteredCategories.reduce((sum, cat) => sum + cat.energyLoss, 0);
+
+  const filteredLossBuckets = useMemo(() => {
+    let buckets = lossBuckets;
+    if (rootCauseFilter !== "all") {
+      const targetId = CATEGORY_ID_MAP[rootCauseFilter];
+      const targetCat = targetId ? CATEGORY_LOSS_KEY_MAP[targetId] : null;
+      if (targetCat) buckets = buckets.filter(b => b.category === targetCat);
+    }
+    if (plantFilter !== "all") {
+      buckets = buckets.map(b => {
+        const budgeted = scale(b.budgeted);
+        const actual = scale(b.actual);
+        const variance = Math.round((actual - budgeted) * 10) / 10;
+        const variancePct = budgeted > 0 ? Math.round((variance / budgeted) * 1000) / 10 : 0;
+        return { ...b, budgeted, actual, variance, variancePct };
+      });
+    }
+    return buckets;
+  }, [rootCauseFilter, plantFilter, plantFactor]);
+
+  const filteredWaterfallData = useMemo(() => {
+    let data = [...waterfallData];
+    if (rootCauseFilter !== "all") {
+      const targetId = CATEGORY_ID_MAP[rootCauseFilter];
+      const waterfallName = targetId ? CATEGORY_WATERFALL_MAP[targetId] : null;
+      if (waterfallName) {
+        data = data.filter(d =>
+          d.name === "Budgeted Generation" ||
+          d.name === waterfallName ||
+          d.name === "Actual Generation" ||
+          d.name === "Net Evacuated"
+        );
+      }
+    }
+    if (plantFilter !== "all") {
+      data = data.map(d => ({
+        ...d,
+        value: d.value < 0 ? -Math.round(Math.abs(d.value) * plantFactor) : Math.round(d.value * plantFactor),
+      }));
+    }
+    let running = 0;
+    data = data.map((d, i) => {
+      if (i === 0 || d.value >= 0) {
+        running = d.value;
+      } else {
+        running = running + d.value;
+      }
+      return { ...d, cumulative: running };
+    });
+    return data;
+  }, [rootCauseFilter, plantFilter, plantFactor]);
+
+  const filteredMomData = useMemo(() => {
+    if (plantFilter === "all") return momData;
+    return momData.map(d => ({
+      ...d,
+      budgeted: scale(d.budgeted),
+      actual: scale(d.actual),
+      loss: scale(d.loss),
+    }));
+  }, [plantFilter, plantFactor]);
+
+  const filteredYoyData = useMemo(() => {
+    if (plantFilter === "all") return yoyData;
+    return yoyData.map(d => ({ ...d, actual: scale(d.actual) }));
+  }, [plantFilter, plantFactor]);
+
+  const filteredYtdMonthlyLossData = useMemo(() => {
+    let data = ytdMonthlyLossData;
+    if (plantFilter !== "all") {
+      data = data.map(d => ({
+        ...d,
+        gridOutage: scale(d.gridOutage),
+        equipFailure: scale(d.equipFailure),
+        plannedShutdown: scale(d.plannedShutdown),
+        forceMajeure: scale(d.forceMajeure),
+        spylTotal: scale(d.spylTotal),
+      }));
+    }
+    return data;
+  }, [plantFilter, plantFactor]);
+
+  const filteredYtdSummaryRows = useMemo(() => {
+    let rows = ytdSummaryRows;
+    if (rootCauseFilter !== "all") {
+      const targetId = CATEGORY_ID_MAP[rootCauseFilter];
+      const targetCat = targetId ? CATEGORY_YTD_FIELD_MAP[targetId] : null;
+      if (targetCat) rows = rows.filter(r => r.category === targetCat);
+    }
+    if (plantFilter !== "all") {
+      rows = rows.map(r => ({
+        ...r,
+        ytdHours: Math.round(r.ytdHours * plantFactor * 10) / 10,
+        ytdMWh: Math.round(r.ytdMWh * plantFactor),
+        spylMWh: Math.round(r.spylMWh * plantFactor),
+        revenue: `₹${(parseFloat(r.revenue.replace(/[₹ Cr]/g, "")) * plantFactor).toFixed(2)} Cr`,
+      }));
+    }
+    return rows;
+  }, [rootCauseFilter, plantFilter, plantFactor]);
+
+  const filteredParetoData = useMemo(() => {
+    let data = paretoData;
+    if (rootCauseFilter !== "all") {
+      const targetId = CATEGORY_ID_MAP[rootCauseFilter];
+      const ganttName = targetId ? CATEGORY_GANTT_MAP[targetId] : null;
+      if (ganttName) {
+        data = data.filter(d => {
+          if (ganttName === "Grid Outage") return d.cause === "Grid Instability";
+          if (ganttName === "Equipment Failure") return d.cause === "Inverter Failure" || d.cause === "Transformer Issue" || d.cause === "String Fault";
+          if (ganttName === "Planned Shutdown") return d.cause === "Communication Loss";
+          if (ganttName === "Force Majeure") return d.cause === "Weather";
+          return true;
+        });
+        let cum = 0;
+        const totalE = data.reduce((s, d) => s + d.energyLoss, 0);
+        data = data.map(d => {
+          cum += d.energyLoss;
+          return { ...d, cumPct: totalE > 0 ? Math.round((cum / totalE) * 1000) / 10 : 0 };
+        });
+      }
+    }
+    if (plantFilter !== "all") {
+      data = data.map(d => ({
+        ...d,
+        incidents: Math.round(d.incidents * plantFactor),
+        energyLoss: Math.round(d.energyLoss * plantFactor),
+      }));
+    }
+    return data;
+  }, [rootCauseFilter, plantFilter, plantFactor]);
+
+  const filteredGanttData = useMemo(() => {
+    let data = ganttData;
+    const ganttCatName = rootCauseFilter !== "all" ? CATEGORY_GANTT_MAP[CATEGORY_ID_MAP[rootCauseFilter]] : null;
+    const ganttPlantName = plantFilter !== "all" ? PLANT_GANTT_MAP[plantFilter] : null;
+
+    return data.map(day => ({
+      ...day,
+      events: day.events.filter(e => {
+        if (ganttCatName && e.type !== ganttCatName) return false;
+        if (ganttPlantName && e.plant !== ganttPlantName) return false;
+        return true;
+      }),
+    }));
+  }, [rootCauseFilter, plantFilter]);
+
+  const ytdTotalHours = useMemo(() => filteredYtdSummaryRows.reduce((s, r) => s + r.ytdHours, 0), [filteredYtdSummaryRows]);
+  const ytdTotalMWh = useMemo(() => filteredYtdSummaryRows.reduce((s, r) => s + r.ytdMWh, 0), [filteredYtdSummaryRows]);
+  const ytdTotalSpyl = useMemo(() => filteredYtdSummaryRows.reduce((s, r) => s + r.spylMWh, 0), [filteredYtdSummaryRows]);
+  const ytdTotalRevenue = useMemo(() => filteredYtdSummaryRows.reduce((s, r) => s + parseFloat(r.revenue.replace(/[₹ Cr]/g, "")), 0), [filteredYtdSummaryRows]);
+  const ytdOverallChange = useMemo(() => ytdTotalSpyl > 0 ? Math.round(((ytdTotalMWh - ytdTotalSpyl) / ytdTotalSpyl) * 1000) / 10 : 0, [ytdTotalMWh, ytdTotalSpyl]);
 
   return (
     <div ref={pageRef} className="min-h-screen bg-slate-50 flex flex-col">
@@ -313,15 +535,37 @@ export function OutageLossAnalytics() {
                 </SelectContent>
               </Select>
             </div>
-            <Button variant="outline" size="sm" className="h-7 px-3 text-xs">Reset</Button>
+            <Button variant="outline" size="sm" className="h-7 px-3 text-xs" onClick={() => { setRootCauseFilter("all"); setPlantFilter("all"); }}>Reset</Button>
           </div>
         </div>
       </div>
 
       <div className="flex-1 overflow-auto p-6">
+      {(rootCauseFilter !== "all" || plantFilter !== "all") && (
+        <div className="mb-4 px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs text-blue-800">
+            <Filter className="w-3.5 h-3.5" />
+            <span className="font-semibold">Active Filters:</span>
+            {rootCauseFilter !== "all" && (
+              <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-[10px]">
+                Category: {rootCauseFilter === "grid" ? "Grid Outage" : rootCauseFilter === "equipment" ? "Equipment Failure" : rootCauseFilter === "planned" ? "Planned Shutdown" : "Force Majeure"}
+              </Badge>
+            )}
+            {plantFilter !== "all" && (
+              <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-[10px]">
+                Plant: {PLANT_SCALE[plantFilter]?.label}
+              </Badge>
+            )}
+          </div>
+          <Button variant="ghost" size="sm" className="h-6 text-[10px] text-blue-700 hover:bg-blue-100" onClick={() => { setRootCauseFilter("all"); setPlantFilter("all"); }}>
+            Clear All
+          </Button>
+        </div>
+      )}
+
       {/* Downtime Categorization Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        {downtimeCategories.map((category) => {
+      <div className={`grid grid-cols-1 gap-6 mb-8 ${filteredCategories.length === 1 ? "md:grid-cols-1 max-w-sm" : filteredCategories.length === 2 ? "md:grid-cols-2" : filteredCategories.length === 3 ? "md:grid-cols-3" : "md:grid-cols-4"}`}>
+        {filteredCategories.map((category) => {
           const Icon = category.icon;
           const percentage = ((category.energyLoss / totalLoss) * 100).toFixed(1);
           
@@ -375,7 +619,7 @@ export function OutageLossAnalytics() {
         </CardHeader>
         <CardContent className="p-6">
           <ResponsiveContainer width="100%" height={400}>
-            <ComposedChart data={waterfallData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <ComposedChart data={filteredWaterfallData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis 
                 dataKey="name" 
@@ -388,7 +632,7 @@ export function OutageLossAnalytics() {
               <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" />
               <Tooltip content={<CustomChartTooltip unit="MWh" />} />
               <Bar dataKey="value" stackId="a">
-                {waterfallData.map((entry, index) => (
+                {filteredWaterfallData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
               </Bar>
@@ -404,31 +648,42 @@ export function OutageLossAnalytics() {
           </ResponsiveContainer>
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="grid grid-cols-5 gap-4 text-center">
-              <div>
-                <div className="text-xs text-gray-600 mb-1">Budgeted</div>
-                <div className="text-xl font-bold text-gray-900">5,200</div>
-                <div className="text-xs text-gray-500">MWh</div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-600 mb-1">Total Loss</div>
-                <div className="text-xl font-bold text-red-600">-645</div>
-                <div className="text-xs text-gray-500">MWh</div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-600 mb-1">Expected</div>
-                <div className="text-xl font-bold text-gray-900">4,555</div>
-                <div className="text-xs text-gray-500">MWh</div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-600 mb-1">Actual</div>
-                <div className="text-xl font-bold text-green-600">4,485</div>
-                <div className="text-xs text-gray-500">MWh</div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-600 mb-1">Net Evacuated</div>
-                <div className="text-xl font-bold" style={{ color: "#0A2E4A" }}>4,450</div>
-                <div className="text-xs text-gray-500">MWh</div>
-              </div>
+              {(() => {
+                const budgeted = filteredWaterfallData.find(d => d.name === "Budgeted Generation")?.value ?? 0;
+                const losses = filteredWaterfallData.filter(d => d.value < 0).reduce((s, d) => s + d.value, 0);
+                const actual = filteredWaterfallData.find(d => d.name === "Actual Generation")?.value ?? 0;
+                const evacuated = filteredWaterfallData.find(d => d.name === "Net Evacuated")?.value ?? actual;
+                const expected = budgeted + filteredWaterfallData.filter(d => d.value < 0 && d.name !== "Additional Loss" && d.name !== "Auxiliary Consumption").reduce((s, d) => s + d.value, 0);
+                return (
+                  <>
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">Budgeted</div>
+                      <div className="text-xl font-bold text-gray-900">{Math.round(budgeted).toLocaleString()}</div>
+                      <div className="text-xs text-gray-500">MWh</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">Total Loss</div>
+                      <div className="text-xl font-bold text-red-600">{Math.round(losses).toLocaleString()}</div>
+                      <div className="text-xs text-gray-500">MWh</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">Expected</div>
+                      <div className="text-xl font-bold text-gray-900">{Math.round(expected).toLocaleString()}</div>
+                      <div className="text-xs text-gray-500">MWh</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">Actual</div>
+                      <div className="text-xl font-bold text-green-600">{Math.round(actual).toLocaleString()}</div>
+                      <div className="text-xs text-gray-500">MWh</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">Net Evacuated</div>
+                      <div className="text-xl font-bold" style={{ color: "#0A2E4A" }}>{Math.round(evacuated).toLocaleString()}</div>
+                      <div className="text-xs text-gray-500">MWh</div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         </CardContent>
@@ -452,7 +707,7 @@ export function OutageLossAnalytics() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {lossBuckets.map((bucket, idx) => {
+              {filteredLossBuckets.map((bucket, idx) => {
                 const isNegative = bucket.variance > 0;
                 const isPositive = bucket.variance < 0;
                 
@@ -514,7 +769,7 @@ export function OutageLossAnalytics() {
           </CardHeader>
           <CardContent className="p-6">
             <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={momData}>
+              <ComposedChart data={filteredMomData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6B7280" />
                 <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" />
@@ -542,39 +797,46 @@ export function OutageLossAnalytics() {
           </CardHeader>
           <CardContent className="p-6">
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={yoyData}>
+              <BarChart data={filteredYoyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6B7280" />
-                <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" domain={[4000, 5000]} />
+                <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" domain={plantFilter === "all" ? [4000, 5000] : ["auto", "auto"]} />
                 <Tooltip content={<CustomChartTooltip unit="MWh" />} />
                 <Bar dataKey="actual" name="Actual Generation (MWh)">
-                  {yoyData.map((entry, index) => (
+                  {filteredYoyData.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={index === 0 ? "#6366F1" : index === 1 ? "#F59E0B" : "#EF4444"} 
                     />
                   ))}
                 </Bar>
-                <ReferenceLine y={4750} stroke="#0A2E4A" strokeDasharray="3 3" label="Baseline" />
+                <ReferenceLine y={scale(4750)} stroke="#0A2E4A" strokeDasharray="3 3" label="Baseline" />
               </BarChart>
             </ResponsiveContainer>
-            <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-around">
-              <div className="text-center">
-                <div className="text-xs text-gray-600">YoY Change</div>
-                <div className="text-lg font-bold text-red-600 flex items-center justify-center gap-1 mt-1">
-                  <TrendingDown className="w-4 h-4" />
-                  -5.6%
+            {(() => {
+              const vals = filteredYoyData.map(d => d.actual);
+              const yoyChange = vals.length >= 2 ? ((vals[vals.length - 1] - vals[vals.length - 2]) / vals[vals.length - 2] * 100) : 0;
+              const twoYearDecline = vals.length >= 3 ? vals[vals.length - 1] - vals[0] : vals.length >= 2 ? vals[vals.length - 1] - vals[0] : 0;
+              return (
+                <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-around">
+                  <div className="text-center">
+                    <div className="text-xs text-gray-600">YoY Change</div>
+                    <div className={`text-lg font-bold flex items-center justify-center gap-1 mt-1 ${yoyChange < 0 ? "text-red-600" : "text-green-600"}`}>
+                      {yoyChange < 0 ? <TrendingDown className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
+                      {yoyChange > 0 ? "+" : ""}{yoyChange.toFixed(1)}%
+                    </div>
+                  </div>
+                  <Separator orientation="vertical" className="h-10" />
+                  <div className="text-center">
+                    <div className="text-xs text-gray-600">{vals.length >= 3 ? "2-Year" : "Period"} Decline</div>
+                    <div className={`text-lg font-bold flex items-center justify-center gap-1 mt-1 ${twoYearDecline < 0 ? "text-red-600" : "text-green-600"}`}>
+                      {twoYearDecline < 0 ? <TrendingDown className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
+                      {twoYearDecline > 0 ? "+" : ""}{Math.round(twoYearDecline).toLocaleString()} MWh
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <Separator orientation="vertical" className="h-10" />
-              <div className="text-center">
-                <div className="text-xs text-gray-600">2-Year Decline</div>
-                <div className="text-lg font-bold text-red-600 flex items-center justify-center gap-1 mt-1">
-                  <TrendingDown className="w-4 h-4" />
-                  -265 MWh
-                </div>
-              </div>
-            </div>
+              );
+            })()}
           </CardContent>
         </Card>
       </div>
@@ -597,12 +859,19 @@ export function OutageLossAnalytics() {
 
           {/* ── KPI summary strip ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { label: "YTD Total Hours Lost", value: "328.4 hrs", sub: "vs 298.5 SPYL", delta: +10.0, icon: Calendar },
-              { label: "YTD Energy Loss",       value: "2,840 MWh", sub: "vs 2,603 SPYL", delta: +9.1,  icon: Zap },
-              { label: "YTD Revenue Impact",    value: "₹5.68 Cr",  sub: "lost generation", delta: null, icon: TrendingDown },
-              { label: "Worst Category YTD",    value: "Grid Outage", sub: "44% of total loss", delta: null, icon: AlertCircle },
-            ].map(({ label, value, sub, delta, icon: Icon }) => (
+            {(() => {
+              const spylHours = Math.round(ytdTotalHours / (1 + ytdOverallChange / 100) * 10) / 10;
+              const worstCat = filteredYtdSummaryRows.length > 0
+                ? [...filteredYtdSummaryRows].sort((a, b) => b.ytdMWh - a.ytdMWh)[0]
+                : null;
+              const worstPct = worstCat && ytdTotalMWh > 0 ? Math.round((worstCat.ytdMWh / ytdTotalMWh) * 100) : 0;
+              return [
+                { label: "YTD Total Hours Lost", value: `${ytdTotalHours.toFixed(1)} hrs`, sub: `vs ${spylHours.toFixed(1)} SPYL`, delta: ytdOverallChange, icon: Calendar },
+                { label: "YTD Energy Loss",       value: `${ytdTotalMWh.toLocaleString()} MWh`, sub: `vs ${ytdTotalSpyl.toLocaleString()} SPYL`, delta: ytdOverallChange, icon: Zap },
+                { label: "YTD Revenue Impact",    value: `₹${ytdTotalRevenue.toFixed(2)} Cr`, sub: "lost generation", delta: null, icon: TrendingDown },
+                { label: "Worst Category YTD",    value: worstCat?.category ?? "—", sub: `${worstPct}% of total loss`, delta: null, icon: AlertCircle },
+              ];
+            })().map(({ label, value, sub, delta, icon: Icon }) => (
               <div key={label} className="p-4 rounded-xl border-2 border-slate-100 bg-slate-50 flex flex-col gap-1">
                 <div className="flex items-center gap-2 mb-1">
                   <Icon className="w-4 h-4 text-slate-500" />
@@ -647,7 +916,7 @@ export function OutageLossAnalytics() {
               </div>
             </div>
             <ResponsiveContainer width="100%" height={280}>
-              <ComposedChart data={ytdMonthlyLossData} barCategoryGap="25%">
+              <ComposedChart data={filteredYtdMonthlyLossData} barCategoryGap="25%">
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#6B7280" />
                 <YAxis tick={{ fontSize: 11 }} stroke="#6B7280" unit=" MWh" width={60} />
@@ -712,7 +981,7 @@ export function OutageLossAnalytics() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {ytdSummaryRows.map((row) => (
+                  {filteredYtdSummaryRows.map((row) => (
                     <TableRow key={row.category} className="hover:bg-slate-50">
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -746,22 +1015,26 @@ export function OutageLossAnalytics() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {/* Totals row */}
+                  {filteredYtdSummaryRows.length > 1 && (
                   <TableRow className="bg-slate-100 font-bold border-t-2 border-slate-300">
                     <TableCell className="font-bold text-slate-900">Total</TableCell>
-                    <TableCell className="text-right font-mono font-bold">328.4</TableCell>
-                    <TableCell className="text-right font-mono font-bold">2,840</TableCell>
-                    <TableCell className="text-right font-mono text-slate-600">2,603</TableCell>
+                    <TableCell className="text-right font-mono font-bold">{ytdTotalHours.toFixed(1)}</TableCell>
+                    <TableCell className="text-right font-mono font-bold">{ytdTotalMWh.toLocaleString()}</TableCell>
+                    <TableCell className="text-right font-mono text-slate-600">{ytdTotalSpyl.toLocaleString()}</TableCell>
                     <TableCell className="text-right">
-                      <span className="inline-flex items-center gap-0.5 font-bold text-rose-600">
-                        <ArrowUpRight className="w-3.5 h-3.5" />+9.1%
+                      <span className={`inline-flex items-center gap-0.5 font-bold ${ytdOverallChange > 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                        {ytdOverallChange > 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                        {ytdOverallChange > 0 ? "+" : ""}{ytdOverallChange}%
                       </span>
                     </TableCell>
-                    <TableCell className="text-right font-bold text-slate-900">₹5.68 Cr</TableCell>
+                    <TableCell className="text-right font-bold text-slate-900">₹{ytdTotalRevenue.toFixed(2)} Cr</TableCell>
                     <TableCell className="text-center">
-                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">Elevated</span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${ytdOverallChange > 20 ? "bg-rose-100 text-rose-700" : ytdOverallChange > 0 ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
+                        {ytdOverallChange > 20 ? "Critical" : ytdOverallChange > 0 ? "Elevated" : "Improved"}
+                      </span>
                     </TableCell>
                   </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -780,7 +1053,7 @@ export function OutageLossAnalytics() {
         </CardHeader>
         <CardContent className="p-6">
           <ResponsiveContainer width="100%" height={350}>
-            <ComposedChart data={paretoData}>
+            <ComposedChart data={filteredParetoData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis 
                 dataKey="cause" 
@@ -825,13 +1098,21 @@ export function OutageLossAnalytics() {
             </ComposedChart>
           </ResponsiveContainer>
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="flex items-center gap-2 text-sm">
-              <AlertCircle className="w-5 h-5 text-orange-600" />
-              <span className="font-semibold text-gray-900">Key Insight:</span>
-              <span className="text-gray-700">
-                Top 4 causes account for <strong className="text-orange-600">82.5%</strong> of total energy losses
-              </span>
-            </div>
+            {(() => {
+              const top4 = filteredParetoData.slice(0, Math.min(4, filteredParetoData.length));
+              const totalE = filteredParetoData.reduce((s, d) => s + d.energyLoss, 0);
+              const top4E = top4.reduce((s, d) => s + d.energyLoss, 0);
+              const pct = totalE > 0 ? (top4E / totalE * 100).toFixed(1) : "0.0";
+              return (
+                <div className="flex items-center gap-2 text-sm">
+                  <AlertCircle className="w-5 h-5 text-orange-600" />
+                  <span className="font-semibold text-gray-900">Key Insight:</span>
+                  <span className="text-gray-700">
+                    Top {top4.length} causes account for <strong className="text-orange-600">{pct}%</strong> of total energy losses
+                  </span>
+                </div>
+              );
+            })()}
           </div>
         </CardContent>
       </Card>
@@ -846,7 +1127,7 @@ export function OutageLossAnalytics() {
         </CardHeader>
         <CardContent className="p-6">
           <div className="space-y-3">
-            {ganttData.map((day, dayIdx) => (
+            {filteredGanttData.map((day, dayIdx) => (
               <div key={dayIdx}>
                 <div className="flex items-center gap-4">
                   {/* Date Label */}

@@ -50,10 +50,19 @@ import { cn } from "../ui/utils";
 interface KPIDetailViewProps {
   kpi: KPI;
   onEditFormula: () => void;
+  period?: string;
+  clusterFilter?: string;
+  fy?: string;
+  month?: string;
 }
 
-export function KPIDetailView({ kpi, onEditFormula }: KPIDetailViewProps) {
+export function KPIDetailView({ kpi, onEditFormula, period = "Monthly", clusterFilter = "all", fy = "FY 2023-24", month = "September" }: KPIDetailViewProps) {
   const [timeRange, setTimeRange] = useState("12m");
+
+  const periodLabel =
+    period === "MTD"    ? "MTD Value" :
+    period === "YTD"    ? "YTD Cumulative" :
+    period === "Annual" ? "Annual Total" : "Monthly Value";
 
   const getComplianceColor = (status: KPI["complianceStatus"]) => {
     switch (status) {
@@ -77,6 +86,20 @@ export function KPIDetailView({ kpi, onEditFormula }: KPIDetailViewProps) {
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50/50 p-6 space-y-6">
       
+      {/* Active Filter Context Bar */}
+      <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 text-[11px] text-slate-600 flex-wrap">
+        <span className="font-semibold text-slate-500 uppercase tracking-wide text-[10px]">Viewing:</span>
+        <span className="px-2 py-0.5 bg-white border border-slate-200 rounded font-medium">{fy}</span>
+        <span className="px-2 py-0.5 bg-white border border-slate-200 rounded font-medium">{month}</span>
+        <span className="px-2 py-0.5 bg-[#0A2E4A] text-white rounded font-medium">{period}</span>
+        {clusterFilter !== "all" && (
+          <span className="px-2 py-0.5 bg-amber-100 border border-amber-300 text-amber-800 rounded font-medium">{clusterFilter} Cluster</span>
+        )}
+        {clusterFilter === "all" && (
+          <span className="px-2 py-0.5 bg-white border border-slate-200 rounded font-medium">All Plants</span>
+        )}
+      </div>
+
       {/* Header Section */}
       <div className="flex items-start justify-between bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
         <div>
@@ -125,11 +148,12 @@ export function KPIDetailView({ kpi, onEditFormula }: KPIDetailViewProps) {
             <Card className="border-none shadow-sm ring-1 ring-slate-200 bg-white relative overflow-hidden group">
                <div className="absolute top-0 left-0 w-1 h-full bg-[#0A2E4A]" />
                <CardContent className="p-4">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Current Value</p>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{periodLabel}</p>
                   <div className="flex items-baseline gap-1">
                      <span className="text-2xl font-bold text-slate-900">{kpi.currentValue}</span>
                      <span className="text-xs font-medium text-slate-500">{kpi.unit}</span>
                   </div>
+                  <p className="text-[9px] text-slate-400 mt-1">{month} · {fy}</p>
                </CardContent>
             </Card>
 
@@ -300,7 +324,14 @@ export function KPIDetailView({ kpi, onEditFormula }: KPIDetailViewProps) {
                  </div>
                  <div className="flex justify-between mt-2 text-xs text-slate-500 px-2">
                     <span>MoM Change: <span className={cn("font-bold", kpi.momChange > 0 ? "text-emerald-600" : "text-rose-600")}>{kpi.momChange > 0 ? "+" : ""}{kpi.momChange}%</span></span>
-                    <span>YoY Change: <span className="font-bold text-emerald-600">+1.2%</span></span>
+                    <span>YoY Change: {(() => {
+                      const h = kpi.history || [];
+                      if (h.length < 2) return <span className="font-bold text-slate-400">—</span>;
+                      const latest = h[h.length - 1].value;
+                      const prev = h[0].value;
+                      const yoy = prev > 0 ? ((latest - prev) / prev * 100) : 0;
+                      return <span className={cn("font-bold", yoy >= 0 ? "text-emerald-600" : "text-rose-600")}>{yoy >= 0 ? "+" : ""}{yoy.toFixed(1)}%</span>;
+                    })()}</span>
                  </div>
               </CardContent>
             </Card>
@@ -314,30 +345,30 @@ export function KPIDetailView({ kpi, onEditFormula }: KPIDetailViewProps) {
                   <div>
                     <div className="flex justify-between text-xs mb-1.5">
                       <span className="text-slate-600 font-medium">Total Revenue at Risk</span>
-                      <span className="font-bold text-rose-700">₹ 4.5 Lakhs</span>
+                      <span className="font-bold text-rose-700">₹ {((kpi.revenueImpact ?? 0) / 100000).toFixed(1)} Lakhs</span>
                     </div>
                     <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-rose-500 w-[35%]" />
+                      <div className="h-full bg-rose-500" style={{ width: `${Math.min(100, Math.max(5, ((kpi.revenueImpact ?? 0) / 1500000) * 100))}%` }} />
                     </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between text-xs mb-1.5">
                       <span className="text-slate-600 font-medium">LD Exposure</span>
-                      <span className="font-bold text-slate-900">₹ 1.2 Lakhs</span>
+                      <span className="font-bold text-slate-900">₹ {((kpi.ldRisk ?? 0) * kpi.currentValue / 100 / 100000).toFixed(1)} Lakhs</span>
                     </div>
                     <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-slate-800 w-[15%]" />
+                      <div className="h-full bg-slate-800" style={{ width: `${Math.min(100, Math.max(3, (kpi.ldRisk ?? 0)))}%` }} />
                     </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between text-xs mb-1.5">
                       <span className="text-slate-600 font-medium">Non-Compliant Plants</span>
-                      <span className="font-bold text-rose-600">3 / 45</span>
+                      <span className="font-bold text-rose-600">{(kpi.plantBreakdown || []).filter(p => p.status !== "Compliant").length} / {kpi.impactedPlants ?? 45}</span>
                     </div>
                     <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-rose-500 w-[8%]" />
+                      <div className="h-full bg-rose-500" style={{ width: `${Math.min(100, ((kpi.plantBreakdown || []).filter(p => p.status !== "Compliant").length / (kpi.impactedPlants ?? 45)) * 100)}%` }} />
                     </div>
                   </div>
 
@@ -388,7 +419,7 @@ export function KPIDetailView({ kpi, onEditFormula }: KPIDetailViewProps) {
                              {plant.status}
                            </Badge>
                          </TableCell>
-                         <TableCell className="text-right text-rose-600 font-medium text-xs py-1">-1.2%</TableCell>
+                         <TableCell className={cn("text-right font-medium text-xs py-1", plant.value >= kpi.targetValue ? "text-emerald-600" : "text-rose-600")}>{kpi.targetValue > 0 ? `${((plant.value - kpi.targetValue) / kpi.targetValue * 100).toFixed(1)}%` : "—"}</TableCell>
                        </TableRow>
                      ))
                    }

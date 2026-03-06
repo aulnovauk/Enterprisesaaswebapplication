@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, Suspense, lazy } from "react";
+import React, { useState, useRef, useEffect, useMemo, Suspense, lazy } from "react";
 const SolarMap = lazy(() => import("../components/SolarMap"));
 import { ExportMenu } from "../components/ExportMenu";
 import { motion, AnimatePresence } from "motion/react";
@@ -387,154 +387,13 @@ const assetHealthBreakdown = [
   { component: "Compliance Score", value: 88.5, target: 95.0, weight: 15 },
 ];
 
-const kpiPreviewData: Record<string, {
-  title: string;
-  rows: { label: string; value: string; subValue?: string; status?: "green" | "yellow" | "red" }[];
-  chart?: { label: string; data: { name: string; value: number }[] };
-  footer?: string;
-}> = {
-  capacity: {
-    title: "Installed Capacity Breakdown",
-    rows: [
-      { label: "Maharashtra", value: "108 MW", subValue: "18 Plants", status: "green" },
-      { label: "Tamil Nadu", value: "85 MW", subValue: "15 Plants", status: "green" },
-      { label: "Goa", value: "15 MW", subValue: "5 Plants", status: "green" },
-      { label: "Rooftop", value: "7 MW", subValue: "4 Plants", status: "yellow" },
-      { label: "Ground Mount", value: "5 MW", subValue: "3 Plants", status: "green" },
-    ],
-    chart: {
-      label: "State-wise Capacity (MW)",
-      data: [
-        { name: "MH", value: 108 },
-        { name: "TN", value: 85 },
-        { name: "Goa", value: 15 },
-        { name: "Other", value: 12 },
-      ],
-    },
-    footer: "Last commissioned: Feb 2026 · Next planned: Q2 FY26",
-  },
-  "mtd-generation": {
-    title: "MTD Generation Details",
-    rows: [
-      { label: "Top: Chennai Coastal", value: "1,920 MWh", subValue: "+3.8% vs target", status: "green" },
-      { label: "Aurangabad Project", value: "2,380 MWh", subValue: "-2.9% vs target", status: "yellow" },
-      { label: "Pune Solar Park", value: "2,150 MWh", subValue: "+2.4% vs target", status: "green" },
-      { label: "Coimbatore Solar", value: "2,120 MWh", subValue: "-9.8% vs target", status: "red" },
-      { label: "Solapur SPV", value: "1,720 MWh", subValue: "+2.4% vs target", status: "green" },
-    ],
-    chart: {
-      label: "Daily Generation Trend (MWh)",
-      data: [
-        { name: "W1", value: 9800 },
-        { name: "W2", value: 10500 },
-        { name: "W3", value: 11200 },
-        { name: "W4", value: 11080 },
-      ],
-    },
-    footer: "Avg daily: 1,521 MWh · Peak: 1,680 MWh (Feb 12)",
-  },
-  "ytd-generation": {
-    title: "YTD Generation Summary",
-    rows: [
-      { label: "Q1 (Apr-Jun)", value: "128,500 MWh", subValue: "93% of target", status: "yellow" },
-      { label: "Q2 (Jul-Sep)", value: "124,800 MWh", subValue: "91% of target", status: "yellow" },
-      { label: "Q3 (Oct-Dec)", value: "132,940 MWh", subValue: "95% of target", status: "green" },
-      { label: "Q4 (Jan-Feb)", value: "99,000 MWh", subValue: "On track", status: "green" },
-    ],
-    chart: {
-      label: "Quarterly Generation (GWh)",
-      data: [
-        { name: "Q1", value: 128.5 },
-        { name: "Q2", value: 124.8 },
-        { name: "Q3", value: 132.9 },
-        { name: "Q4", value: 99.0 },
-      ],
-    },
-    footer: "Annual target: 520 GWh · Current pace: 93.3%",
-  },
-  "portfolio-cuf": {
-    title: "CUF Analysis by Cluster",
-    rows: [
-      { label: "Maharashtra Cluster", value: "22.8%", subValue: "Target: 24%", status: "yellow" },
-      { label: "Tamil Nadu Cluster", value: "21.5%", subValue: "Target: 24%", status: "red" },
-      { label: "Goa Cluster", value: "22.8%", subValue: "Target: 24%", status: "yellow" },
-      { label: "Best Plant: Chennai", value: "24.5%", subValue: "Above target", status: "green" },
-      { label: "Worst Plant: Trichy", value: "18.5%", subValue: "Below target", status: "red" },
-    ],
-    footer: "Portfolio weighted CUF: 22.1% · Gap to target: -1.9%",
-  },
-  "grid-availability": {
-    title: "Grid Availability Breakdown",
-    rows: [
-      { label: "Maharashtra Grid", value: "96.5%", subValue: "12 hrs downtime", status: "green" },
-      { label: "Tamil Nadu Grid", value: "98.2%", subValue: "6 hrs downtime", status: "green" },
-      { label: "Goa Grid", value: "99.1%", subValue: "2 hrs downtime", status: "green" },
-      { label: "Scheduled Outage", value: "1.2%", subValue: "8.6 hrs", status: "yellow" },
-      { label: "Unscheduled Outage", value: "1.0%", subValue: "7.2 hrs", status: "red" },
-    ],
-    footer: "Total grid hours: 672 · Available: 657.3 hrs",
-  },
-  "revenue-realized": {
-    title: "Revenue Breakdown (₹ Cr)",
-    rows: [
-      { label: "Energy Sale", value: "₹24.8 Cr", subValue: "87% of total", status: "green" },
-      { label: "REC Income", value: "₹2.1 Cr", subValue: "7.4% of total", status: "green" },
-      { label: "Incentives & Bonus", value: "₹1.6 Cr", subValue: "5.6% of total", status: "yellow" },
-      { label: "Pending Collection", value: "₹3.2 Cr", subValue: "Overdue: ₹0.8 Cr", status: "red" },
-    ],
-    footer: "Collection efficiency: 91.4% · DSO: 42 days",
-  },
-  "revenue-shortfall": {
-    title: "Revenue Shortfall Analysis",
-    rows: [
-      { label: "Generation Shortfall", value: "₹1.4 Cr", subValue: "52% of gap", status: "red" },
-      { label: "Grid Curtailment", value: "₹0.6 Cr", subValue: "22% of gap", status: "yellow" },
-      { label: "Equipment Downtime", value: "₹0.5 Cr", subValue: "19% of gap", status: "yellow" },
-      { label: "Force Majeure", value: "₹0.2 Cr", subValue: "7% of gap", status: "green" },
-    ],
-    footer: "Recoverable: ₹0.8 Cr via LD claims · Net exposure: ₹1.9 Cr",
-  },
-  "ld-exposure": {
-    title: "LD Exposure by Vendor",
-    rows: [
-      { label: "Vendor C", value: "₹0.54 Cr", subValue: "15 plants · High risk", status: "red" },
-      { label: "Vendor A", value: "₹0.42 Cr", subValue: "12 plants · Medium", status: "yellow" },
-      { label: "Vendor B", value: "₹0.28 Cr", subValue: "8 plants · Low", status: "yellow" },
-      { label: "Vendor D", value: "₹0.00 Cr", subValue: "10 plants · None", status: "green" },
-    ],
-    footer: "YTD total: ₹3.85 Cr · Current month: ₹1.24 Cr",
-  },
-  "asset-health": {
-    title: "Asset Health Components",
-    rows: [
-      { label: "Performance Ratio", value: "78.6 / 100", subValue: "Weight: 35%", status: "yellow" },
-      { label: "Availability Score", value: "96.2 / 100", subValue: "Weight: 30%", status: "green" },
-      { label: "Downtime Score", value: "85.5 / 100", subValue: "Weight: 20%", status: "yellow" },
-      { label: "Compliance Score", value: "88.5 / 100", subValue: "Weight: 15%", status: "green" },
-    ],
-    footer: "Weighted Index: 82.5 · Target: 90.0 · Gap: -7.5",
-  },
-  "co2-reduction": {
-    title: "CO₂ Reduction Breakdown",
-    rows: [
-      { label: "Maharashtra Plants", value: "187,200 T", subValue: "48.7% share", status: "green" },
-      { label: "Tamil Nadu Plants", value: "142,800 T", subValue: "37.1% share", status: "green" },
-      { label: "Goa Plants", value: "54,520 T", subValue: "14.2% share", status: "green" },
-      { label: "Equivalent Trees", value: "17.5M", subValue: "Trees planted equiv.", status: "green" },
-    ],
-    chart: {
-      label: "Monthly CO₂ Saved (kT)",
-      data: [
-        { name: "Oct", value: 32.5 },
-        { name: "Nov", value: 31.8 },
-        { name: "Dec", value: 33.2 },
-        { name: "Jan", value: 34.1 },
-        { name: "Feb", value: 32.8 },
-      ],
-    },
-    footer: "Grid emission factor: 0.82 tCO₂/MWh · Annual target: 410 kT",
-  },
-};
+type KpiPreviewEntry = {
+    title: string;
+    rows: { label: string; value: string; subValue?: string; status?: "green" | "yellow" | "red" }[];
+    chart?: { label: string; data: { name: string; value: number }[] };
+    footer?: string;
+  };
+
 
 const statusColors: any = {
   compliant: { bg: "#10B981", label: "Compliant" },
@@ -564,7 +423,7 @@ function KpiCardWithPreview({
 }: { 
   children: React.ReactNode; 
   kpi: typeof strategicKPIs[0]; 
-  preview?: typeof kpiPreviewData[string];
+  preview?: KpiPreviewEntry;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState<"right" | "left">("right");
@@ -688,6 +547,26 @@ function KpiCardWithPreview({
   );
 }
 
+// ── Filter Engine: month seasonal generation factors (India solar profile) ────
+const MONTH_ORDER = [
+  "April","May","June","July","August","September",
+  "October","November","December","January","February","March",
+];
+const MONTH_FACTORS: Record<string, number> = {
+  April: 1.10, May: 1.15, June: 0.95, July: 0.85, August: 0.88,
+  September: 0.90, October: 0.92, November: 0.85, December: 0.80,
+  January: 0.82, February: 0.85, March: 1.00,
+};
+const FY_FACTORS: Record<string, number> = {
+  "FY 2025-26": 1.00, "FY 2024-25": 0.95, "FY 2023-24": 0.88,
+};
+const BASE_SEASON = 0.85; // existing data is calibrated for February
+// Baseline portfolio-level KPI values (all plants, FY 2025-26, Feb, MTD)
+const BASE_KPI = {
+  mtdGen: 42580, mtdTarget: 45000,
+  plantsCap: plantMarkers.reduce((s, p) => s + p.capacity, 0), // 208 MW from sample
+};
+
 export function Dashboard() {
   const [financialYear, setFinancialYear] = useState("FY 2025-26");
   const [month, setMonth] = useState("February");
@@ -696,6 +575,382 @@ export function Dashboard() {
   const [durationToggle, setDurationToggle] = useState("MTD");
   const [showComparison, setShowComparison] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
+
+  // ── Derived filtered data from all 5 top-level filters ───────────────────
+  const dashboardData = useMemo(() => {
+    const fyFactor = FY_FACTORS[financialYear] ?? 1.00;
+    const mFactor  = MONTH_FACTORS[month] ?? 1.00;
+    const monthScalar = mFactor / BASE_SEASON; // relative to Feb baseline
+
+    // Plant-level filtering
+    const filtered = plantMarkers.filter(p =>
+      (stateFilter === "All States" || p.state === stateFilter) &&
+      (vendorFilter === "All Vendors" || p.vendor === vendorFilter)
+    );
+
+    const filteredCap = filtered.reduce((s, p) => s + p.capacity, 0);
+    const capRatio    = BASE_KPI.plantsCap > 0 ? filteredCap / BASE_KPI.plantsCap : 0;
+
+    // Scaled portfolio metadata
+    const filteredPortfolioCap   = Math.round(PORTFOLIO_CONFIG.totalCapacity * capRatio);
+    const filteredPlantCount     = Math.max(1, Math.round(PORTFOLIO_CONFIG.totalPlants * capRatio));
+    const uniqueStates           = [...new Set(filtered.map(p => p.state))];
+
+    // MTD
+    const mtdGen    = Math.round(BASE_KPI.mtdGen    * capRatio * fyFactor * monthScalar);
+    const mtdTarget = Math.round(BASE_KPI.mtdTarget * capRatio * fyFactor * monthScalar);
+
+    // YTD: cumulative Apr → selected month
+    const monthIdx  = Math.max(0, MONTH_ORDER.indexOf(month));
+    const ytdSum    = MONTH_ORDER.slice(0, monthIdx + 1).reduce((s, m) => s + (MONTH_FACTORS[m] ?? 1), 0);
+    const ytdGen    = Math.round(BASE_KPI.mtdGen    * capRatio * fyFactor * ytdSum / BASE_SEASON);
+    const ytdTarget = Math.round(BASE_KPI.mtdTarget * capRatio * fyFactor * ytdSum / BASE_SEASON);
+
+    // Annual: full 12-month
+    const allSum      = Object.values(MONTH_FACTORS).reduce((s, v) => s + v, 0);
+    const annualGen    = Math.round(BASE_KPI.mtdGen    * capRatio * fyFactor * allSum / BASE_SEASON);
+    const annualTarget = Math.round(BASE_KPI.mtdTarget * capRatio * fyFactor * allSum / BASE_SEASON);
+
+    // Period-selected generation
+    const periodGen    = durationToggle === "MTD" ? mtdGen    : durationToggle === "YTD" ? ytdGen    : annualGen;
+    const periodTarget = durationToggle === "MTD" ? mtdTarget : durationToggle === "YTD" ? ytdTarget : annualTarget;
+    const genPct       = periodTarget > 0 ? Math.round((periodGen / periodTarget) * 100) : 0;
+
+    // Weighted CUF & availability (from plant-level data)
+    const portfolioCuf     = filteredCap > 0
+      ? parseFloat((filtered.reduce((s, p) => s + p.cuf * p.capacity, 0) / filteredCap).toFixed(1)) : 0;
+    const gridAvailability = filteredCap > 0
+      ? parseFloat((filtered.reduce((s, p) => s + p.availability * p.capacity, 0) / filteredCap).toFixed(1)) : 0;
+
+    // Revenue (₹2/kWh tariff, 91% collection rate)
+    const TARIFF = 0.0002; // ₹ Cr per MWh
+    const revenueRealized  = parseFloat((periodGen * TARIFF * 0.91).toFixed(1));
+    const revenueTarget    = parseFloat((periodTarget * TARIFF).toFixed(1));
+    const revenueShortfall = parseFloat(Math.max(0, revenueTarget - revenueRealized).toFixed(2));
+
+    // LD exposure (calibrated: 2 high-risk × 0.55 + 1 medium × 0.14 = 1.24 Cr for all plants)
+    const highRisk  = filtered.filter(p => p.ldRisk === "high").length;
+    const medRisk   = filtered.filter(p => p.ldRisk === "medium").length;
+    const ldExposure = parseFloat((highRisk * 0.55 + medRisk * 0.14).toFixed(2));
+
+    // CO₂ (0.82 tCO₂/MWh emission factor)
+    const co2 = Math.round(periodGen * 0.82);
+
+    // Asset Health Index (per-plant scoring)
+    const assetHealth = filtered.length > 0
+      ? parseFloat((filtered.reduce((s, p) => {
+          const score =
+            (p.availability - 85) * 0.8
+            + (p.cuf / 25 * 100 - 70) * 0.35
+            + (p.status === "compliant" ? 12 : p.status === "warning" ? 5 : -5)
+            + (p.ldRisk === "none" ? 8 : p.ldRisk === "low" ? 4 : p.ldRisk === "medium" ? 0 : -8)
+            + 70;
+          return s + Math.min(100, Math.max(50, score));
+        }, 0) / filtered.length).toFixed(1))
+      : 0;
+
+    // Period change label
+    const genChange = fyFactor < 1.0
+      ? `-${Math.round((1 - fyFactor) * 100)}% vs FY 2025-26`
+      : durationToggle === "MTD" ? "+5.2% MoM" : durationToggle === "YTD" ? "+8.4% YoY" : "+6.1% YoY";
+
+    return {
+      filtered, filteredCap, filteredPortfolioCap, filteredPlantCount, uniqueStates,
+      mtdGen, mtdTarget, ytdGen, ytdTarget, annualGen, annualTarget,
+      periodGen, periodTarget, genPct,
+      portfolioCuf, gridAvailability,
+      revenueRealized, revenueTarget, revenueShortfall,
+      ldExposure, co2, assetHealth, genChange,
+    };
+  }, [financialYear, month, stateFilter, vendorFilter, durationToggle]);
+
+  // ── Build computed KPI cards from dashboardData ───────────────────────────
+  const computedKPIs = useMemo(() => {
+    const {
+      periodGen, periodTarget, ytdGen, ytdTarget, annualGen, annualTarget,
+      portfolioCuf, gridAvailability, revenueRealized, revenueTarget,
+      revenueShortfall, ldExposure, co2, assetHealth, filteredPortfolioCap, genChange,
+    } = dashboardData;
+
+    const periodLabel =
+      durationToggle === "MTD" ? "MTD Generation" :
+      durationToggle === "YTD" ? "YTD Generation" : "Annual Generation";
+
+    const ytdLabel = durationToggle === "Annual" ? "Annual Projection" : "YTD Cumulative";
+    const ytdVal   = durationToggle === "Annual" ? annualGen   : ytdGen;
+    const ytdTgt   = durationToggle === "Annual" ? annualTarget : ytdTarget;
+
+    return strategicKPIs.map(kpi => {
+      switch (kpi.id) {
+        case "capacity":
+          return { ...kpi, value: String(filteredPortfolioCap), actual: filteredPortfolioCap, target: PORTFOLIO_CONFIG.totalCapacity };
+        case "mtd-generation":
+          return { ...kpi, title: periodLabel, value: periodGen.toLocaleString(), actual: periodGen, target: periodTarget, change: genChange };
+        case "ytd-generation":
+          return { ...kpi, title: ytdLabel, value: ytdVal.toLocaleString(), actual: ytdVal, target: ytdTgt };
+        case "portfolio-cuf":
+          return { ...kpi, value: String(portfolioCuf), actual: portfolioCuf,
+            compliance: portfolioCuf >= 23 ? "green" : portfolioCuf >= 21 ? "yellow" : "red" };
+        case "grid-availability":
+          return { ...kpi, value: String(gridAvailability), actual: gridAvailability,
+            compliance: gridAvailability >= 98 ? "green" : gridAvailability >= 95 ? "yellow" : "red" };
+        case "revenue-realized":
+          return { ...kpi, value: `₹${revenueRealized}`, actual: revenueRealized, target: revenueTarget };
+        case "revenue-shortfall":
+          return { ...kpi, value: `₹${revenueShortfall}`, actual: revenueShortfall,
+            compliance: revenueShortfall > 3 ? "red" : revenueShortfall > 1 ? "yellow" : "green" };
+        case "ld-exposure":
+          return { ...kpi, value: `₹${ldExposure}`, actual: ldExposure,
+            compliance: ldExposure > 1 ? "red" : ldExposure > 0.5 ? "yellow" : "green" };
+        case "asset-health":
+          return { ...kpi, value: String(assetHealth), actual: assetHealth,
+            compliance: assetHealth >= 85 ? "green" : assetHealth >= 75 ? "yellow" : "red" };
+        case "co2-reduction":
+          return { ...kpi, value: co2.toLocaleString(), actual: co2 };
+        default:
+          return kpi;
+      }
+    });
+  }, [dashboardData, durationToggle]);
+
+  // ── Reactive preview data — recomputes whenever filters change ────────────
+  const kpiPreviewData = useMemo<Record<string, KpiPreviewEntry>>(() => {
+    const {
+      filtered, filteredPortfolioCap, periodGen, periodTarget,
+      ytdGen, ytdTarget, portfolioCuf, gridAvailability,
+      revenueRealized, revenueTarget, revenueShortfall,
+      ldExposure, co2, assetHealth,
+    } = dashboardData;
+
+    // Helper: group plants by a key and sum/count
+    const groupBy = (key: "state" | "vendor") => {
+      const map: Record<string, { cap: number; count: number; cuf: number; avail: number; gen: number; ldHigh: number; ldMed: number }> = {};
+      for (const p of filtered) {
+        const k = p[key];
+        if (!map[k]) map[k] = { cap: 0, count: 0, cuf: 0, avail: 0, gen: 0, ldHigh: 0, ldMed: 0 };
+        map[k].cap   += p.capacity;
+        map[k].count += 1;
+        map[k].cuf   += p.cuf * p.capacity;
+        map[k].avail += p.availability * p.capacity;
+        map[k].gen   += p.generation;
+        if (p.ldRisk === "high")   map[k].ldHigh += 1;
+        if (p.ldRisk === "medium") map[k].ldMed  += 1;
+      }
+      return map;
+    };
+
+    const byState  = groupBy("state");
+    const byVendor = groupBy("vendor");
+    const pctFmt   = (v: number) => `${v.toFixed(1)}%`;
+
+    // --- capacity ---
+    const stateCapRows = Object.entries(byState)
+      .sort((a, b) => b[1].cap - a[1].cap)
+      .map(([state, d]) => ({
+        label: state,
+        value: `${d.cap} MW`,
+        subValue: `${d.count} Plant${d.count !== 1 ? "s" : ""}`,
+        status: (d.cap > 30 ? "green" : d.cap > 15 ? "yellow" : "green") as "green"|"yellow"|"red",
+      }));
+    const stateChartData = Object.entries(byState)
+      .sort((a, b) => b[1].cap - a[1].cap)
+      .map(([state, d]) => ({ name: state.length > 6 ? state.slice(0, 3) : state, value: d.cap }));
+
+    // --- generation (top 5 plants by generation) ---
+    const topPlants = [...filtered].sort((a, b) => b.generation - a.generation).slice(0, 5);
+    const genRows = topPlants.map(p => {
+      const pct = p.target > 0 ? ((p.generation - p.target) / p.target * 100) : 0;
+      return {
+        label: p.name.length > 22 ? p.name.slice(0, 22) + "…" : p.name,
+        value: `${p.generation.toLocaleString()} MWh`,
+        subValue: `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}% vs target`,
+        status: (pct >= 0 ? "green" : pct >= -5 ? "yellow" : "red") as "green"|"yellow"|"red",
+      };
+    });
+
+    // --- ytd quarterly breakdown (scale from ytdGen) ---
+    const qFactor = ytdTarget > 0 ? ytdGen / ytdTarget : 1;
+    const ytdRows = [
+      { label: "Q1 (Apr-Jun)", value: `${Math.round(ytdGen * 0.26).toLocaleString()} MWh`, subValue: `${Math.round(qFactor * 93)}% of target`, status: (qFactor > 0.92 ? "green" : "yellow") as "green"|"yellow"|"red" },
+      { label: "Q2 (Jul-Sep)", value: `${Math.round(ytdGen * 0.25).toLocaleString()} MWh`, subValue: `${Math.round(qFactor * 91)}% of target`, status: "yellow" as const },
+      { label: "Q3 (Oct-Dec)", value: `${Math.round(ytdGen * 0.27).toLocaleString()} MWh`, subValue: `${Math.round(qFactor * 95)}% of target`, status: "green" as const },
+      { label: "Q4 (Jan-Feb)", value: `${Math.round(ytdGen * 0.22).toLocaleString()} MWh`, subValue: "On track", status: "green" as const },
+    ];
+
+    // --- CUF by state ---
+    const cufRows = Object.entries(byState)
+      .sort((a, b) => b[1].cuf / b[1].cap - a[1].cuf / a[1].cap)
+      .map(([state, d]) => {
+        const wCuf = d.cap > 0 ? +(d.cuf / d.cap).toFixed(1) : 0;
+        return {
+          label: `${state} Cluster`,
+          value: pctFmt(wCuf),
+          subValue: "Target: 24%",
+          status: (wCuf >= 23 ? "green" : wCuf >= 21 ? "yellow" : "red") as "green"|"yellow"|"red",
+        };
+      });
+    const bestPlant  = [...filtered].sort((a, b) => b.cuf - a.cuf)[0];
+    const worstPlant = [...filtered].sort((a, b) => a.cuf - b.cuf)[0];
+    if (bestPlant)  cufRows.push({ label: `Best: ${bestPlant.name.split(" ")[0]}`,  value: pctFmt(bestPlant.cuf),  subValue: "Above target", status: "green"  });
+    if (worstPlant) cufRows.push({ label: `Worst: ${worstPlant.name.split(" ")[0]}`, value: pctFmt(worstPlant.cuf), subValue: "Below target", status: (worstPlant.cuf < 20 ? "red" : "yellow") });
+
+    // --- Grid availability by state ---
+    const gaRows = Object.entries(byState)
+      .sort((a, b) => b[1].avail / b[1].cap - a[1].avail / a[1].cap)
+      .map(([state, d]) => {
+        const wAvail = d.cap > 0 ? +(d.avail / d.cap).toFixed(1) : 0;
+        const downHrs = Math.round((100 - wAvail) / 100 * 720);
+        return {
+          label: `${state} Grid`,
+          value: pctFmt(wAvail),
+          subValue: `${downHrs} hrs downtime`,
+          status: (wAvail >= 97 ? "green" : wAvail >= 95 ? "yellow" : "red") as "green"|"yellow"|"red",
+        };
+      });
+    gaRows.push({ label: "Scheduled Outage", value: "1.2%", subValue: "8.6 hrs", status: "yellow" });
+    gaRows.push({ label: "Unscheduled Outage", value: `${Math.max(0, 100 - gridAvailability - 1.2).toFixed(1)}%`, subValue: "Unplanned", status: "red" });
+
+    // --- Revenue ---
+    const revenueRows = [
+      { label: "Energy Sale",        value: `₹${(revenueRealized * 0.87).toFixed(1)} Cr`, subValue: "87% of total", status: "green" as const },
+      { label: "REC Income",         value: `₹${(revenueRealized * 0.074).toFixed(1)} Cr`, subValue: "7.4% of total", status: "green" as const },
+      { label: "Incentives & Bonus", value: `₹${(revenueRealized * 0.056).toFixed(1)} Cr`, subValue: "5.6% of total", status: "yellow" as const },
+      { label: "Pending Collection", value: `₹${(revenueTarget - revenueRealized + 0.5).toFixed(1)} Cr`, subValue: `Overdue: ₹${(revenueShortfall * 0.3).toFixed(2)} Cr`, status: (revenueShortfall > 2 ? "red" : "yellow") as "green"|"yellow"|"red" },
+    ];
+
+    // --- Shortfall breakdown ---
+    const shortfallRows = [
+      { label: "Generation Shortfall", value: `₹${(revenueShortfall * 0.52).toFixed(2)} Cr`, subValue: "52% of gap", status: "red" as const },
+      { label: "Grid Curtailment",     value: `₹${(revenueShortfall * 0.22).toFixed(2)} Cr`, subValue: "22% of gap", status: "yellow" as const },
+      { label: "Equipment Downtime",   value: `₹${(revenueShortfall * 0.19).toFixed(2)} Cr`, subValue: "19% of gap", status: "yellow" as const },
+      { label: "Force Majeure",        value: `₹${(revenueShortfall * 0.07).toFixed(2)} Cr`, subValue: "7% of gap",  status: "green" as const },
+    ];
+
+    // --- LD exposure by vendor ---
+    const ldRows = Object.entries(byVendor)
+      .sort((a, b) => (b[1].ldHigh * 0.55 + b[1].ldMed * 0.14) - (a[1].ldHigh * 0.55 + a[1].ldMed * 0.14))
+      .map(([vendor, d]) => {
+        const exp = +(d.ldHigh * 0.55 + d.ldMed * 0.14).toFixed(2);
+        return {
+          label: vendor,
+          value: `₹${exp} Cr`,
+          subValue: `${d.count} plant${d.count !== 1 ? "s" : ""} · ${exp > 0.4 ? "High" : exp > 0 ? "Medium" : "None"} risk`,
+          status: (exp > 0.4 ? "red" : exp > 0 ? "yellow" : "green") as "green"|"yellow"|"red",
+        };
+      });
+
+    // --- Asset health components (derived) ---
+    const prScore = Math.min(100, Math.round(portfolioCuf / 25 * 100));
+    const avScore = Math.min(100, Math.round(gridAvailability));
+    const downScore = Math.min(100, Math.round(85 + (gridAvailability - 95)));
+    const compScore = Math.round(filtered.filter(p => p.status === "compliant").length / Math.max(1, filtered.length) * 100);
+    const healthRows = [
+      { label: "Performance Ratio", value: `${prScore} / 100`, subValue: "Weight: 35%", status: (prScore >= 80 ? "green" : "yellow") as "green"|"yellow"|"red" },
+      { label: "Availability Score", value: `${avScore} / 100`, subValue: "Weight: 30%", status: (avScore >= 95 ? "green" : "yellow") as "green"|"yellow"|"red" },
+      { label: "Downtime Score",     value: `${downScore} / 100`, subValue: "Weight: 20%", status: (downScore >= 85 ? "yellow" : "red") as "green"|"yellow"|"red" },
+      { label: "Compliance Score",   value: `${compScore} / 100`, subValue: "Weight: 15%", status: (compScore >= 80 ? "green" : "yellow") as "green"|"yellow"|"red" },
+    ];
+
+    // --- CO2 by state ---
+    const co2Rows = Object.entries(byState)
+      .sort((a, b) => b[1].gen - a[1].gen)
+      .map(([state, d]) => {
+        const stateCo2 = Math.round(d.gen * 0.82);
+        const share = co2 > 0 ? (stateCo2 / co2 * 100).toFixed(1) : "0";
+        return {
+          label: `${state} Plants`,
+          value: `${stateCo2.toLocaleString()} T`,
+          subValue: `${share}% share`,
+          status: "green" as const,
+        };
+      });
+    const treesEquiv = Math.round(co2 / 22);
+    co2Rows.push({ label: "Equivalent Trees", value: `${(treesEquiv / 1000).toFixed(1)}K`, subValue: "Trees planted equiv.", status: "green" });
+
+    const periodLabel = durationToggle === "MTD" ? "MTD" : durationToggle === "YTD" ? "YTD" : "Annual";
+
+    return {
+      capacity: {
+        title: "Installed Capacity Breakdown",
+        rows: stateCapRows,
+        chart: { label: "State-wise Capacity (MW)", data: stateChartData },
+        footer: `Total filtered: ${filteredPortfolioCap} MW · ${filtered.length} plant${filtered.length !== 1 ? "s" : ""}`,
+      },
+      "mtd-generation": {
+        title: `${periodLabel} Generation Details`,
+        rows: genRows.length > 0 ? genRows : [{ label: "No plants in filter", value: "—", status: "yellow" }],
+        chart: {
+          label: "Weekly Generation (MWh)",
+          data: [
+            { name: "W1", value: Math.round(periodGen * 0.23) },
+            { name: "W2", value: Math.round(periodGen * 0.26) },
+            { name: "W3", value: Math.round(periodGen * 0.28) },
+            { name: "W4", value: Math.round(periodGen * 0.23) },
+          ],
+        },
+        footer: `${periodLabel} total: ${periodGen.toLocaleString()} MWh · Target: ${periodTarget.toLocaleString()} MWh`,
+      },
+      "ytd-generation": {
+        title: "YTD Generation Summary",
+        rows: ytdRows,
+        chart: {
+          label: "Quarterly Generation (GWh)",
+          data: [
+            { name: "Q1", value: +(ytdGen * 0.26 / 1000).toFixed(1) },
+            { name: "Q2", value: +(ytdGen * 0.25 / 1000).toFixed(1) },
+            { name: "Q3", value: +(ytdGen * 0.27 / 1000).toFixed(1) },
+            { name: "Q4", value: +(ytdGen * 0.22 / 1000).toFixed(1) },
+          ],
+        },
+        footer: `YTD pace: ${ytdTarget > 0 ? Math.round(ytdGen / ytdTarget * 100) : 0}% of annual plan`,
+      },
+      "portfolio-cuf": {
+        title: "CUF Analysis by Cluster",
+        rows: cufRows,
+        footer: `Portfolio weighted CUF: ${portfolioCuf}% · Gap to target: ${(portfolioCuf - 24).toFixed(1)}%`,
+      },
+      "grid-availability": {
+        title: "Grid Availability Breakdown",
+        rows: gaRows,
+        footer: `Weighted portfolio GA: ${gridAvailability}% · Target: 98%`,
+      },
+      "revenue-realized": {
+        title: "Revenue Breakdown (₹ Cr)",
+        rows: revenueRows,
+        footer: `Collection efficiency: 91.4% · Target: ₹${revenueTarget} Cr`,
+      },
+      "revenue-shortfall": {
+        title: "Revenue Shortfall Analysis",
+        rows: shortfallRows,
+        footer: `Total shortfall: ₹${revenueShortfall} Cr · Net exposure: ₹${(revenueShortfall * 1.2).toFixed(2)} Cr`,
+      },
+      "ld-exposure": {
+        title: "LD Exposure by Vendor",
+        rows: ldRows.length > 0 ? ldRows : [{ label: "No LD exposure in filter", value: "₹0 Cr", status: "green" }],
+        footer: `Total LD exposure: ₹${ldExposure} Cr · ${filtered.filter(p => p.ldRisk === "high").length} high-risk plant${filtered.filter(p => p.ldRisk === "high").length !== 1 ? "s" : ""}`,
+      },
+      "asset-health": {
+        title: "Asset Health Components",
+        rows: healthRows,
+        footer: `Weighted Index: ${assetHealth} · Target: 90.0 · Gap: ${(+assetHealth - 90).toFixed(1)}`,
+      },
+      "co2-reduction": {
+        title: "CO₂ Reduction Breakdown",
+        rows: co2Rows,
+        chart: {
+          label: "Monthly CO₂ Saved (kT)",
+          data: [
+            { name: "Oct", value: +(co2 * 0.21 / 1000).toFixed(1) },
+            { name: "Nov", value: +(co2 * 0.20 / 1000).toFixed(1) },
+            { name: "Dec", value: +(co2 * 0.22 / 1000).toFixed(1) },
+            { name: "Jan", value: +(co2 * 0.19 / 1000).toFixed(1) },
+            { name: "Feb", value: +(co2 * 0.18 / 1000).toFixed(1) },
+          ],
+        },
+        footer: `Grid emission factor: 0.82 tCO₂/MWh · ${periodLabel} CO₂ saved: ${(co2 / 1000).toFixed(1)} kT`,
+      },
+    };
+  }, [dashboardData, durationToggle]);
 
   const mergedMtdData = mtdGenerationData.map((d, i) => ({
     ...d,
@@ -718,7 +973,10 @@ export function Dashboard() {
               <div>
                 <h1 className="text-base font-bold text-slate-900 leading-none">Portfolio Dashboard</h1>
                 <p className="text-xs text-slate-600 mt-0.5">
-                  {PORTFOLIO_CONFIG.totalCapacity} MW · {PORTFOLIO_CONFIG.totalPlants} Plants · {PORTFOLIO_CONFIG.states.length} States
+                  {dashboardData.filteredPortfolioCap} MW · {dashboardData.filteredPlantCount} Plants · {dashboardData.uniqueStates.length} {dashboardData.uniqueStates.length === 1 ? "State" : "States"}
+                  {(stateFilter !== "All States" || vendorFilter !== "All Vendors") && (
+                    <span className="ml-2 px-1.5 py-0.5 bg-amber-100 text-amber-700 border border-amber-300 rounded text-[10px] font-bold">Filtered View</span>
+                  )}
                 </p>
               </div>
             </div>
@@ -729,8 +987,8 @@ export function Dashboard() {
                 <span className="text-xs text-slate-600">Updated 2 min ago</span>
               </div>
               <ExportMenu
-                kpis={strategicKPIs.map(k => ({ title: k.title, value: k.value, unit: k.unit, change: k.change }))}
-                plants={plantMarkers}
+                kpis={computedKPIs.map(k => ({ title: k.title, value: k.value, unit: k.unit, change: k.change }))}
+                plants={dashboardData.filtered}
                 dashboardRef={dashboardRef}
               />
             </div>
@@ -812,9 +1070,9 @@ export function Dashboard() {
           
           {/* ROW 1 – STRATEGIC KPI SUMMARY CARDS */}
           <div className="grid grid-cols-5 gap-4">
-            {strategicKPIs.map((kpi) => {
+            {computedKPIs.map((kpi) => {
               const Icon = kpi.icon;
-              const progressPercent = (kpi.actual / kpi.target) * 100;
+              const progressPercent = kpi.target > 0 ? Math.min(100, (kpi.actual / kpi.target) * 100) : 100;
               const preview = kpiPreviewData[kpi.id];
               
               return (
@@ -917,13 +1175,13 @@ export function Dashboard() {
                       </div>
                     </div>
                   }>
-                    <SolarMap plantMarkers={plantMarkers} statusColors={statusColors} />
+                    <SolarMap plantMarkers={dashboardData.filtered} statusColors={statusColors} />
                   </Suspense>
                 </div>
                 {/* State summary strip — enhanced */}
-                <div className="grid grid-cols-3 gap-2 mt-3">
-                  {PORTFOLIO_CONFIG.states.map((state) => {
-                    const statePlants = plantMarkers.filter(p => p.state === state);
+                <div className={`grid gap-2 mt-3 ${dashboardData.uniqueStates.length === 1 ? "grid-cols-1" : dashboardData.uniqueStates.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                  {(stateFilter === "All States" ? PORTFOLIO_CONFIG.states : [stateFilter]).map((state) => {
+                    const statePlants = dashboardData.filtered.filter(p => p.state === state);
                     const stateCapacity = statePlants.reduce((sum, p) => sum + p.capacity, 0);
                     const compliant = statePlants.filter(p => p.status === "compliant").length;
                     const avgCuf = statePlants.length ? (statePlants.reduce((s, p) => s + p.cuf, 0) / statePlants.length) : 0;
@@ -983,7 +1241,7 @@ export function Dashboard() {
                     <span className="text-[9px] text-slate-400">Click marker on map for details</span>
                   </div>
                   <div className="space-y-1">
-                    {[...plantMarkers].sort((a, b) => b.cuf - a.cuf).map((plant, idx) => {
+                    {[...dashboardData.filtered].sort((a, b) => b.cuf - a.cuf).map((plant, idx) => {
                       const pct = plant.target > 0 ? Math.round((plant.generation / plant.target) * 100) : 0;
                       const cufCol = plant.cuf >= 23 ? "#10B981" : plant.cuf >= 21 ? "#F59E0B" : plant.cuf >= 19 ? "#F97316" : "#EF4444";
                       const sttCol: Record<string, string> = { compliant: "#10B981", warning: "#F59E0B", "non-compliant": "#EF4444", curtailment: "#F97316", shutdown: "#6B7280" };
