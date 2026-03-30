@@ -1300,26 +1300,26 @@ export function ReportsMIS() {
             </div>
 
             {/* View Mode Tabs */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="w-auto">
                 <TabsList className="bg-slate-100 border border-slate-200 p-1 h-11">
-                  <TabsTrigger value="gallery" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">
+                  <TabsTrigger value="gallery" className="gap-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm px-3">
                     <Grid3x3 className="w-4 h-4" />
                     Template Gallery
                   </TabsTrigger>
-                  <TabsTrigger value="builder" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">
+                  <TabsTrigger value="builder" className="gap-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm px-3">
                     <Wand2 className="w-4 h-4" />
                     Report Builder
                   </TabsTrigger>
-                  <TabsTrigger value="scheduled" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">
+                  <TabsTrigger value="scheduled" className="gap-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm px-3">
                     <CalendarDays className="w-4 h-4" />
-                    Scheduled Reports
+                    Scheduled
                   </TabsTrigger>
-                  <TabsTrigger value="history" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">
+                  <TabsTrigger value="history" className="gap-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm px-3">
                     <Clock className="w-4 h-4" />
-                    Report History
+                    History
                   </TabsTrigger>
-                  <TabsTrigger value="analytics" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">
+                  <TabsTrigger value="analytics" className="gap-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm px-3">
                     <BarChart3 className="w-4 h-4" />
                     Analytics
                   </TabsTrigger>
@@ -1334,13 +1334,13 @@ export function ReportsMIS() {
                     placeholder="Search reports..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 w-64 h-10 bg-slate-50 border-slate-200"
+                    className="pl-9 w-48 h-10 bg-slate-50 border-slate-200"
                   />
                 </div>
 
                 {viewMode === "gallery" && (
                   <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger className="w-40 h-10 bg-slate-50">
+                    <SelectTrigger className="w-36 h-10 bg-slate-50">
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1503,7 +1503,7 @@ export function ReportsMIS() {
             <div className="flex h-full overflow-hidden">
               
               {/* LEFT PANEL - Fields Palette */}
-              <div className="w-80 bg-white border-r border-slate-200 flex flex-col shrink-0 shadow-sm min-h-0 overflow-hidden">
+              <div className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 shadow-sm min-h-0 overflow-hidden">
                 <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-[#0A2E4A] to-[#0A2E4A]/90 shrink-0">
                   <div className="flex items-center gap-2 mb-2">
                     <Database className="w-5 h-5 text-white" />
@@ -1935,7 +1935,7 @@ export function ReportsMIS() {
               </div>
 
               {/* RIGHT PANEL - Settings & Export */}
-              <div className="w-80 bg-white border-l border-slate-200 flex flex-col shrink-0 shadow-sm min-h-0 overflow-hidden">
+              <div className="w-64 bg-white border-l border-slate-200 flex flex-col shrink-0 shadow-sm min-h-0 overflow-hidden">
                 <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-[#0A2E4A] to-[#0A2E4A]/90 shrink-0">
                   <div className="flex items-center gap-2 mb-2">
                     <Settings className="w-5 h-5 text-white" />
