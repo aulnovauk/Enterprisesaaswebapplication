@@ -1503,8 +1503,8 @@ export function ReportsMIS() {
             <div className="flex h-full overflow-hidden">
               
               {/* LEFT PANEL - Fields Palette */}
-              <div className="w-80 bg-white border-r border-slate-200 flex flex-col shrink-0 shadow-sm">
-                <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-[#0A2E4A] to-[#0A2E4A]/90">
+              <div className="w-80 bg-white border-r border-slate-200 flex flex-col shrink-0 shadow-sm min-h-0 overflow-hidden">
+                <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-[#0A2E4A] to-[#0A2E4A]/90 shrink-0">
                   <div className="flex items-center gap-2 mb-2">
                     <Database className="w-5 h-5 text-white" />
                     <h2 className="text-sm font-bold text-white">Data Fields</h2>
@@ -1512,7 +1512,7 @@ export function ReportsMIS() {
                   <p className="text-xs text-blue-100">Drag fields to build your report</p>
                 </div>
 
-                <ScrollArea className="flex-1">
+                <ScrollArea className="flex-1 min-h-0">
                   <div className="p-4 space-y-3">
                     {fieldCategories.map((category) => (
                       <div key={category} className="space-y-2">
@@ -1555,7 +1555,7 @@ export function ReportsMIS() {
                 </ScrollArea>
 
                 {/* Quick Actions */}
-                <div className="p-4 border-t border-slate-200 bg-slate-50 space-y-2">
+                <div className="p-4 border-t border-slate-200 bg-slate-50 space-y-2 shrink-0">
                   <Button 
                     variant="outline" 
                     className="w-full justify-start gap-2 text-xs"
@@ -1935,8 +1935,8 @@ export function ReportsMIS() {
               </div>
 
               {/* RIGHT PANEL - Settings & Export */}
-              <div className="w-80 bg-white border-l border-slate-200 flex flex-col shrink-0 shadow-sm">
-                <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-[#0A2E4A] to-[#0A2E4A]/90">
+              <div className="w-80 bg-white border-l border-slate-200 flex flex-col shrink-0 shadow-sm min-h-0 overflow-hidden">
+                <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-[#0A2E4A] to-[#0A2E4A]/90 shrink-0">
                   <div className="flex items-center gap-2 mb-2">
                     <Settings className="w-5 h-5 text-white" />
                     <h2 className="text-sm font-bold text-white">Settings & Export</h2>
@@ -1944,7 +1944,7 @@ export function ReportsMIS() {
                   <p className="text-xs text-blue-100">Configure report options</p>
                 </div>
 
-                <ScrollArea className="flex-1">
+                <ScrollArea className="flex-1 min-h-0">
                   <div className="p-4 space-y-6">
                     
                     {/* Aggregation Settings */}
@@ -2025,7 +2025,7 @@ export function ReportsMIS() {
                 </ScrollArea>
 
                 {/* Save Actions */}
-                <div className="p-4 border-t border-slate-200 bg-slate-50 space-y-2">
+                <div className="p-4 border-t border-slate-200 bg-slate-50 space-y-2 shrink-0">
                   <Button className="w-full gap-2 bg-[#0A2E4A]">
                     <Save className="w-4 h-4" />
                     Save as Template
