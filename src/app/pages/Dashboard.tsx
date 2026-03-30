@@ -1986,6 +1986,7 @@ export function Dashboard() {
         <div className="p-6 space-y-6 max-w-[1920px] mx-auto pb-16">
 
           {/* ALL DASHBOARD SECTIONS — rendered from widget order */}
+          <AnimatePresence mode="sync">
           {widgetOrder.map((widgetId, idx) => {
             const widget = widgetRegistry[widgetId];
             if (!widget) return null;
@@ -2002,6 +2003,7 @@ export function Dashboard() {
               </DraggableWidget>
             );
           })}
+          </AnimatePresence>
 
         </div>
       </div>
