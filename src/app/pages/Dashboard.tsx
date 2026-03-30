@@ -1,7 +1,9 @@
-import React, { useState, useRef, useEffect, useMemo, Suspense, lazy } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback, Suspense, lazy } from "react";
 const SolarMap = lazy(() => import("../components/SolarMap"));
 import { ExportMenu } from "../components/ExportMenu";
 import { motion, AnimatePresence } from "motion/react";
+import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import {
   BarChart,
   Bar,
@@ -68,6 +70,9 @@ import {
   TrendingUp as TrendUp,
   Gauge,
   Factory,
+  GripVertical,
+  LayoutGrid,
+  RotateCcw,
 } from "lucide-react";
 
 // Portfolio Configuration
@@ -567,6 +572,79 @@ const BASE_KPI = {
   plantsCap: plantMarkers.reduce((s, p) => s + p.capacity, 0), // 208 MW from sample
 };
 
+const WIDGET_ORDER_KEY = "dashboard-widget-order";
+const DEFAULT_WIDGET_ORDER = ["geo-risk", "generation", "commercial", "benchmarking", "advanced"];
+const WIDGET_TYPE = "DASHBOARD_WIDGET";
+
+function DraggableWidget({
+  id,
+  index,
+  title,
+  customizeMode,
+  moveWidget,
+  children,
+}: {
+  id: string;
+  index: number;
+  title: string;
+  customizeMode: boolean;
+  moveWidget: (dragIndex: number, hoverIndex: number) => void;
+  children: React.ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const [{ isDragging }, drag, preview] = useDrag({
+    type: WIDGET_TYPE,
+    item: () => ({ id, index }),
+    canDrag: customizeMode,
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+  });
+
+  const [{ isOver }, drop] = useDrop({
+    accept: WIDGET_TYPE,
+    hover(item: { id: string; index: number }, monitor) {
+      if (!ref.current) return;
+      const dragIndex = item.index;
+      const hoverIndex = index;
+      if (dragIndex === hoverIndex) return;
+      const hoverBoundingRect = ref.current.getBoundingClientRect();
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const clientOffset = monitor.getClientOffset();
+      if (!clientOffset) return;
+      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
+      moveWidget(dragIndex, hoverIndex);
+      item.index = hoverIndex;
+    },
+    collect: (monitor) => ({ isOver: monitor.isOver() }),
+  });
+
+  preview(drop(ref));
+
+  return (
+    <motion.div
+      ref={ref}
+      layout
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className={`relative group/widget ${isDragging ? "opacity-40" : ""} ${
+        customizeMode ? "ring-2 ring-dashed ring-slate-300 rounded-xl" : ""
+      } ${isOver && customizeMode ? "ring-[#0A2E4A] ring-2" : ""}`}
+    >
+      {customizeMode && (
+        <div
+          ref={drag}
+          className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-1 px-1.5 py-2 bg-white border-2 border-slate-300 rounded-lg shadow-md cursor-grab active:cursor-grabbing hover:border-[#0A2E4A] hover:shadow-lg transition-all"
+        >
+          <GripVertical className="w-4 h-4 text-slate-400" />
+          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider [writing-mode:vertical-lr] rotate-180">{title}</span>
+        </div>
+      )}
+      <div className={customizeMode ? "ml-6" : ""}>{children}</div>
+    </motion.div>
+  );
+}
+
 export function Dashboard() {
   const [financialYear, setFinancialYear] = useState("FY 2025-26");
   const [month, setMonth] = useState("February");
@@ -574,7 +652,43 @@ export function Dashboard() {
   const [vendorFilter, setVendorFilter] = useState("All Vendors");
   const [durationToggle, setDurationToggle] = useState("MTD");
   const [showComparison, setShowComparison] = useState(false);
+  const [customizeMode, setCustomizeMode] = useState(false);
+  const [widgetOrder, setWidgetOrder] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(WIDGET_ORDER_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (
+          Array.isArray(parsed) &&
+          parsed.length === DEFAULT_WIDGET_ORDER.length &&
+          DEFAULT_WIDGET_ORDER.every((id) => parsed.includes(id)) &&
+          new Set(parsed).size === parsed.length
+        ) {
+          return parsed;
+        }
+      }
+    } catch {}
+    return DEFAULT_WIDGET_ORDER;
+  });
   const dashboardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    localStorage.setItem(WIDGET_ORDER_KEY, JSON.stringify(widgetOrder));
+  }, [widgetOrder]);
+
+  const moveWidget = useCallback((dragIndex: number, hoverIndex: number) => {
+    setWidgetOrder((prev) => {
+      const next = [...prev];
+      const [removed] = next.splice(dragIndex, 1);
+      next.splice(hoverIndex, 0, removed);
+      return next;
+    });
+  }, []);
+
+  const resetLayout = useCallback(() => {
+    setWidgetOrder(DEFAULT_WIDGET_ORDER);
+    localStorage.removeItem(WIDGET_ORDER_KEY);
+  }, []);
 
   // ── Derived filtered data from all 5 top-level filters ───────────────────
   const dashboardData = useMemo(() => {
@@ -958,6 +1072,694 @@ export function Dashboard() {
     prevTarget: prevYearMtdGenerationData[i]?.target,
   }));
 
+  const widgetRegistry: Record<string, { title: string; render: () => React.ReactNode }> = {
+    "geo-risk": {
+      title: "Geo & Risk",
+      render: () => (
+          <div className="grid grid-cols-12 gap-6">
+            <Card className="col-span-7 border-2 border-slate-200 shadow-md">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Geographic Distribution
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3">
+                <div className="rounded-xl overflow-hidden h-96 border border-slate-200 shadow-inner">
+                  <Suspense fallback={
+                    <div className="w-full h-full bg-slate-900 flex items-center justify-center rounded-xl">
+                      <div className="text-center">
+                        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                        <p className="text-sm text-slate-400">Loading map...</p>
+                      </div>
+                    </div>
+                  }>
+                    <SolarMap plantMarkers={dashboardData.filtered} statusColors={statusColors} />
+                  </Suspense>
+                </div>
+                <div className={`grid gap-2 mt-3 ${dashboardData.uniqueStates.length === 1 ? "grid-cols-1" : dashboardData.uniqueStates.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                  {(stateFilter === "All States" ? PORTFOLIO_CONFIG.states : [stateFilter]).map((state) => {
+                    const statePlants = dashboardData.filtered.filter((p: any) => p.state === state);
+                    const stateCapacity = statePlants.reduce((sum: number, p: any) => sum + p.capacity, 0);
+                    const compliant = statePlants.filter((p: any) => p.status === "compliant").length;
+                    const avgCuf = statePlants.length ? (statePlants.reduce((s: number, p: any) => s + p.cuf, 0) / statePlants.length) : 0;
+                    const stateGen = statePlants.reduce((s: number, p: any) => s + p.generation, 0);
+                    const stateTgt = statePlants.reduce((s: number, p: any) => s + p.target, 0);
+                    const achieve = stateTgt > 0 ? Math.round((stateGen / stateTgt) * 100) : 0;
+                    const highRisk = statePlants.filter((p: any) => p.ldRisk === "high").length;
+                    const cufPct = Math.min((avgCuf / 25) * 100, 100);
+                    const cufCol = avgCuf >= 23 ? "#10B981" : avgCuf >= 21 ? "#F59E0B" : "#F97316";
+                    const achCol = achieve >= 100 ? "#10B981" : achieve >= 95 ? "#F59E0B" : "#EF4444";
+                    return (
+                      <div key={state} className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <div className="flex items-start justify-between mb-1.5">
+                          <div>
+                            <div className="text-[10px] font-bold text-slate-500 uppercase leading-tight">{state}</div>
+                            <div className="text-sm font-bold text-slate-900 leading-tight">{stateCapacity} MW</div>
+                          </div>
+                          <div className="flex flex-col items-end gap-0.5">
+                            <div className="text-[10px] text-slate-500">{statePlants.length} sites</div>
+                            <div className="flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                              <span className="text-[10px] font-semibold text-emerald-600">{compliant}/{statePlants.length}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mb-1.5">
+                          <div className="flex justify-between mb-0.5">
+                            <span className="text-[9px] text-slate-500">Avg CUF</span>
+                            <span className="text-[9px] font-bold" style={{ color: cufCol }}>{avgCuf.toFixed(1)}%</span>
+                          </div>
+                          <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${cufPct}%`, background: cufCol }} />
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] text-slate-500">Achievement</span>
+                          <span className="text-[9px] font-bold" style={{ color: achCol }}>{achieve}%</span>
+                        </div>
+                        {highRisk > 0 && (
+                          <div className="mt-1 flex items-center gap-1">
+                            <span className="text-[9px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5">⚠ {highRisk} LD Risk</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide">All Plants — Ranked by CUF</span>
+                    <span className="text-[9px] text-slate-400">Click marker on map for details</span>
+                  </div>
+                  <div className="space-y-1">
+                    {[...dashboardData.filtered].sort((a: any, b: any) => b.cuf - a.cuf).map((plant: any, idx: number) => {
+                      const pct = plant.target > 0 ? Math.round((plant.generation / plant.target) * 100) : 0;
+                      const cufCol = plant.cuf >= 23 ? "#10B981" : plant.cuf >= 21 ? "#F59E0B" : plant.cuf >= 19 ? "#F97316" : "#EF4444";
+                      const sttCol: Record<string, string> = { compliant: "#10B981", warning: "#F59E0B", "non-compliant": "#EF4444", curtailment: "#F97316", shutdown: "#6B7280" };
+                      const dotCol = sttCol[plant.status] ?? "#6B7280";
+                      const achCol = pct >= 100 ? "#10B981" : pct >= 95 ? "#F59E0B" : "#EF4444";
+                      const ldBg: Record<string, string> = { high: "bg-rose-50 text-rose-700 border-rose-200", medium: "bg-amber-50 text-amber-700 border-amber-200", low: "bg-yellow-50 text-yellow-700 border-yellow-200", none: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+                      return (
+                        <div key={plant.id} className="flex items-center gap-2 px-2 py-1 rounded bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors">
+                          <span className="text-[9px] font-bold text-slate-400 w-4 text-right shrink-0">#{idx + 1}</span>
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: dotCol, boxShadow: `0 0 4px ${dotCol}80` }} />
+                          <span className="text-[10px] font-semibold text-slate-800 flex-1 min-w-0 truncate">{plant.name}</span>
+                          <span className="text-[9px] text-slate-500 shrink-0 hidden sm:inline">{plant.district}</span>
+                          <span className="text-[9px] font-bold shrink-0" style={{ color: cufCol }}>{plant.cuf}%</span>
+                          <span className="text-[9px] font-bold shrink-0 w-9 text-right" style={{ color: achCol }}>{pct}%</span>
+                          {plant.ldRisk !== "none" && (
+                            <span className={`text-[8px] font-semibold border rounded px-1 shrink-0 ${ldBg[plant.ldRisk]}`}>{plant.ldRisk.toUpperCase()}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-between mt-1 px-2">
+                    <span className="text-[8px] text-slate-400"># = CUF rank · Color dot = status · CUF% · Achieve%</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="col-span-5 border-2 border-slate-200 shadow-md">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-600" />
+                    Risk & Alert Dashboard
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Risk Score</div>
+                      <div className="text-xs font-bold text-orange-600">{riskData.riskScore}/100</div>
+                    </div>
+                    <div className="px-2 py-1 rounded-md text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-300 uppercase tracking-wide">
+                      Elevated
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-3">
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2.5 bg-rose-50 rounded-lg border-2 border-rose-200">
+                      <div className="text-[10px] font-semibold text-rose-700 mb-0.5">Non-Compliant Plants</div>
+                      <div className="text-2xl font-bold text-rose-900 leading-none">{riskData.nonCompliantPlants}</div>
+                      <div className="text-[9px] text-rose-500 mt-1">↑ 1 vs last month</div>
+                    </div>
+                    <div className="p-2.5 bg-amber-50 rounded-lg border-2 border-amber-200">
+                      <div className="text-[10px] font-semibold text-amber-700 mb-0.5">High LD Risk</div>
+                      <div className="text-2xl font-bold text-amber-900 leading-none">{riskData.highLDRisk}</div>
+                      <div className="text-[9px] text-amber-600 mt-1">₹{riskData.ldExposureCr} Cr exposure</div>
+                    </div>
+                    <div className="p-2.5 bg-purple-50 rounded-lg border-2 border-purple-200">
+                      <div className="text-[10px] font-semibold text-purple-700 mb-0.5">Escalations</div>
+                      <div className="text-2xl font-bold text-purple-900 leading-none">{riskData.escalationTriggered}</div>
+                      <div className="text-[9px] text-purple-500 mt-1">2 awaiting response</div>
+                    </div>
+                    <div className="p-2.5 bg-blue-50 rounded-lg border-2 border-blue-200">
+                      <div className="text-[10px] font-semibold text-blue-700 mb-0.5">Pending JMR</div>
+                      <div className="text-2xl font-bold text-blue-900 leading-none">{riskData.pendingJMR}</div>
+                      <div className="text-[9px] text-rose-600 mt-1 font-semibold">⚠ {riskData.overdueJMR} overdue &gt;7 days</div>
+                    </div>
+                  </div>
+                  <div className="p-2.5 rounded-lg border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 flex items-center justify-between">
+                    <div>
+                      <div className="text-[9px] font-bold text-orange-600 uppercase tracking-wide mb-0.5">Total LD Financial Exposure</div>
+                      <div className="text-lg font-bold text-orange-800">₹{riskData.ldExposureCr} Cr at risk</div>
+                      <div className="text-[9px] text-orange-600">Across {riskData.highLDRisk} plants · Vendor C highest</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[9px] text-orange-500 mb-1">vs Budget</div>
+                      <div className="text-base font-bold text-orange-700">4.0%</div>
+                      <div className="text-[9px] text-orange-500">of revenue</div>
+                    </div>
+                  </div>
+                  <Separator />
+                  <div>
+                    <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-2">Active Alerts</h4>
+                    <div className="space-y-1.5">
+                      {riskData.recentAlerts.map((alert: any) => {
+                        const sevStyle: Record<string, { dot: string; bg: string; badge: string; text: string }> = {
+                          critical: { dot: "bg-rose-500",   bg: "bg-rose-50 border-rose-200",     badge: "bg-rose-100 text-rose-700 border-rose-300",     text: "text-rose-700" },
+                          high:     { dot: "bg-orange-500", bg: "bg-orange-50 border-orange-200", badge: "bg-orange-100 text-orange-700 border-orange-300", text: "text-orange-600" },
+                          medium:   { dot: "bg-amber-400",  bg: "bg-amber-50 border-amber-200",   badge: "bg-amber-100 text-amber-700 border-amber-200",    text: "text-amber-600" },
+                        };
+                        const s = sevStyle[alert.severity] ?? sevStyle.medium;
+                        return (
+                          <div key={alert.id} className={`px-2.5 py-2 rounded-lg border ${s.bg}`}>
+                            <div className="flex items-center justify-between mb-0.5">
+                              <div className="flex items-center gap-1.5">
+                                <span className={`w-2 h-2 rounded-full ${s.dot} shrink-0`} />
+                                <span className="text-[10px] font-bold text-slate-800 truncate">{alert.plant}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className={`text-[9px] border rounded px-1.5 py-0.5 font-semibold ${s.badge}`}>{alert.category}</span>
+                                <span className={`text-[9px] font-bold ${s.text}`}>{alert.daysOpen}d</span>
+                              </div>
+                            </div>
+                            <div className="text-[9px] text-slate-500 pl-3.5">{alert.detail}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <Separator />
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-wide">Non-Compliant Trend (6M)</h4>
+                      <span className="text-[9px] text-emerald-600 font-semibold">↓ Improving</span>
+                    </div>
+                    <ResponsiveContainer width="100%" height={60}>
+                      <BarChart data={riskData.complianceTrend} barSize={14} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
+                        <XAxis dataKey="month" tick={{ fontSize: 8, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 8, fill: "#94a3b8" }} axisLine={false} tickLine={false} domain={[0, 14]} />
+                        <Bar dataKey="nonCompliant" radius={[3, 3, 0, 0]}>
+                          {riskData.complianceTrend.map((entry: any, index: number) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={entry.nonCompliant >= 10 ? "#EF4444" : entry.nonCompliant >= 9 ? "#F97316" : "#F59E0B"}
+                            />
+                          ))}
+                        </Bar>
+                        <Tooltip
+                          contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "6px", fontSize: "10px", color: "#f1f5f9" }}
+                          formatter={(v: number) => [`${v} plants`, "Non-Compliant"]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <Separator />
+                  <div>
+                    <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-2">Vendor LD Exposure</h4>
+                    <div className="space-y-2">
+                      {riskData.vendorLDExposure.map((v: any) => {
+                        const maxLd = Math.max(...riskData.vendorLDExposure.map((x: any) => x.ldCr));
+                        const pct = Math.round((v.ldCr / maxLd) * 100);
+                        const col = v.risk === "high" ? "#EF4444" : v.risk === "medium" ? "#F97316" : "#F59E0B";
+                        const bgBadge = v.risk === "high" ? "bg-rose-100 text-rose-700 border-rose-200" : v.risk === "medium" ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-amber-100 text-amber-700 border-amber-200";
+                        return (
+                          <div key={v.vendor}>
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-semibold text-slate-700">{v.vendor}</span>
+                                <span className="text-[9px] text-slate-400">{v.plants} plants</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-bold text-slate-800">₹{v.ldCr} Cr</span>
+                                <span className={`text-[8px] font-bold border rounded px-1 ${bgBadge}`}>{v.risk.toUpperCase()}</span>
+                              </div>
+                            </div>
+                            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: col }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+      ),
+    },
+    "generation": {
+      title: "Generation",
+      render: () => (
+          <div className="grid grid-cols-12 gap-6">
+            <Card className="col-span-4 border-2 border-slate-200 shadow-md">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-base">MTD vs Target Generation</CardTitle>
+                    <CardDescription className="text-xs">Top 6 plants by capacity</CardDescription>
+                  </div>
+                  <button
+                    onClick={() => setShowComparison((v) => !v)}
+                    className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md border transition-all ${
+                      showComparison
+                        ? "bg-amber-50 border-amber-300 text-amber-700"
+                        : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"
+                    }`}
+                  >
+                    <TrendingUp className="w-3 h-3" />
+                    vs PY
+                  </button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={mergedMtdData} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis type="number" tick={{ fontSize: 10 }} stroke="#64748b" />
+                      <YAxis dataKey="plant" type="category" tick={{ fontSize: 10 }} stroke="#64748b" width={100} />
+                      <Tooltip content={<CustomChartTooltip unit="MWh" />} />
+                      <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      {showComparison && <Bar dataKey="prevActual" fill="#CBD5E1" name="PY Actual (MWh)" opacity={0.7} />}
+                      <Bar dataKey="target" fill="#94A3B8" name="Target (MWh)" />
+                      <Bar dataKey="actual" fill="#0A2E4A" name="Actual (MWh)" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="col-span-5 border-2 border-slate-200 shadow-md">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-base">Portfolio CUF Trend (12 Months)</CardTitle>
+                    <CardDescription className="text-xs">Monthly performance vs target</CardDescription>
+                  </div>
+                  <button
+                    onClick={() => setShowComparison((v) => !v)}
+                    className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md border transition-all ${
+                      showComparison
+                        ? "bg-amber-50 border-amber-300 text-amber-700"
+                        : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"
+                    }`}
+                  >
+                    <TrendingUp className="w-3 h-3" />
+                    vs PY
+                  </button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={mergedCufData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="#64748b" />
+                      <YAxis domain={[18, 25]} tick={{ fontSize: 10 }} stroke="#64748b" />
+                      <Tooltip content={<CustomChartTooltip unit="%" />} />
+                      <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      {showComparison && (
+                        <Line
+                          type="monotone"
+                          dataKey="prevPortfolio"
+                          stroke="#94A3B8"
+                          strokeWidth={2}
+                          strokeDasharray="4 4"
+                          name="PY CUF (%)"
+                          dot={{ fill: "#94A3B8", r: 3 }}
+                        />
+                      )}
+                      <Line 
+                        type="monotone" 
+                        dataKey="portfolio" 
+                        stroke="#0A2E4A" 
+                        strokeWidth={3}
+                        name="Portfolio CUF (%)"
+                        dot={{ fill: '#0A2E4A', r: 4 }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="target" 
+                        stroke="#10B981" 
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                        name="Target (%)"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="col-span-3 border-2 border-slate-200 shadow-md">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <CardTitle className="text-base">Downtime Classification</CardTitle>
+                <CardDescription className="text-xs">Distribution by cause</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="h-72 flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={downtimeData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        dataKey="value"
+                        label={(entry) => `${entry.value}%`}
+                        labelLine={false}
+                      >
+                        {downtimeData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomChartTooltip unit="%" />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-4 space-y-2">
+                  {downtimeData.map((item) => (
+                    <div key={item.name} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded" style={{ backgroundColor: item.color }}></div>
+                        <span className="text-slate-700">{item.name}</span>
+                      </div>
+                      <span className="font-bold text-slate-900">{item.value}%</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+      ),
+    },
+    "commercial": {
+      title: "Commercial",
+      render: () => (
+          <div className="grid grid-cols-12 gap-6">
+            <Card className="col-span-4 border-2 border-slate-200 shadow-md">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <CardTitle className="text-base">Revenue Waterfall (₹ Cr)</CardTitle>
+                <CardDescription className="text-xs">Budget to realization flow</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={revenueWaterfallData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="stage" tick={{ fontSize: 10 }} stroke="#64748b" />
+                      <YAxis domain={[25, 33]} tick={{ fontSize: 10 }} stroke="#64748b" />
+                      <Tooltip content={<CustomChartTooltip unit="₹ Cr" />} />
+                      <Bar dataKey="value" fill="#0A2E4A" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-4 p-3 bg-amber-50 rounded-lg border-2 border-amber-200">
+                  <div className="text-xs font-semibold text-amber-700 mb-1">Total Shortfall</div>
+                  <div className="text-xl font-bold text-amber-900">₹2.7 Cr</div>
+                  <div className="text-xs text-amber-600 mt-1">8.7% below budget</div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="col-span-4 border-2 border-slate-200 shadow-md">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <CardTitle className="text-base">LD Exposure by Vendor</CardTitle>
+                <CardDescription className="text-xs">Liquidated damages summary</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs font-bold">Vendor</TableHead>
+                      <TableHead className="text-xs font-bold text-center">Plants</TableHead>
+                      <TableHead className="text-xs font-bold text-right">LD (₹ Cr)</TableHead>
+                      <TableHead className="text-xs font-bold text-right">Risk</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ldExposureData.map((vendor) => (
+                      <TableRow key={vendor.vendor} className="hover:bg-slate-50">
+                        <TableCell className="text-xs font-semibold">{vendor.vendor}</TableCell>
+                        <TableCell className="text-xs text-center">{vendor.plants}</TableCell>
+                        <TableCell className="text-xs text-right font-bold">₹{vendor.ldAmount.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge 
+                            variant="outline" 
+                            className={`text-[10px] ${
+                              vendor.severity === "high" ? "bg-rose-50 text-rose-700 border-rose-200" :
+                              vendor.severity === "medium" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                              vendor.severity === "low" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                              "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            }`}
+                          >
+                            {vendor.severity === "none" ? "Clean" : vendor.severity}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <div className="mt-4 p-3 bg-rose-50 rounded-lg border-2 border-rose-200">
+                  <div className="text-xs font-semibold text-rose-700 mb-1">Total Portfolio LD</div>
+                  <div className="text-xl font-bold text-rose-900">₹1.24 Cr</div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="col-span-4 border-2 border-slate-200 shadow-md">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <CardTitle className="text-base">O&M Deviation Settlement</CardTitle>
+                <CardDescription className="text-xs">Performance vs benchmark</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-4">
+                  <div className="p-4 bg-slate-50 rounded-lg border-2 border-slate-200">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-xs font-semibold text-slate-600 mb-2">PR Benchmark</div>
+                        <div className="text-3xl font-bold text-slate-900">{omDeviationData.prBenchmark}%</div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-slate-600 mb-2">Actual PR</div>
+                        <div className="text-3xl font-bold text-rose-600">{omDeviationData.actualPR}%</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-amber-50 rounded-lg border-2 border-amber-200">
+                    <div className="text-xs font-semibold text-amber-700 mb-2">PR Gap</div>
+                    <div className="text-2xl font-bold text-amber-900">
+                      -{(omDeviationData.prBenchmark - omDeviationData.actualPR).toFixed(1)}%
+                    </div>
+                  </div>
+                  <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+                    <div className="text-xs font-semibold text-blue-700 mb-2">Settlement Amount</div>
+                    <div className="text-2xl font-bold text-blue-900">₹{omDeviationData.settlementAmount} Cr</div>
+                    <div className="text-xs text-blue-600 mt-1">Payable to EESL</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+      ),
+    },
+    "benchmarking": {
+      title: "Benchmarking",
+      render: () => (
+          <div className="grid grid-cols-12 gap-6">
+            <Card className="col-span-7 border-2 border-slate-200 shadow-md">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <CardTitle className="text-base">Vendor Performance Ranking</CardTitle>
+                <CardDescription className="text-xs">Comparative analysis across vendors</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs font-bold w-12">Rank</TableHead>
+                      <TableHead className="text-xs font-bold">Vendor</TableHead>
+                      <TableHead className="text-xs font-bold text-center">Plants</TableHead>
+                      <TableHead className="text-xs font-bold text-right">Avg CUF</TableHead>
+                      <TableHead className="text-xs font-bold text-right">Availability</TableHead>
+                      <TableHead className="text-xs font-bold text-right">LD (₹ Cr)</TableHead>
+                      <TableHead className="text-xs font-bold text-right">Compliance</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {vendorRankingData.map((vendor) => (
+                      <TableRow key={vendor.rank} className="hover:bg-slate-50 cursor-pointer">
+                        <TableCell>
+                          <div className="w-7 h-7 rounded-lg bg-[#0A2E4A] text-white flex items-center justify-center font-bold text-xs">
+                            {vendor.rank}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs font-bold">{vendor.vendor}</TableCell>
+                        <TableCell className="text-xs text-center">{vendor.plants}</TableCell>
+                        <TableCell className="text-xs text-right font-semibold">{vendor.avgCuf}%</TableCell>
+                        <TableCell className="text-xs text-right font-semibold">{vendor.avgAvailability}%</TableCell>
+                        <TableCell className="text-xs text-right font-semibold">₹{vendor.ldExposure.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge 
+                            variant="outline"
+                            className={`text-[10px] ${
+                              vendor.compliance >= 95 ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                              vendor.compliance >= 90 ? "bg-amber-50 text-amber-700 border-amber-200" :
+                              "bg-rose-50 text-rose-700 border-rose-200"
+                            }`}
+                          >
+                            {vendor.compliance}%
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+            <Card className="col-span-5 border-2 border-slate-200 shadow-md">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <CardTitle className="text-base">State-wise Cluster Comparison</CardTitle>
+                <CardDescription className="text-xs">Regional performance metrics</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-4">
+                  {clusterComparisonData.map((cluster) => (
+                    <div key={cluster.state} className="p-4 bg-slate-50 rounded-lg border-2 border-slate-200 hover:border-[#0A2E4A] transition-all cursor-pointer">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-bold text-slate-900">{cluster.state}</h4>
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                          {cluster.capacity} MW
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-4 gap-3 text-xs">
+                        <div>
+                          <div className="text-slate-600 mb-1">Generation</div>
+                          <div className="font-bold text-slate-900">{cluster.generation.toLocaleString()} MWh</div>
+                        </div>
+                        <div>
+                          <div className="text-slate-600 mb-1">CUF</div>
+                          <div className="font-bold text-slate-900">{cluster.cuf}%</div>
+                        </div>
+                        <div>
+                          <div className="text-slate-600 mb-1">Availability</div>
+                          <div className="font-bold text-slate-900">{cluster.availability}%</div>
+                        </div>
+                        <div>
+                          <div className="text-slate-600 mb-1">LD</div>
+                          <div className="font-bold text-rose-600">₹{cluster.ldExposure}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+      ),
+    },
+    "advanced": {
+      title: "Analytics",
+      render: () => (
+          <div className="grid grid-cols-12 gap-6">
+            <Card className="col-span-6 border-2 border-slate-200 shadow-md">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <CardTitle className="text-base">Lost Production Index (LPI)</CardTitle>
+                <CardDescription className="text-xs">Monthly energy loss percentage</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={lpiData}>
+                      <defs>
+                        <linearGradient id="colorLPI" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#EF4444" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="#64748b" />
+                      <YAxis domain={[0, 15]} tick={{ fontSize: 10 }} stroke="#64748b" />
+                      <Tooltip content={<CustomChartTooltip unit="index" />} />
+                      <Area 
+                        type="monotone" 
+                        dataKey="lpi" 
+                        stroke="#EF4444" 
+                        strokeWidth={3}
+                        fill="url(#colorLPI)" 
+                        name="LPI (%)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-4 p-3 bg-rose-50 rounded-lg border-2 border-rose-200">
+                  <div className="text-xs font-semibold text-rose-700 mb-1">Average LPI (12M)</div>
+                  <div className="text-xl font-bold text-rose-900">8.3%</div>
+                  <div className="text-xs text-rose-600 mt-1">Target: &lt;5%</div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="col-span-6 border-2 border-slate-200 shadow-md">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <CardTitle className="text-base">Asset Health Index Breakdown</CardTitle>
+                <CardDescription className="text-xs">Weighted component scores</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-4">
+                  {assetHealthBreakdown.map((component) => {
+                    const score = (component.value / component.target) * 100;
+                    return (
+                      <div key={component.component}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-900">{component.component}</span>
+                            <Badge variant="outline" className="text-[10px] bg-slate-100 text-slate-700">
+                              {component.weight}%
+                            </Badge>
+                          </div>
+                          <div className="text-xs">
+                            <span className="font-bold text-slate-900">{component.value}</span>
+                            <span className="text-slate-600"> / {component.target}</span>
+                          </div>
+                        </div>
+                        <div className="relative">
+                          <Progress value={score} className="h-3" />
+                          <div className="absolute top-0 left-0 h-3 flex items-center px-2">
+                            <span className="text-[10px] font-bold text-white">{score.toFixed(0)}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-6 p-4 bg-gradient-to-r from-[#0A2E4A] to-[#0A2E4A]/80 rounded-lg text-white">
+                  <div className="text-xs font-semibold mb-2">Composite Asset Health Index</div>
+                  <div className="text-4xl font-bold">82.5 <span className="text-xl">/100</span></div>
+                  <div className="text-xs mt-2 flex items-center gap-1">
+                    <ArrowUp className="w-3 h-3" />
+                    +1.2 points this month
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+      ),
+    },
+  };
+
   return (
     <div ref={dashboardRef} data-dashboard-content className="min-h-screen bg-slate-50 flex flex-col">
       
@@ -982,6 +1784,30 @@ export function Dashboard() {
             </div>
 
             <div className="flex items-center gap-3">
+              {customizeMode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetLayout}
+                  className="h-7 text-xs gap-1.5 text-slate-600 hover:text-slate-900"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  Reset Layout
+                </Button>
+              )}
+              <Button
+                variant={customizeMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCustomizeMode((v) => !v)}
+                className={`h-7 text-xs gap-1.5 ${
+                  customizeMode
+                    ? "bg-[#0A2E4A] text-white hover:bg-[#0A2E4A]/90"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <LayoutGrid className="w-3 h-3" />
+                {customizeMode ? "Done" : "Customize"}
+              </Button>
               <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 rounded-lg border border-slate-200">
                 <Clock className="w-3 h-3 text-slate-500" />
                 <span className="text-xs text-slate-600">Updated 2 min ago</span>
@@ -1065,10 +1891,11 @@ export function Dashboard() {
       </div>
 
       {/* MAIN CONTENT */}
+      <DndProvider backend={HTML5Backend}>
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-6 max-w-[1920px] mx-auto pb-16">
           
-          {/* ROW 1 – STRATEGIC KPI SUMMARY CARDS */}
+          {/* ROW 1 – STRATEGIC KPI SUMMARY CARDS (fixed, not draggable) */}
           <div className="grid grid-cols-5 gap-3">
             {computedKPIs.map((kpi) => {
               const Icon = kpi.icon;
@@ -1154,723 +1981,27 @@ export function Dashboard() {
             })}
           </div>
 
-          {/* ROW 2 – GEOGRAPHICAL & RISK VIEW */}
-          <div className="grid grid-cols-12 gap-6">
-            {/* Left: India Map with Plant Markers */}
-            <Card className="col-span-7 border-2 border-slate-200 shadow-md">
-              <CardHeader className="border-b border-slate-100 pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  Geographic Distribution
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-3">
-                <div className="rounded-xl overflow-hidden h-96 border border-slate-200 shadow-inner">
-                  <Suspense fallback={
-                    <div className="w-full h-full bg-slate-900 flex items-center justify-center rounded-xl">
-                      <div className="text-center">
-                        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                        <p className="text-sm text-slate-400">Loading map...</p>
-                      </div>
-                    </div>
-                  }>
-                    <SolarMap plantMarkers={dashboardData.filtered} statusColors={statusColors} />
-                  </Suspense>
-                </div>
-                {/* State summary strip — enhanced */}
-                <div className={`grid gap-2 mt-3 ${dashboardData.uniqueStates.length === 1 ? "grid-cols-1" : dashboardData.uniqueStates.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
-                  {(stateFilter === "All States" ? PORTFOLIO_CONFIG.states : [stateFilter]).map((state) => {
-                    const statePlants = dashboardData.filtered.filter(p => p.state === state);
-                    const stateCapacity = statePlants.reduce((sum, p) => sum + p.capacity, 0);
-                    const compliant = statePlants.filter(p => p.status === "compliant").length;
-                    const avgCuf = statePlants.length ? (statePlants.reduce((s, p) => s + p.cuf, 0) / statePlants.length) : 0;
-                    const stateGen = statePlants.reduce((s, p) => s + p.generation, 0);
-                    const stateTgt = statePlants.reduce((s, p) => s + p.target, 0);
-                    const achieve = stateTgt > 0 ? Math.round((stateGen / stateTgt) * 100) : 0;
-                    const highRisk = statePlants.filter(p => p.ldRisk === "high").length;
-                    const cufPct = Math.min((avgCuf / 25) * 100, 100);
-                    const cufCol = avgCuf >= 23 ? "#10B981" : avgCuf >= 21 ? "#F59E0B" : "#F97316";
-                    const achCol = achieve >= 100 ? "#10B981" : achieve >= 95 ? "#F59E0B" : "#EF4444";
-                    return (
-                      <div key={state} className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                        {/* Header row */}
-                        <div className="flex items-start justify-between mb-1.5">
-                          <div>
-                            <div className="text-[10px] font-bold text-slate-500 uppercase leading-tight">{state}</div>
-                            <div className="text-sm font-bold text-slate-900 leading-tight">{stateCapacity} MW</div>
-                          </div>
-                          <div className="flex flex-col items-end gap-0.5">
-                            <div className="text-[10px] text-slate-500">{statePlants.length} sites</div>
-                            <div className="flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                              <span className="text-[10px] font-semibold text-emerald-600">{compliant}/{statePlants.length}</span>
-                            </div>
-                          </div>
-                        </div>
-                        {/* CUF bar */}
-                        <div className="mb-1.5">
-                          <div className="flex justify-between mb-0.5">
-                            <span className="text-[9px] text-slate-500">Avg CUF</span>
-                            <span className="text-[9px] font-bold" style={{ color: cufCol }}>{avgCuf.toFixed(1)}%</span>
-                          </div>
-                          <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
-                            <div className="h-full rounded-full" style={{ width: `${cufPct}%`, background: cufCol }} />
-                          </div>
-                        </div>
-                        {/* Achievement row */}
-                        <div className="flex items-center justify-between">
-                          <span className="text-[9px] text-slate-500">Achievement</span>
-                          <span className="text-[9px] font-bold" style={{ color: achCol }}>{achieve}%</span>
-                        </div>
-                        {/* High risk badge */}
-                        {highRisk > 0 && (
-                          <div className="mt-1 flex items-center gap-1">
-                            <span className="text-[9px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5">⚠ {highRisk} LD Risk</span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Plant drill-down list */}
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide">All Plants — Ranked by CUF</span>
-                    <span className="text-[9px] text-slate-400">Click marker on map for details</span>
-                  </div>
-                  <div className="space-y-1">
-                    {[...dashboardData.filtered].sort((a, b) => b.cuf - a.cuf).map((plant, idx) => {
-                      const pct = plant.target > 0 ? Math.round((plant.generation / plant.target) * 100) : 0;
-                      const cufCol = plant.cuf >= 23 ? "#10B981" : plant.cuf >= 21 ? "#F59E0B" : plant.cuf >= 19 ? "#F97316" : "#EF4444";
-                      const sttCol: Record<string, string> = { compliant: "#10B981", warning: "#F59E0B", "non-compliant": "#EF4444", curtailment: "#F97316", shutdown: "#6B7280" };
-                      const dotCol = sttCol[plant.status] ?? "#6B7280";
-                      const achCol = pct >= 100 ? "#10B981" : pct >= 95 ? "#F59E0B" : "#EF4444";
-                      const ldBg: Record<string, string> = { high: "bg-rose-50 text-rose-700 border-rose-200", medium: "bg-amber-50 text-amber-700 border-amber-200", low: "bg-yellow-50 text-yellow-700 border-yellow-200", none: "bg-emerald-50 text-emerald-700 border-emerald-200" };
-                      return (
-                        <div key={plant.id} className="flex items-center gap-2 px-2 py-1 rounded bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors">
-                          <span className="text-[9px] font-bold text-slate-400 w-4 text-right shrink-0">#{idx + 1}</span>
-                          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: dotCol, boxShadow: `0 0 4px ${dotCol}80` }} />
-                          <span className="text-[10px] font-semibold text-slate-800 flex-1 min-w-0 truncate">{plant.name}</span>
-                          <span className="text-[9px] text-slate-500 shrink-0 hidden sm:inline">{plant.district}</span>
-                          <span className="text-[9px] font-bold shrink-0" style={{ color: cufCol }}>{plant.cuf}%</span>
-                          <span className="text-[9px] font-bold shrink-0 w-9 text-right" style={{ color: achCol }}>{pct}%</span>
-                          {plant.ldRisk !== "none" && (
-                            <span className={`text-[8px] font-semibold border rounded px-1 shrink-0 ${ldBg[plant.ldRisk]}`}>{plant.ldRisk.toUpperCase()}</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="flex justify-between mt-1 px-2">
-                    <span className="text-[8px] text-slate-400"># = CUF rank · Color dot = status · CUF% · Achieve%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Right: Risk & Alert Panel */}
-            <Card className="col-span-5 border-2 border-slate-200 shadow-md">
-              <CardHeader className="border-b border-slate-100 pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-rose-600" />
-                    Risk & Alert Dashboard
-                  </CardTitle>
-                  {/* Portfolio Risk Score badge */}
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Risk Score</div>
-                      <div className="text-xs font-bold text-orange-600">{riskData.riskScore}/100</div>
-                    </div>
-                    <div className="px-2 py-1 rounded-md text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-300 uppercase tracking-wide">
-                      Elevated
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-3">
-                <div className="space-y-3">
-
-                  {/* ── KPI Cards 2×2 ──────────────────────────────────────────── */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="p-2.5 bg-rose-50 rounded-lg border-2 border-rose-200">
-                      <div className="text-[10px] font-semibold text-rose-700 mb-0.5">Non-Compliant Plants</div>
-                      <div className="text-2xl font-bold text-rose-900 leading-none">{riskData.nonCompliantPlants}</div>
-                      <div className="text-[9px] text-rose-500 mt-1">↑ 1 vs last month</div>
-                    </div>
-                    <div className="p-2.5 bg-amber-50 rounded-lg border-2 border-amber-200">
-                      <div className="text-[10px] font-semibold text-amber-700 mb-0.5">High LD Risk</div>
-                      <div className="text-2xl font-bold text-amber-900 leading-none">{riskData.highLDRisk}</div>
-                      <div className="text-[9px] text-amber-600 mt-1">₹{riskData.ldExposureCr} Cr exposure</div>
-                    </div>
-                    <div className="p-2.5 bg-purple-50 rounded-lg border-2 border-purple-200">
-                      <div className="text-[10px] font-semibold text-purple-700 mb-0.5">Escalations</div>
-                      <div className="text-2xl font-bold text-purple-900 leading-none">{riskData.escalationTriggered}</div>
-                      <div className="text-[9px] text-purple-500 mt-1">2 awaiting response</div>
-                    </div>
-                    <div className="p-2.5 bg-blue-50 rounded-lg border-2 border-blue-200">
-                      <div className="text-[10px] font-semibold text-blue-700 mb-0.5">Pending JMR</div>
-                      <div className="text-2xl font-bold text-blue-900 leading-none">{riskData.pendingJMR}</div>
-                      <div className="text-[9px] text-rose-600 mt-1 font-semibold">⚠ {riskData.overdueJMR} overdue &gt;7 days</div>
-                    </div>
-                  </div>
-
-                  {/* ── LD Financial Exposure Banner ────────────────────────────── */}
-                  <div className="p-2.5 rounded-lg border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 flex items-center justify-between">
-                    <div>
-                      <div className="text-[9px] font-bold text-orange-600 uppercase tracking-wide mb-0.5">Total LD Financial Exposure</div>
-                      <div className="text-lg font-bold text-orange-800">₹{riskData.ldExposureCr} Cr at risk</div>
-                      <div className="text-[9px] text-orange-600">Across {riskData.highLDRisk} plants · Vendor C highest</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[9px] text-orange-500 mb-1">vs Budget</div>
-                      <div className="text-base font-bold text-orange-700">4.0%</div>
-                      <div className="text-[9px] text-orange-500">of revenue</div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* ── Active Alert Feed ───────────────────────────────────────── */}
-                  <div>
-                    <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-2">Active Alerts</h4>
-                    <div className="space-y-1.5">
-                      {riskData.recentAlerts.map((alert) => {
-                        const sevStyle: Record<string, { dot: string; bg: string; badge: string; text: string }> = {
-                          critical: { dot: "bg-rose-500",   bg: "bg-rose-50 border-rose-200",     badge: "bg-rose-100 text-rose-700 border-rose-300",     text: "text-rose-700" },
-                          high:     { dot: "bg-orange-500", bg: "bg-orange-50 border-orange-200", badge: "bg-orange-100 text-orange-700 border-orange-300", text: "text-orange-600" },
-                          medium:   { dot: "bg-amber-400",  bg: "bg-amber-50 border-amber-200",   badge: "bg-amber-100 text-amber-700 border-amber-200",    text: "text-amber-600" },
-                        };
-                        const s = sevStyle[alert.severity] ?? sevStyle.medium;
-                        return (
-                          <div key={alert.id} className={`px-2.5 py-2 rounded-lg border ${s.bg}`}>
-                            <div className="flex items-center justify-between mb-0.5">
-                              <div className="flex items-center gap-1.5">
-                                <span className={`w-2 h-2 rounded-full ${s.dot} shrink-0`} />
-                                <span className="text-[10px] font-bold text-slate-800 truncate">{alert.plant}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <span className={`text-[9px] border rounded px-1.5 py-0.5 font-semibold ${s.badge}`}>{alert.category}</span>
-                                <span className={`text-[9px] font-bold ${s.text}`}>{alert.daysOpen}d</span>
-                              </div>
-                            </div>
-                            <div className="text-[9px] text-slate-500 pl-3.5">{alert.detail}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* ── 6-Month Compliance Trend ────────────────────────────────── */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-wide">Non-Compliant Trend (6M)</h4>
-                      <span className="text-[9px] text-emerald-600 font-semibold">↓ Improving</span>
-                    </div>
-                    <ResponsiveContainer width="100%" height={60}>
-                      <BarChart data={riskData.complianceTrend} barSize={14} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-                        <XAxis dataKey="month" tick={{ fontSize: 8, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fontSize: 8, fill: "#94a3b8" }} axisLine={false} tickLine={false} domain={[0, 14]} />
-                        <Bar dataKey="nonCompliant" radius={[3, 3, 0, 0]}>
-                          {riskData.complianceTrend.map((entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={entry.nonCompliant >= 10 ? "#EF4444" : entry.nonCompliant >= 9 ? "#F97316" : "#F59E0B"}
-                            />
-                          ))}
-                        </Bar>
-                        <Tooltip
-                          contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "6px", fontSize: "10px", color: "#f1f5f9" }}
-                          formatter={(v: number) => [`${v} plants`, "Non-Compliant"]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  <Separator />
-
-                  {/* ── Vendor LD Exposure ──────────────────────────────────────── */}
-                  <div>
-                    <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-2">Vendor LD Exposure</h4>
-                    <div className="space-y-2">
-                      {riskData.vendorLDExposure.map((v) => {
-                        const maxLd = Math.max(...riskData.vendorLDExposure.map((x) => x.ldCr));
-                        const pct = Math.round((v.ldCr / maxLd) * 100);
-                        const col = v.risk === "high" ? "#EF4444" : v.risk === "medium" ? "#F97316" : "#F59E0B";
-                        const bgBadge = v.risk === "high" ? "bg-rose-100 text-rose-700 border-rose-200" : v.risk === "medium" ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-amber-100 text-amber-700 border-amber-200";
-                        return (
-                          <div key={v.vendor}>
-                            <div className="flex items-center justify-between mb-1">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] font-semibold text-slate-700">{v.vendor}</span>
-                                <span className="text-[9px] text-slate-400">{v.plants} plants</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] font-bold text-slate-800">₹{v.ldCr} Cr</span>
-                                <span className={`text-[8px] font-bold border rounded px-1 ${bgBadge}`}>{v.risk.toUpperCase()}</span>
-                              </div>
-                            </div>
-                            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                              <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: col }} />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* ROW 3 – GENERATION & PERFORMANCE ANALYTICS */}
-          <div className="grid grid-cols-12 gap-6">
-            {/* MTD vs Target Generation */}
-            <Card className="col-span-4 border-2 border-slate-200 shadow-md">
-              <CardHeader className="border-b border-slate-100 pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-base">MTD vs Target Generation</CardTitle>
-                    <CardDescription className="text-xs">Top 6 plants by capacity</CardDescription>
-                  </div>
-                  <button
-                    onClick={() => setShowComparison((v) => !v)}
-                    className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md border transition-all ${
-                      showComparison
-                        ? "bg-amber-50 border-amber-300 text-amber-700"
-                        : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"
-                    }`}
-                  >
-                    <TrendingUp className="w-3 h-3" />
-                    vs PY
-                  </button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={mergedMtdData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis type="number" tick={{ fontSize: 10 }} stroke="#64748b" />
-                      <YAxis dataKey="plant" type="category" tick={{ fontSize: 10 }} stroke="#64748b" width={100} />
-                      <Tooltip content={<CustomChartTooltip unit="MWh" />} />
-                      <Legend wrapperStyle={{ fontSize: '11px' }} />
-                      {showComparison && <Bar dataKey="prevActual" fill="#CBD5E1" name="PY Actual (MWh)" opacity={0.7} />}
-                      <Bar dataKey="target" fill="#94A3B8" name="Target (MWh)" />
-                      <Bar dataKey="actual" fill="#0A2E4A" name="Actual (MWh)" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* CUF Trend (12 Month) */}
-            <Card className="col-span-5 border-2 border-slate-200 shadow-md">
-              <CardHeader className="border-b border-slate-100 pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-base">Portfolio CUF Trend (12 Months)</CardTitle>
-                    <CardDescription className="text-xs">Monthly performance vs target</CardDescription>
-                  </div>
-                  <button
-                    onClick={() => setShowComparison((v) => !v)}
-                    className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md border transition-all ${
-                      showComparison
-                        ? "bg-amber-50 border-amber-300 text-amber-700"
-                        : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"
-                    }`}
-                  >
-                    <TrendingUp className="w-3 h-3" />
-                    vs PY
-                  </button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={mergedCufData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="#64748b" />
-                      <YAxis domain={[18, 25]} tick={{ fontSize: 10 }} stroke="#64748b" />
-                      <Tooltip content={<CustomChartTooltip unit="%" />} />
-                      <Legend wrapperStyle={{ fontSize: '11px' }} />
-                      {showComparison && (
-                        <Line
-                          type="monotone"
-                          dataKey="prevPortfolio"
-                          stroke="#94A3B8"
-                          strokeWidth={2}
-                          strokeDasharray="4 4"
-                          name="PY CUF (%)"
-                          dot={{ fill: "#94A3B8", r: 3 }}
-                        />
-                      )}
-                      <Line 
-                        type="monotone" 
-                        dataKey="portfolio" 
-                        stroke="#0A2E4A" 
-                        strokeWidth={3}
-                        name="Portfolio CUF (%)"
-                        dot={{ fill: '#0A2E4A', r: 4 }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="target" 
-                        stroke="#10B981" 
-                        strokeWidth={2}
-                        strokeDasharray="5 5"
-                        name="Target (%)"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Downtime Classification */}
-            <Card className="col-span-3 border-2 border-slate-200 shadow-md">
-              <CardHeader className="border-b border-slate-100 pb-3">
-                <CardTitle className="text-base">Downtime Classification</CardTitle>
-                <CardDescription className="text-xs">Distribution by cause</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="h-72 flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={downtimeData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={50}
-                        outerRadius={80}
-                        dataKey="value"
-                        label={(entry) => `${entry.value}%`}
-                        labelLine={false}
-                      >
-                        {downtimeData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<CustomChartTooltip unit="%" />} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-4 space-y-2">
-                  {downtimeData.map((item) => (
-                    <div key={item.name} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded" style={{ backgroundColor: item.color }}></div>
-                        <span className="text-slate-700">{item.name}</span>
-                      </div>
-                      <span className="font-bold text-slate-900">{item.value}%</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* ROW 4 – COMMERCIAL & FINANCIAL INSIGHT */}
-          <div className="grid grid-cols-12 gap-6">
-            {/* Revenue Waterfall */}
-            <Card className="col-span-4 border-2 border-slate-200 shadow-md">
-              <CardHeader className="border-b border-slate-100 pb-3">
-                <CardTitle className="text-base">Revenue Waterfall (₹ Cr)</CardTitle>
-                <CardDescription className="text-xs">Budget to realization flow</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={revenueWaterfallData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis dataKey="stage" tick={{ fontSize: 10 }} stroke="#64748b" />
-                      <YAxis domain={[25, 33]} tick={{ fontSize: 10 }} stroke="#64748b" />
-                      <Tooltip content={<CustomChartTooltip unit="₹ Cr" />} />
-                      <Bar dataKey="value" fill="#0A2E4A" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-4 p-3 bg-amber-50 rounded-lg border-2 border-amber-200">
-                  <div className="text-xs font-semibold text-amber-700 mb-1">Total Shortfall</div>
-                  <div className="text-xl font-bold text-amber-900">₹2.7 Cr</div>
-                  <div className="text-xs text-amber-600 mt-1">8.7% below budget</div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* LD Exposure by Vendor */}
-            <Card className="col-span-4 border-2 border-slate-200 shadow-md">
-              <CardHeader className="border-b border-slate-100 pb-3">
-                <CardTitle className="text-base">LD Exposure by Vendor</CardTitle>
-                <CardDescription className="text-xs">Liquidated damages summary</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-xs font-bold">Vendor</TableHead>
-                      <TableHead className="text-xs font-bold text-center">Plants</TableHead>
-                      <TableHead className="text-xs font-bold text-right">LD (₹ Cr)</TableHead>
-                      <TableHead className="text-xs font-bold text-right">Risk</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {ldExposureData.map((vendor) => (
-                      <TableRow key={vendor.vendor} className="hover:bg-slate-50">
-                        <TableCell className="text-xs font-semibold">{vendor.vendor}</TableCell>
-                        <TableCell className="text-xs text-center">{vendor.plants}</TableCell>
-                        <TableCell className="text-xs text-right font-bold">₹{vendor.ldAmount.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">
-                          <Badge 
-                            variant="outline" 
-                            className={`text-[10px] ${
-                              vendor.severity === "high" ? "bg-rose-50 text-rose-700 border-rose-200" :
-                              vendor.severity === "medium" ? "bg-amber-50 text-amber-700 border-amber-200" :
-                              vendor.severity === "low" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                              "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            }`}
-                          >
-                            {vendor.severity === "none" ? "Clean" : vendor.severity}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <div className="mt-4 p-3 bg-rose-50 rounded-lg border-2 border-rose-200">
-                  <div className="text-xs font-semibold text-rose-700 mb-1">Total Portfolio LD</div>
-                  <div className="text-xl font-bold text-rose-900">₹1.24 Cr</div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* O&M Deviation Settlement */}
-            <Card className="col-span-4 border-2 border-slate-200 shadow-md">
-              <CardHeader className="border-b border-slate-100 pb-3">
-                <CardTitle className="text-base">O&M Deviation Settlement</CardTitle>
-                <CardDescription className="text-xs">Performance vs benchmark</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="space-y-4">
-                  <div className="p-4 bg-slate-50 rounded-lg border-2 border-slate-200">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-xs font-semibold text-slate-600 mb-2">PR Benchmark</div>
-                        <div className="text-3xl font-bold text-slate-900">{omDeviationData.prBenchmark}%</div>
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-slate-600 mb-2">Actual PR</div>
-                        <div className="text-3xl font-bold text-rose-600">{omDeviationData.actualPR}%</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-amber-50 rounded-lg border-2 border-amber-200">
-                    <div className="text-xs font-semibold text-amber-700 mb-2">PR Gap</div>
-                    <div className="text-2xl font-bold text-amber-900">
-                      -{(omDeviationData.prBenchmark - omDeviationData.actualPR).toFixed(1)}%
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-                    <div className="text-xs font-semibold text-blue-700 mb-2">Settlement Amount</div>
-                    <div className="text-2xl font-bold text-blue-900">₹{omDeviationData.settlementAmount} Cr</div>
-                    <div className="text-xs text-blue-600 mt-1">Payable to EESL</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* ROW 5 – BENCHMARKING & COMPARISON */}
-          <div className="grid grid-cols-12 gap-6">
-            {/* Vendor Performance Ranking */}
-            <Card className="col-span-7 border-2 border-slate-200 shadow-md">
-              <CardHeader className="border-b border-slate-100 pb-3">
-                <CardTitle className="text-base">Vendor Performance Ranking</CardTitle>
-                <CardDescription className="text-xs">Comparative analysis across vendors</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-xs font-bold w-12">Rank</TableHead>
-                      <TableHead className="text-xs font-bold">Vendor</TableHead>
-                      <TableHead className="text-xs font-bold text-center">Plants</TableHead>
-                      <TableHead className="text-xs font-bold text-right">Avg CUF</TableHead>
-                      <TableHead className="text-xs font-bold text-right">Availability</TableHead>
-                      <TableHead className="text-xs font-bold text-right">LD (₹ Cr)</TableHead>
-                      <TableHead className="text-xs font-bold text-right">Compliance</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {vendorRankingData.map((vendor) => (
-                      <TableRow key={vendor.rank} className="hover:bg-slate-50 cursor-pointer">
-                        <TableCell>
-                          <div className="w-7 h-7 rounded-lg bg-[#0A2E4A] text-white flex items-center justify-center font-bold text-xs">
-                            {vendor.rank}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-xs font-bold">{vendor.vendor}</TableCell>
-                        <TableCell className="text-xs text-center">{vendor.plants}</TableCell>
-                        <TableCell className="text-xs text-right font-semibold">{vendor.avgCuf}%</TableCell>
-                        <TableCell className="text-xs text-right font-semibold">{vendor.avgAvailability}%</TableCell>
-                        <TableCell className="text-xs text-right font-semibold">₹{vendor.ldExposure.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">
-                          <Badge 
-                            variant="outline"
-                            className={`text-[10px] ${
-                              vendor.compliance >= 95 ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                              vendor.compliance >= 90 ? "bg-amber-50 text-amber-700 border-amber-200" :
-                              "bg-rose-50 text-rose-700 border-rose-200"
-                            }`}
-                          >
-                            {vendor.compliance}%
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
-            {/* Cluster Comparison */}
-            <Card className="col-span-5 border-2 border-slate-200 shadow-md">
-              <CardHeader className="border-b border-slate-100 pb-3">
-                <CardTitle className="text-base">State-wise Cluster Comparison</CardTitle>
-                <CardDescription className="text-xs">Regional performance metrics</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="space-y-4">
-                  {clusterComparisonData.map((cluster) => (
-                    <div key={cluster.state} className="p-4 bg-slate-50 rounded-lg border-2 border-slate-200 hover:border-[#0A2E4A] transition-all cursor-pointer">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-bold text-slate-900">{cluster.state}</h4>
-                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                          {cluster.capacity} MW
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-4 gap-3 text-xs">
-                        <div>
-                          <div className="text-slate-600 mb-1">Generation</div>
-                          <div className="font-bold text-slate-900">{cluster.generation.toLocaleString()} MWh</div>
-                        </div>
-                        <div>
-                          <div className="text-slate-600 mb-1">CUF</div>
-                          <div className="font-bold text-slate-900">{cluster.cuf}%</div>
-                        </div>
-                        <div>
-                          <div className="text-slate-600 mb-1">Availability</div>
-                          <div className="font-bold text-slate-900">{cluster.availability}%</div>
-                        </div>
-                        <div>
-                          <div className="text-slate-600 mb-1">LD</div>
-                          <div className="font-bold text-rose-600">₹{cluster.ldExposure}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* ROW 6 – ADVANCED ANALYTICS */}
-          <div className="grid grid-cols-12 gap-6">
-            {/* Lost Production Index */}
-            <Card className="col-span-6 border-2 border-slate-200 shadow-md">
-              <CardHeader className="border-b border-slate-100 pb-3">
-                <CardTitle className="text-base">Lost Production Index (LPI)</CardTitle>
-                <CardDescription className="text-xs">Monthly energy loss percentage</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={lpiData}>
-                      <defs>
-                        <linearGradient id="colorLPI" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#EF4444" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="#64748b" />
-                      <YAxis domain={[0, 15]} tick={{ fontSize: 10 }} stroke="#64748b" />
-                      <Tooltip content={<CustomChartTooltip unit="index" />} />
-                      <Area 
-                        type="monotone" 
-                        dataKey="lpi" 
-                        stroke="#EF4444" 
-                        strokeWidth={3}
-                        fill="url(#colorLPI)" 
-                        name="LPI (%)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-4 p-3 bg-rose-50 rounded-lg border-2 border-rose-200">
-                  <div className="text-xs font-semibold text-rose-700 mb-1">Average LPI (12M)</div>
-                  <div className="text-xl font-bold text-rose-900">8.3%</div>
-                  <div className="text-xs text-rose-600 mt-1">Target: &lt;5%</div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Asset Health Index Breakdown */}
-            <Card className="col-span-6 border-2 border-slate-200 shadow-md">
-              <CardHeader className="border-b border-slate-100 pb-3">
-                <CardTitle className="text-base">Asset Health Index Breakdown</CardTitle>
-                <CardDescription className="text-xs">Weighted component scores</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="space-y-4">
-                  {assetHealthBreakdown.map((component) => {
-                    const score = (component.value / component.target) * 100;
-                    
-                    return (
-                      <div key={component.component}>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-900">{component.component}</span>
-                            <Badge variant="outline" className="text-[10px] bg-slate-100 text-slate-700">
-                              {component.weight}%
-                            </Badge>
-                          </div>
-                          <div className="text-xs">
-                            <span className="font-bold text-slate-900">{component.value}</span>
-                            <span className="text-slate-600"> / {component.target}</span>
-                          </div>
-                        </div>
-                        <div className="relative">
-                          <Progress value={score} className="h-3" />
-                          <div className="absolute top-0 left-0 h-3 flex items-center px-2">
-                            <span className="text-[10px] font-bold text-white">{score.toFixed(0)}%</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-6 p-4 bg-gradient-to-r from-[#0A2E4A] to-[#0A2E4A]/80 rounded-lg text-white">
-                  <div className="text-xs font-semibold mb-2">Composite Asset Health Index</div>
-                  <div className="text-4xl font-bold">82.5 <span className="text-xl">/100</span></div>
-                  <div className="text-xs mt-2 flex items-center gap-1">
-                    <ArrowUp className="w-3 h-3" />
-                    +1.2 points this month
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* DRAGGABLE WIDGET SECTIONS */}
+          {widgetOrder.map((widgetId, idx) => {
+            const widget = widgetRegistry[widgetId];
+            if (!widget) return null;
+            return (
+              <DraggableWidget
+                key={widgetId}
+                id={widgetId}
+                index={idx}
+                title={widget.title}
+                customizeMode={customizeMode}
+                moveWidget={moveWidget}
+              >
+                {widget.render()}
+              </DraggableWidget>
+            );
+          })}
 
         </div>
       </div>
+      </DndProvider>
     </div>
   );
 }
