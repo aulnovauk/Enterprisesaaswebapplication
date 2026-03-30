@@ -73,6 +73,23 @@ index.html            - HTML entry
 vite.config.ts        - Vite config (port 5000, host 0.0.0.0)
 ```
 
+## Client JMR Report Fields
+
+The platform now supports the client's JMR report format with these fields tracked per site per month:
+- **Site_Name** — Plant/site name
+- **District** — District-level location (added to JMR records, Dashboard plantMarkers, Outage summary)
+- **Vendor** — O&M vendor
+- **Capacity_KWp** — Site capacity in KWp (platform also uses MW internally; KWp = MW × 1000)
+- **JMR_Month** — JMR reporting month (e.g., Jan-2026, Nov-2025)
+- **Energy_Export_KWh** — Net energy exported to grid in KWh
+- **Energy_Import_KWh** — Energy imported from grid in KWh
+- **Outage** — Total outage duration in HH:MM format
+
+These fields are displayed in:
+1. **JMR Data Management** → JMR Repository table (new columns: District, Capacity KWp, Energy Export KWh, Energy Import KWh, Outage HH:MM)
+2. **Dashboard** → Plant listing shows district alongside plant name
+3. **Outage & Loss Analytics** → "Site-wise Monthly Outage Summary" table at bottom with all client sample data rows (ABC–JKL sites), color-coded outage severity
+
 ## Development
 
 - Workflow: `npm run dev` on port 5000

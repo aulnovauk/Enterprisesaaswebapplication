@@ -214,19 +214,19 @@ const strategicKPIs = [
 // Plant Markers for India Map (Simplified representation)
 const plantMarkers = [
   // Maharashtra
-  { id: 1, name: "Pune Solar Park",     state: "Maharashtra", lat: 18.5, lon: 73.8, capacity: 25, status: "compliant",     cuf: 23.5, generation: 2150, target: 2100, availability: 97.2, ldRisk: "none",   vendor: "Vendor D" },
-  { id: 2, name: "Nashik Site A",        state: "Maharashtra", lat: 19.9, lon: 73.7, capacity: 15, status: "warning",       cuf: 21.2, generation: 1180, target: 1260, availability: 94.5, ldRisk: "low",    vendor: "Vendor A" },
-  { id: 3, name: "Aurangabad Project",   state: "Maharashtra", lat: 19.8, lon: 75.3, capacity: 30, status: "compliant",     cuf: 24.1, generation: 2380, target: 2450, availability: 96.8, ldRisk: "none",   vendor: "Vendor B" },
-  { id: 4, name: "Solapur SPV",          state: "Maharashtra", lat: 17.6, lon: 75.9, capacity: 20, status: "compliant",     cuf: 23.8, generation: 1720, target: 1680, availability: 97.5, ldRisk: "none",   vendor: "Vendor D" },
-  { id: 5, name: "Nagpur Plant",         state: "Maharashtra", lat: 21.1, lon: 79.0, capacity: 18, status: "curtailment",   cuf: 19.5, generation: 1310, target: 1580, availability: 91.2, ldRisk: "high",   vendor: "Vendor C" },
+  { id: 1, name: "Pune Solar Park",     state: "Maharashtra", district: "Pune",        lat: 18.5, lon: 73.8, capacity: 25, status: "compliant",     cuf: 23.5, generation: 2150, target: 2100, availability: 97.2, ldRisk: "none",   vendor: "Vendor D" },
+  { id: 2, name: "Nashik Site A",        state: "Maharashtra", district: "Nashik",      lat: 19.9, lon: 73.7, capacity: 15, status: "warning",       cuf: 21.2, generation: 1180, target: 1260, availability: 94.5, ldRisk: "low",    vendor: "Vendor A" },
+  { id: 3, name: "Aurangabad Project",   state: "Maharashtra", district: "Aurangabad",  lat: 19.8, lon: 75.3, capacity: 30, status: "compliant",     cuf: 24.1, generation: 2380, target: 2450, availability: 96.8, ldRisk: "none",   vendor: "Vendor B" },
+  { id: 4, name: "Solapur SPV",          state: "Maharashtra", district: "Solapur",     lat: 17.6, lon: 75.9, capacity: 20, status: "compliant",     cuf: 23.8, generation: 1720, target: 1680, availability: 97.5, ldRisk: "none",   vendor: "Vendor D" },
+  { id: 5, name: "Nagpur Plant",         state: "Maharashtra", district: "Nagpur",      lat: 21.1, lon: 79.0, capacity: 18, status: "curtailment",   cuf: 19.5, generation: 1310, target: 1580, availability: 91.2, ldRisk: "high",   vendor: "Vendor C" },
   // Tamil Nadu
-  { id: 6, name: "Chennai Coastal",      state: "Tamil Nadu",  lat: 13.0, lon: 80.2, capacity: 22, status: "compliant",     cuf: 24.5, generation: 1920, target: 1850, availability: 98.1, ldRisk: "none",   vendor: "Vendor D" },
-  { id: 7, name: "Coimbatore Solar",     state: "Tamil Nadu",  lat: 11.0, lon: 76.9, capacity: 28, status: "warning",       cuf: 20.8, generation: 2120, target: 2350, availability: 93.5, ldRisk: "medium", vendor: "Vendor C" },
-  { id: 8, name: "Madurai Project",      state: "Tamil Nadu",  lat:  9.9, lon: 78.1, capacity: 16, status: "compliant",     cuf: 23.2, generation: 1560, target: 1480, availability: 96.4, ldRisk: "none",   vendor: "Vendor A" },
-  { id: 9, name: "Trichy Site B",        state: "Tamil Nadu",  lat: 10.8, lon: 78.7, capacity: 19, status: "non-compliant", cuf: 18.5, generation: 1140, target: 1680, availability: 88.3, ldRisk: "high",   vendor: "Vendor C" },
+  { id: 6, name: "Chennai Coastal",      state: "Tamil Nadu",  district: "Chennai",     lat: 13.0, lon: 80.2, capacity: 22, status: "compliant",     cuf: 24.5, generation: 1920, target: 1850, availability: 98.1, ldRisk: "none",   vendor: "Vendor D" },
+  { id: 7, name: "Coimbatore Solar",     state: "Tamil Nadu",  district: "Coimbatore",  lat: 11.0, lon: 76.9, capacity: 28, status: "warning",       cuf: 20.8, generation: 2120, target: 2350, availability: 93.5, ldRisk: "medium", vendor: "Vendor C" },
+  { id: 8, name: "Madurai Project",      state: "Tamil Nadu",  district: "Madurai",     lat:  9.9, lon: 78.1, capacity: 16, status: "compliant",     cuf: 23.2, generation: 1560, target: 1480, availability: 96.4, ldRisk: "none",   vendor: "Vendor A" },
+  { id: 9, name: "Trichy Site B",        state: "Tamil Nadu",  district: "Tiruchirappalli", lat: 10.8, lon: 78.7, capacity: 19, status: "non-compliant", cuf: 18.5, generation: 1140, target: 1680, availability: 88.3, ldRisk: "high",   vendor: "Vendor C" },
   // Goa
-  { id: 10, name: "Panaji Solar Farm",   state: "Goa",         lat: 15.4, lon: 73.8, capacity: 8,  status: "compliant",     cuf: 22.8, generation:  720, target:  700, availability: 97.0, ldRisk: "none",   vendor: "Vendor B" },
-  { id: 11, name: "Margao SPV",          state: "Goa",         lat: 15.2, lon: 73.9, capacity: 7,  status: "warning",       cuf: 21.5, generation:  580, target:  630, availability: 93.8, ldRisk: "low",    vendor: "Vendor A" },
+  { id: 10, name: "Panaji Solar Farm",   state: "Goa",         district: "North Goa",   lat: 15.4, lon: 73.8, capacity: 8,  status: "compliant",     cuf: 22.8, generation:  720, target:  700, availability: 97.0, ldRisk: "none",   vendor: "Vendor B" },
+  { id: 11, name: "Margao SPV",          state: "Goa",         district: "South Goa",   lat: 15.2, lon: 73.9, capacity: 7,  status: "warning",       cuf: 21.5, generation:  580, target:  630, availability: 93.8, ldRisk: "low",    vendor: "Vendor A" },
 ];
 
 // Risk & Alert Data
@@ -1253,7 +1253,7 @@ export function Dashboard() {
                           <span className="text-[9px] font-bold text-slate-400 w-4 text-right shrink-0">#{idx + 1}</span>
                           <span className="w-2 h-2 rounded-full shrink-0" style={{ background: dotCol, boxShadow: `0 0 4px ${dotCol}80` }} />
                           <span className="text-[10px] font-semibold text-slate-800 flex-1 min-w-0 truncate">{plant.name}</span>
-                          <span className="text-[9px] text-slate-500 shrink-0 hidden sm:inline">{plant.state.replace("Tamil Nadu", "TN").replace("Maharashtra", "MH")}</span>
+                          <span className="text-[9px] text-slate-500 shrink-0 hidden sm:inline">{plant.district}</span>
                           <span className="text-[9px] font-bold shrink-0" style={{ color: cufCol }}>{plant.cuf}%</span>
                           <span className="text-[9px] font-bold shrink-0 w-9 text-right" style={{ color: achCol }}>{pct}%</span>
                           {plant.ldRisk !== "none" && (

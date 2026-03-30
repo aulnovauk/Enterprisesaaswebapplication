@@ -1205,6 +1205,65 @@ export function OutageLossAnalytics() {
           </div>
         </CardContent>
       </Card>
+
+      <Card className="border-2 border-slate-200">
+        <CardHeader className="border-b border-slate-100">
+          <CardTitle className="text-base font-semibold">Site-wise Monthly Outage Summary</CardTitle>
+          <p className="text-xs text-slate-500 mt-1">Per-site outage duration by JMR month — matching client reporting format</p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50">
+                  <TableHead className="font-bold">Site Name</TableHead>
+                  <TableHead className="font-bold">District</TableHead>
+                  <TableHead className="font-bold">Vendor</TableHead>
+                  <TableHead className="font-bold text-right">Capacity (KWp)</TableHead>
+                  <TableHead className="font-bold text-center">JMR Month</TableHead>
+                  <TableHead className="font-bold text-right">Energy Export (KWh)</TableHead>
+                  <TableHead className="font-bold text-right">Energy Import (KWh)</TableHead>
+                  <TableHead className="font-bold text-center">Outage (HH:MM)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[
+                  { site: "ABC Solar",           district: "Yavatmal",   vendor: "SolarCo India",  capacityKWp: 469.00,   jmrMonth: "Jan-2026", energyExport: 63760.00,  energyImport: 320.00,   outage: "00:00" },
+                  { site: "BCD Solar Park",      district: "Nagpur",     vendor: "SunPower Tech",  capacityKWp: 2555.19,  jmrMonth: "Nov-2025", energyExport: 261230.00, energyImport: 1620.00,  outage: "01:19" },
+                  { site: "CDE Solar Project",   district: "Nanded",     vendor: "SunPower Tech",  capacityKWp: 789.00,   jmrMonth: "Dec-2025", energyExport: 100878.00, energyImport: 661.00,   outage: "13:46" },
+                  { site: "DEF Solar Station",   district: "Osmanabad",  vendor: "SunPower Tech",  capacityKWp: 2777.77,  jmrMonth: "Jan-2026", energyExport: 396600.00, energyImport: 3400.00,  outage: "23:16" },
+                  { site: "EFG Solar Plant",     district: "Jalna",      vendor: "Mega Solar Inc", capacityKWp: 910.10,   jmrMonth: "Nov-2025", energyExport: 31790.00,  energyImport: 0.00,     outage: "01:29" },
+                  { site: "FGH Solar Unit",      district: "Jalna",      vendor: "SolarCo India",  capacityKWp: 340.92,   jmrMonth: "Nov-2025", energyExport: 38810.50,  energyImport: 553.50,   outage: "04:37" },
+                  { site: "GHI Solar Park",      district: "Nandurbar",  vendor: "SunPower Tech",  capacityKWp: 758.88,   jmrMonth: "Jan-2026", energyExport: 79132.78,  energyImport: 403.82,   outage: "08:46" },
+                  { site: "HIJ Solar Complex",   district: "Ahmednagar", vendor: "SolarCo India",  capacityKWp: 5009.99,  jmrMonth: "Jan-2026", energyExport: 645415.00, energyImport: 2495.00,  outage: "10:27" },
+                  { site: "IJK Solar Farm",      district: "Kolhapur",   vendor: "SunPower Tech",  capacityKWp: 549.88,   jmrMonth: "Feb-2026", energyExport: 69999.00,  energyImport: 341.30,   outage: "02:54" },
+                  { site: "JKL Solar Station",   district: "Hingoli",    vendor: "Mega Solar Inc", capacityKWp: 3122.49,  jmrMonth: "Dec-2025", energyExport: 419690.00, energyImport: 1640.00,  outage: "04:05" },
+                ].map((row, idx) => {
+                  const outageMinutes = (() => {
+                    const [h, m] = row.outage.split(":").map(Number);
+                    return h * 60 + m;
+                  })();
+                  const outageSeverity = outageMinutes === 0 ? "text-emerald-600" : outageMinutes <= 120 ? "text-amber-600" : "text-rose-600";
+                  return (
+                    <TableRow key={idx} className="hover:bg-slate-50">
+                      <TableCell className="font-semibold text-sm">{row.site}</TableCell>
+                      <TableCell className="text-sm">{row.district}</TableCell>
+                      <TableCell className="text-sm">{row.vendor}</TableCell>
+                      <TableCell className="text-right text-sm font-medium">{row.capacityKWp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-center text-sm">
+                        <Badge variant="outline" className="text-xs">{row.jmrMonth}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-medium">{row.energyExport.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-right text-sm font-medium">{row.energyImport.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell className={`text-center font-mono text-sm font-bold ${outageSeverity}`}>{row.outage}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
       </div>
     </div>
   );

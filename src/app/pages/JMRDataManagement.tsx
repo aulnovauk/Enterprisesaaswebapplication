@@ -107,8 +107,13 @@ const jmrRecords = [
     fy: "FY 2025-26",
     month: "February",
     plant: "Jodhpur Solar Park A",
+    district: "Jodhpur",
     vendor: "SolarCo India",
+    capacityKWp: 2555.19,
     grossGeneration: 4520,
+    energyExportKWh: 261230.00,
+    energyImportKWh: 1620.00,
+    outage: "01:19",
     revenue: 42.85,
     approvalStatus: "approved",
     lockStatus: true,
@@ -124,8 +129,13 @@ const jmrRecords = [
     fy: "FY 2025-26",
     month: "February",
     plant: "Sangli Solar Farm",
+    district: "Sangli",
     vendor: "SunPower Tech",
+    capacityKWp: 789.00,
     grossGeneration: 2150,
+    energyExportKWh: 100878.00,
+    energyImportKWh: 661.00,
+    outage: "13:46",
     revenue: 20.42,
     approvalStatus: "pending",
     lockStatus: false,
@@ -141,8 +151,13 @@ const jmrRecords = [
     fy: "FY 2025-26",
     month: "February",
     plant: "Anantapur PV Plant",
+    district: "Anantapur",
     vendor: "Green Energy Ltd",
+    capacityKWp: 2777.77,
     grossGeneration: 8900,
+    energyExportKWh: 396600.00,
+    energyImportKWh: 3400.00,
+    outage: "23:16",
     revenue: 84.55,
     approvalStatus: "draft",
     lockStatus: false,
@@ -158,8 +173,13 @@ const jmrRecords = [
     fy: "FY 2025-26",
     month: "January",
     plant: "Kutch Solar Station",
+    district: "Kutch",
     vendor: "TechSolar Pvt",
+    capacityKWp: 910.10,
     grossGeneration: 6750,
+    energyExportKWh: 31790.00,
+    energyImportKWh: 0.00,
+    outage: "01:29",
     revenue: 64.12,
     approvalStatus: "rejected",
     lockStatus: false,
@@ -175,8 +195,13 @@ const jmrRecords = [
     fy: "FY 2025-26",
     month: "January",
     plant: "Pavagada Solar Park",
+    district: "Tumkur",
     vendor: "Mega Solar Inc",
+    capacityKWp: 5009.99,
     grossGeneration: 15500,
+    energyExportKWh: 645415.00,
+    energyImportKWh: 2495.00,
+    outage: "10:27",
     revenue: 147.25,
     approvalStatus: "approved",
     lockStatus: true,
@@ -186,6 +211,160 @@ const jmrRecords = [
     approvedBy: "Suresh Iyer",
     submittedDate: "2026-02-01",
     approvedDate: "2026-02-03",
+  },
+  {
+    id: "JMR-2026-02-004",
+    fy: "FY 2025-26",
+    month: "February",
+    plant: "ABC Solar",
+    district: "Yavatmal",
+    vendor: "SolarCo India",
+    capacityKWp: 469.00,
+    grossGeneration: 1850,
+    energyExportKWh: 63760.00,
+    energyImportKWh: 320.00,
+    outage: "00:00",
+    revenue: 17.58,
+    approvalStatus: "approved",
+    lockStatus: true,
+    version: 1,
+    pdfUploaded: true,
+    submittedBy: "Rajesh Kumar",
+    approvedBy: "Priya Sharma",
+    submittedDate: "2026-03-01",
+    approvedDate: "2026-03-02",
+  },
+  {
+    id: "JMR-2025-11-001",
+    fy: "FY 2025-26",
+    month: "November",
+    plant: "EFG Solar Plant",
+    district: "Jalna",
+    vendor: "Mega Solar Inc",
+    capacityKWp: 910.10,
+    grossGeneration: 920,
+    energyExportKWh: 31790.00,
+    energyImportKWh: 0.00,
+    outage: "01:29",
+    revenue: 8.74,
+    approvalStatus: "approved",
+    lockStatus: true,
+    version: 1,
+    pdfUploaded: true,
+    submittedBy: "Lakshmi N",
+    approvedBy: "Suresh Iyer",
+    submittedDate: "2025-12-01",
+    approvedDate: "2025-12-03",
+  },
+  {
+    id: "JMR-2025-11-002",
+    fy: "FY 2025-26",
+    month: "November",
+    plant: "FGH Solar Unit",
+    district: "Jalna",
+    vendor: "SolarCo India",
+    capacityKWp: 340.92,
+    grossGeneration: 1125,
+    energyExportKWh: 38810.50,
+    energyImportKWh: 553.50,
+    outage: "04:37",
+    revenue: 10.69,
+    approvalStatus: "approved",
+    lockStatus: true,
+    version: 1,
+    pdfUploaded: true,
+    submittedBy: "Amit Desai",
+    approvedBy: "Priya Sharma",
+    submittedDate: "2025-12-01",
+    approvedDate: "2025-12-02",
+  },
+  {
+    id: "JMR-2026-01-003",
+    fy: "FY 2025-26",
+    month: "January",
+    plant: "GHI Solar Park",
+    district: "Nandurbar",
+    vendor: "SunPower Tech",
+    capacityKWp: 758.88,
+    grossGeneration: 2290,
+    energyExportKWh: 79132.78,
+    energyImportKWh: 403.82,
+    outage: "08:46",
+    revenue: 21.76,
+    approvalStatus: "pending",
+    lockStatus: false,
+    version: 1,
+    pdfUploaded: true,
+    submittedBy: "Venkat Rao",
+    approvedBy: "—",
+    submittedDate: "2026-02-01",
+    approvedDate: "—",
+  },
+  {
+    id: "JMR-2026-02-005",
+    fy: "FY 2025-26",
+    month: "February",
+    plant: "IJK Solar Farm",
+    district: "Kolhapur",
+    vendor: "SunPower Tech",
+    capacityKWp: 549.88,
+    grossGeneration: 2030,
+    energyExportKWh: 69999.00,
+    energyImportKWh: 341.30,
+    outage: "02:54",
+    revenue: 19.29,
+    approvalStatus: "approved",
+    lockStatus: true,
+    version: 1,
+    pdfUploaded: true,
+    submittedBy: "Sunil Patel",
+    approvedBy: "Suresh Iyer",
+    submittedDate: "2026-03-01",
+    approvedDate: "2026-03-02",
+  },
+  {
+    id: "JMR-2025-12-001",
+    fy: "FY 2025-26",
+    month: "December",
+    plant: "CDE Solar Project",
+    district: "Nanded",
+    vendor: "SunPower Tech",
+    capacityKWp: 789.00,
+    grossGeneration: 2920,
+    energyExportKWh: 100878.00,
+    energyImportKWh: 661.00,
+    outage: "13:46",
+    revenue: 27.74,
+    approvalStatus: "approved",
+    lockStatus: true,
+    version: 2,
+    pdfUploaded: true,
+    submittedBy: "Amit Desai",
+    approvedBy: "Priya Sharma",
+    submittedDate: "2026-01-01",
+    approvedDate: "2026-01-03",
+  },
+  {
+    id: "JMR-2025-12-002",
+    fy: "FY 2025-26",
+    month: "December",
+    plant: "JKL Solar Station",
+    district: "Hingoli",
+    vendor: "Mega Solar Inc",
+    capacityKWp: 3122.49,
+    grossGeneration: 12150,
+    energyExportKWh: 419690.00,
+    energyImportKWh: 1640.00,
+    outage: "04:05",
+    revenue: 115.43,
+    approvalStatus: "approved",
+    lockStatus: true,
+    version: 1,
+    pdfUploaded: true,
+    submittedBy: "Lakshmi N",
+    approvedBy: "Suresh Iyer",
+    submittedDate: "2026-01-01",
+    approvedDate: "2026-01-02",
   },
 ];
 
@@ -272,7 +451,7 @@ const getStatusConfig = (status: string) => {
 export function JMRDataManagement() {
   const [activeTab, setActiveTab] = useState("manual-entry");
   const [selectedFY, setSelectedFY] = useState("FY 2025-26");
-  const [selectedMonth, setSelectedMonth] = useState("February");
+  const [selectedMonth, setSelectedMonth] = useState("All Months");
   const [selectedPlant, setSelectedPlant] = useState("All Plants");
   const [selectedVendor, setSelectedVendor] = useState("All Vendors");
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -427,11 +606,11 @@ export function JMRDataManagement() {
     toast.info("Form reset");
   };
 
-  const isFiltered = selectedFY !== "FY 2025-26" || selectedMonth !== "February" || selectedPlant !== "All Plants" || selectedVendor !== "All Vendors" || selectedStatus !== "all";
+  const isFiltered = selectedFY !== "FY 2025-26" || selectedMonth !== "All Months" || selectedPlant !== "All Plants" || selectedVendor !== "All Vendors" || selectedStatus !== "all";
 
   const resetAllFilters = () => {
     setSelectedFY("FY 2025-26");
-    setSelectedMonth("February");
+    setSelectedMonth("All Months");
     setSelectedPlant("All Plants");
     setSelectedVendor("All Vendors");
     setSelectedStatus("all");
@@ -441,7 +620,7 @@ export function JMRDataManagement() {
 
   const filteredJMRRecords = useMemo(() => jmrRecords.filter((record) => {
     const matchesFY = record.fy === selectedFY;
-    const matchesMonth = record.month === selectedMonth;
+    const matchesMonth = selectedMonth === "All Months" || record.month === selectedMonth;
     const matchesPlant = selectedPlant === "All Plants" || record.plant === selectedPlant;
     const matchesVendor = selectedVendor === "All Vendors" || record.vendor === selectedVendor;
     const matchesStatus = selectedStatus === "all" || record.approvalStatus === selectedStatus;
@@ -449,13 +628,14 @@ export function JMRDataManagement() {
       !searchTerm ||
       record.plant.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.vendor.toLowerCase().includes(searchTerm.toLowerCase());
+      record.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.district.toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesFY && matchesMonth && matchesPlant && matchesVendor && matchesStatus && matchesSearch;
   }), [selectedFY, selectedMonth, selectedPlant, selectedVendor, selectedStatus, searchTerm]);
 
   const statusCounts = useMemo(() => {
-    const byPeriod = jmrRecords.filter(r => r.fy === selectedFY && r.month === selectedMonth);
+    const byPeriod = jmrRecords.filter(r => r.fy === selectedFY && (selectedMonth === "All Months" || r.month === selectedMonth));
     return {
       approved: byPeriod.filter(r => r.approvalStatus === "approved").length,
       pending: byPeriod.filter(r => r.approvalStatus === "pending").length,
@@ -523,10 +703,11 @@ export function JMRDataManagement() {
                 </Select>
                 <Separator orientation="vertical" className="h-3.5" />
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 font-semibold text-xs w-16">
+                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 font-semibold text-xs w-20">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="All Months">All Months</SelectItem>
                     {months.map((month) => (
                       <SelectItem key={month} value={month}>
                         {month}
@@ -608,7 +789,7 @@ export function JMRDataManagement() {
           <span className="text-xs text-blue-800 font-medium">Active Filters:</span>
           <div className="flex items-center gap-1.5 flex-wrap">
             {selectedFY !== "FY 2025-26" && <Badge variant="outline" className="text-[10px] h-5 bg-blue-100 text-blue-700 border-blue-300">{selectedFY}</Badge>}
-            {selectedMonth !== "February" && <Badge variant="outline" className="text-[10px] h-5 bg-blue-100 text-blue-700 border-blue-300">{selectedMonth}</Badge>}
+            {selectedMonth !== "All Months" && <Badge variant="outline" className="text-[10px] h-5 bg-blue-100 text-blue-700 border-blue-300">{selectedMonth}</Badge>}
             {selectedPlant !== "All Plants" && <Badge variant="outline" className="text-[10px] h-5 bg-blue-100 text-blue-700 border-blue-300">{selectedPlant}</Badge>}
             {selectedVendor !== "All Vendors" && <Badge variant="outline" className="text-[10px] h-5 bg-blue-100 text-blue-700 border-blue-300">{selectedVendor}</Badge>}
             {selectedStatus !== "all" && <Badge variant="outline" className="text-[10px] h-5 bg-blue-100 text-blue-700 border-blue-300">{APPROVAL_OPTIONS.find(o => o.value === selectedStatus)?.label}</Badge>}
@@ -1961,8 +2142,13 @@ export function JMRDataManagement() {
                               <TableHead className="font-bold">JMR ID</TableHead>
                               <TableHead className="font-bold">FY / Month</TableHead>
                               <TableHead className="font-bold">Plant</TableHead>
+                              <TableHead className="font-bold">District</TableHead>
                               <TableHead className="font-bold">Vendor</TableHead>
+                              <TableHead className="font-bold text-right">Capacity (KWp)</TableHead>
                               <TableHead className="font-bold text-right">Generation (MWh)</TableHead>
+                              <TableHead className="font-bold text-right">Energy Export (KWh)</TableHead>
+                              <TableHead className="font-bold text-right">Energy Import (KWh)</TableHead>
+                              <TableHead className="font-bold text-center">Outage (HH:MM)</TableHead>
                               <TableHead className="font-bold text-right">Revenue (₹L)</TableHead>
                               <TableHead className="font-bold">Status</TableHead>
                               <TableHead className="font-bold text-center">Lock</TableHead>
@@ -1988,9 +2174,22 @@ export function JMRDataManagement() {
                                   <TableCell className="font-semibold text-sm">
                                     {record.plant}
                                   </TableCell>
+                                  <TableCell className="text-sm">{record.district}</TableCell>
                                   <TableCell className="text-sm">{record.vendor}</TableCell>
+                                  <TableCell className="text-right font-semibold text-sm">
+                                    {record.capacityKWp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </TableCell>
                                   <TableCell className="text-right font-semibold">
                                     {record.grossGeneration.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell className="text-right font-semibold text-sm">
+                                    {record.energyExportKWh.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </TableCell>
+                                  <TableCell className="text-right font-semibold text-sm">
+                                    {record.energyImportKWh.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </TableCell>
+                                  <TableCell className="text-center font-mono text-sm">
+                                    {record.outage}
                                   </TableCell>
                                   <TableCell className="text-right font-semibold">
                                     ₹{record.revenue.toFixed(2)}
