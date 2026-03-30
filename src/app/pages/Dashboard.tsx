@@ -573,7 +573,7 @@ const BASE_KPI = {
 };
 
 const WIDGET_ORDER_KEY = "dashboard-widget-order";
-const DEFAULT_WIDGET_ORDER = ["geo-risk", "generation", "commercial", "benchmarking", "advanced"];
+const DEFAULT_WIDGET_ORDER = ["kpi-cards", "geo-risk", "generation", "commercial", "benchmarking", "advanced"];
 const WIDGET_TYPE = "DASHBOARD_WIDGET";
 
 function DraggableWidget({
@@ -672,9 +672,15 @@ export function Dashboard() {
   });
   const dashboardRef = useRef<HTMLDivElement>(null);
 
+  const isDefaultOrder = widgetOrder.every((id, i) => id === DEFAULT_WIDGET_ORDER[i]);
+
   useEffect(() => {
-    localStorage.setItem(WIDGET_ORDER_KEY, JSON.stringify(widgetOrder));
-  }, [widgetOrder]);
+    if (isDefaultOrder) {
+      localStorage.removeItem(WIDGET_ORDER_KEY);
+    } else {
+      localStorage.setItem(WIDGET_ORDER_KEY, JSON.stringify(widgetOrder));
+    }
+  }, [widgetOrder, isDefaultOrder]);
 
   const moveWidget = useCallback((dragIndex: number, hoverIndex: number) => {
     setWidgetOrder((prev) => {
@@ -687,7 +693,6 @@ export function Dashboard() {
 
   const resetLayout = useCallback(() => {
     setWidgetOrder(DEFAULT_WIDGET_ORDER);
-    localStorage.removeItem(WIDGET_ORDER_KEY);
   }, []);
 
   // ── Derived filtered data from all 5 top-level filters ───────────────────
@@ -1073,6 +1078,91 @@ export function Dashboard() {
   }));
 
   const widgetRegistry: Record<string, { title: string; render: () => React.ReactNode }> = {
+    "kpi-cards": {
+      title: "KPI Cards",
+      render: () => (
+          <div className="grid grid-cols-5 gap-3">
+            {computedKPIs.map((kpi) => {
+              const Icon = kpi.icon;
+              const progressPercent = kpi.target > 0 ? Math.min(100, (kpi.actual / kpi.target) * 100) : 100;
+              const preview = kpiPreviewData[kpi.id];
+              return (
+                <KpiCardWithPreview key={kpi.id} kpi={kpi} preview={preview}>
+                  <motion.div
+                    whileHover={{ y: -1 }}
+                    className="cursor-pointer"
+                  >
+                    {(() => {
+                      const accentColor =
+                        kpi.compliance === "green"  ? { bar: "#10B981", border: "border-l-emerald-500", bg: "kpi-card-green" } :
+                        kpi.compliance === "yellow" ? { bar: "#E8A800", border: "border-l-amber-500",   bg: "kpi-card-yellow" } :
+                        kpi.compliance === "red"    ? { bar: "#EF4444", border: "border-l-rose-500",    bg: "kpi-card-red" } :
+                                                      { bar: "#94a3b8", border: "border-l-slate-400",   bg: "kpi-card-stable" };
+                      return (
+                        <Card className={`border border-slate-200 border-l-4 ${accentColor.border} shadow-sm hover:shadow-md transition-all overflow-hidden ${accentColor.bg}`}>
+                          <div style={{ height: 2, background: `linear-gradient(90deg, ${accentColor.bar}, ${accentColor.bar}88)`, flexShrink: 0 }} />
+                          <CardContent className="px-3 py-2">
+                            <div className="flex items-start justify-between mb-1.5">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-wide mb-0.5 truncate">
+                                  {kpi.title}
+                                </p>
+                                <div className="flex items-baseline gap-1">
+                                  <span className="text-xl font-bold text-slate-900 leading-tight">{kpi.value}</span>
+                                  <span className="text-[10px] font-medium text-slate-600">{kpi.unit}</span>
+                                </div>
+                              </div>
+                              <div className={`w-2 h-2 rounded-full shadow-sm shrink-0 mt-0.5 ${complianceColors[kpi.compliance]}`} style={{ boxShadow: `0 0 4px ${accentColor.bar}99` }} />
+                            </div>
+                            <div className="mb-1.5">
+                              <div className="flex items-center justify-between text-[9px] mb-0.5">
+                                <span className="text-slate-600 truncate">Target: {kpi.target} {kpi.unit}</span>
+                                <span className="font-bold text-slate-900 shrink-0 ml-1">{progressPercent.toFixed(0)}%</span>
+                              </div>
+                              <Progress value={progressPercent} className="h-0.5" />
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-0.5">
+                                {kpi.trend === "up" ? (
+                                  <ArrowUp className="w-2.5 h-2.5 text-emerald-600" />
+                                ) : kpi.trend === "down" ? (
+                                  <ArrowDown className="w-2.5 h-2.5 text-rose-600" />
+                                ) : (
+                                  <div className="w-2.5 h-2.5" />
+                                )}
+                                <span className={`text-[9px] font-bold ${
+                                  kpi.trend === "up" ? "text-emerald-600" : 
+                                  kpi.trend === "down" ? "text-rose-600" : "text-slate-600"
+                                }`}>
+                                  {kpi.change}
+                                </span>
+                                <span className="text-[9px] text-slate-500">MoM</span>
+                              </div>
+                              <div className="h-5 w-14">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <LineChart data={kpi.sparkline.map((val) => ({ value: val }))}>
+                                    <Line 
+                                      type="monotone" 
+                                      dataKey="value" 
+                                      stroke={kpi.compliance === "green" ? "#10B981" : kpi.compliance === "yellow" ? "#E8A800" : "#EF4444"}
+                                      strokeWidth={1.5}
+                                      dot={false}
+                                    />
+                                  </LineChart>
+                                </ResponsiveContainer>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })()}
+                  </motion.div>
+                </KpiCardWithPreview>
+              );
+            })}
+          </div>
+      ),
+    },
     "geo-risk": {
       title: "Geo & Risk",
       render: () => (
@@ -1894,94 +1984,8 @@ export function Dashboard() {
       <DndProvider backend={HTML5Backend}>
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-6 max-w-[1920px] mx-auto pb-16">
-          
-          {/* ROW 1 – STRATEGIC KPI SUMMARY CARDS (fixed, not draggable) */}
-          <div className="grid grid-cols-5 gap-3">
-            {computedKPIs.map((kpi) => {
-              const Icon = kpi.icon;
-              const progressPercent = kpi.target > 0 ? Math.min(100, (kpi.actual / kpi.target) * 100) : 100;
-              const preview = kpiPreviewData[kpi.id];
-              
-              return (
-                <KpiCardWithPreview key={kpi.id} kpi={kpi} preview={preview}>
-                  <motion.div
-                    whileHover={{ y: -1 }}
-                    className="cursor-pointer"
-                  >
-                    {(() => {
-                      const accentColor =
-                        kpi.compliance === "green"  ? { bar: "#10B981", border: "border-l-emerald-500", bg: "kpi-card-green" } :
-                        kpi.compliance === "yellow" ? { bar: "#E8A800", border: "border-l-amber-500",   bg: "kpi-card-yellow" } :
-                        kpi.compliance === "red"    ? { bar: "#EF4444", border: "border-l-rose-500",    bg: "kpi-card-red" } :
-                                                      { bar: "#94a3b8", border: "border-l-slate-400",   bg: "kpi-card-stable" };
-                      return (
-                        <Card className={`border border-slate-200 border-l-4 ${accentColor.border} shadow-sm hover:shadow-md transition-all overflow-hidden ${accentColor.bg}`}>
-                          <div style={{ height: 2, background: `linear-gradient(90deg, ${accentColor.bar}, ${accentColor.bar}88)`, flexShrink: 0 }} />
-                          <CardContent className="px-3 py-2">
-                            <div className="flex items-start justify-between mb-1.5">
-                              <div className="flex-1 min-w-0">
-                                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-wide mb-0.5 truncate">
-                                  {kpi.title}
-                                </p>
-                                <div className="flex items-baseline gap-1">
-                                  <span className="text-xl font-bold text-slate-900 leading-tight">{kpi.value}</span>
-                                  <span className="text-[10px] font-medium text-slate-600">{kpi.unit}</span>
-                                </div>
-                              </div>
-                              <div className={`w-2 h-2 rounded-full shadow-sm shrink-0 mt-0.5 ${complianceColors[kpi.compliance]}`} style={{ boxShadow: `0 0 4px ${accentColor.bar}99` }} />
-                            </div>
 
-                            <div className="mb-1.5">
-                              <div className="flex items-center justify-between text-[9px] mb-0.5">
-                                <span className="text-slate-600 truncate">Target: {kpi.target} {kpi.unit}</span>
-                                <span className="font-bold text-slate-900 shrink-0 ml-1">{progressPercent.toFixed(0)}%</span>
-                              </div>
-                              <Progress value={progressPercent} className="h-0.5" />
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-0.5">
-                                {kpi.trend === "up" ? (
-                                  <ArrowUp className="w-2.5 h-2.5 text-emerald-600" />
-                                ) : kpi.trend === "down" ? (
-                                  <ArrowDown className="w-2.5 h-2.5 text-rose-600" />
-                                ) : (
-                                  <div className="w-2.5 h-2.5" />
-                                )}
-                                <span className={`text-[9px] font-bold ${
-                                  kpi.trend === "up" ? "text-emerald-600" : 
-                                  kpi.trend === "down" ? "text-rose-600" : "text-slate-600"
-                                }`}>
-                                  {kpi.change}
-                                </span>
-                                <span className="text-[9px] text-slate-500">MoM</span>
-                              </div>
-                              
-                              <div className="h-5 w-14">
-                                <ResponsiveContainer width="100%" height="100%">
-                                  <LineChart data={kpi.sparkline.map((val) => ({ value: val }))}>
-                                    <Line 
-                                      type="monotone" 
-                                      dataKey="value" 
-                                      stroke={kpi.compliance === "green" ? "#10B981" : kpi.compliance === "yellow" ? "#E8A800" : "#EF4444"}
-                                      strokeWidth={1.5}
-                                      dot={false}
-                                    />
-                                  </LineChart>
-                                </ResponsiveContainer>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })()}
-                  </motion.div>
-                </KpiCardWithPreview>
-              );
-            })}
-          </div>
-
-          {/* DRAGGABLE WIDGET SECTIONS */}
+          {/* ALL DASHBOARD SECTIONS — rendered from widget order */}
           {widgetOrder.map((widgetId, idx) => {
             const widget = widgetRegistry[widgetId];
             if (!widget) return null;
