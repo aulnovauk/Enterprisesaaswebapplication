@@ -1069,7 +1069,7 @@ export function Dashboard() {
         <div className="p-6 space-y-6 max-w-[1920px] mx-auto pb-16">
           
           {/* ROW 1 – STRATEGIC KPI SUMMARY CARDS */}
-          <div className="grid grid-cols-5 gap-4">
+          <div className="grid grid-cols-5 gap-3">
             {computedKPIs.map((kpi) => {
               const Icon = kpi.icon;
               const progressPercent = kpi.target > 0 ? Math.min(100, (kpi.actual / kpi.target) * 100) : 100;
@@ -1078,7 +1078,7 @@ export function Dashboard() {
               return (
                 <KpiCardWithPreview key={kpi.id} kpi={kpi} preview={preview}>
                   <motion.div
-                    whileHover={{ y: -2 }}
+                    whileHover={{ y: -1 }}
                     className="cursor-pointer"
                   >
                     {(() => {
@@ -1089,49 +1089,48 @@ export function Dashboard() {
                                                       { bar: "#94a3b8", border: "border-l-slate-400",   bg: "kpi-card-stable" };
                       return (
                         <Card className={`border border-slate-200 border-l-4 ${accentColor.border} shadow-sm hover:shadow-md transition-all overflow-hidden ${accentColor.bg}`}>
-                          {/* Coloured top accent strip */}
-                          <div style={{ height: 3, background: `linear-gradient(90deg, ${accentColor.bar}, ${accentColor.bar}88)`, flexShrink: 0 }} />
-                          <CardContent className="p-4 pt-3">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex-1">
-                                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-1">
+                          <div style={{ height: 2, background: `linear-gradient(90deg, ${accentColor.bar}, ${accentColor.bar}88)`, flexShrink: 0 }} />
+                          <CardContent className="px-3 py-2">
+                            <div className="flex items-start justify-between mb-1.5">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-wide mb-0.5 truncate">
                                   {kpi.title}
                                 </p>
-                                <div className="flex items-baseline gap-1.5">
-                                  <span className="text-2xl font-bold text-slate-900">{kpi.value}</span>
-                                  <span className="text-xs font-medium text-slate-600">{kpi.unit}</span>
+                                <div className="flex items-baseline gap-1">
+                                  <span className="text-xl font-bold text-slate-900 leading-tight">{kpi.value}</span>
+                                  <span className="text-[10px] font-medium text-slate-600">{kpi.unit}</span>
                                 </div>
                               </div>
-                              <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${complianceColors[kpi.compliance]}`} style={{ boxShadow: `0 0 6px ${accentColor.bar}99` }} />
+                              <div className={`w-2 h-2 rounded-full shadow-sm shrink-0 mt-0.5 ${complianceColors[kpi.compliance]}`} style={{ boxShadow: `0 0 4px ${accentColor.bar}99` }} />
                             </div>
 
-                            <div className="mb-2">
-                              <div className="flex items-center justify-between text-[10px] mb-1">
-                                <span className="text-slate-600">Target: {kpi.target} {kpi.unit}</span>
-                                <span className="font-bold text-slate-900">{progressPercent.toFixed(0)}%</span>
+                            <div className="mb-1.5">
+                              <div className="flex items-center justify-between text-[9px] mb-0.5">
+                                <span className="text-slate-600 truncate">Target: {kpi.target} {kpi.unit}</span>
+                                <span className="font-bold text-slate-900 shrink-0 ml-1">{progressPercent.toFixed(0)}%</span>
                               </div>
-                              <Progress value={progressPercent} className="h-1" />
+                              <Progress value={progressPercent} className="h-0.5" />
                             </div>
 
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-0.5">
                                 {kpi.trend === "up" ? (
-                                  <ArrowUp className="w-3 h-3 text-emerald-600" />
+                                  <ArrowUp className="w-2.5 h-2.5 text-emerald-600" />
                                 ) : kpi.trend === "down" ? (
-                                  <ArrowDown className="w-3 h-3 text-rose-600" />
+                                  <ArrowDown className="w-2.5 h-2.5 text-rose-600" />
                                 ) : (
-                                  <div className="w-3 h-3" />
+                                  <div className="w-2.5 h-2.5" />
                                 )}
-                                <span className={`text-[10px] font-bold ${
+                                <span className={`text-[9px] font-bold ${
                                   kpi.trend === "up" ? "text-emerald-600" : 
                                   kpi.trend === "down" ? "text-rose-600" : "text-slate-600"
                                 }`}>
                                   {kpi.change}
                                 </span>
-                                <span className="text-[10px] text-slate-500">MoM</span>
+                                <span className="text-[9px] text-slate-500">MoM</span>
                               </div>
                               
-                              <div className="h-6 w-16">
+                              <div className="h-5 w-14">
                                 <ResponsiveContainer width="100%" height="100%">
                                   <LineChart data={kpi.sparkline.map((val) => ({ value: val }))}>
                                     <Line 
