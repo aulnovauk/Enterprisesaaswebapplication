@@ -174,15 +174,15 @@ export function GlobalFilterBar({
           </Select>
 
           {/* Period Toggle */}
-          <div className="flex bg-slate-100 rounded-md p-1">
+          <div className="flex bg-slate-100 rounded-lg p-1 border border-slate-200">
             {PERIODS.map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`px-3 py-1 text-xs font-medium rounded-sm transition-all ${
+                className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
                   period === p
-                    ? "bg-white text-slate-800 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                    ? "bg-[#2955A0] text-white shadow-md"
+                    : "text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm"
                 }`}
               >
                 {p}
