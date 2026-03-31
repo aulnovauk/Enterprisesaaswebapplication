@@ -76,7 +76,7 @@ export function Layout() {
         className={`flex flex-col transition-all duration-300 ease-in-out shadow-lg ${
           isSidebarCollapsed ? "w-16" : "w-[260px]"
         }`} 
-        style={{ background: "linear-gradient(180deg, #0089C9 0%, #2955A0 100%)" }}
+        style={{ background: "#2955A0" }}
       >
         {/* Logo */}
         <div className={`border-b border-white/10 flex items-center justify-center ${
