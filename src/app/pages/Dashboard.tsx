@@ -1360,8 +1360,9 @@ export function Dashboard() {
                       <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-wide">Non-Compliant Trend (6M)</h4>
                       <span className="text-[9px] text-emerald-600 font-semibold">↓ Improving</span>
                     </div>
-                    <ResponsiveContainer width="100%" height={60}>
-                      <BarChart data={riskData.complianceTrend} barSize={14} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
+                    <div style={{ overflow: "visible", position: "relative" }}>
+                    <ResponsiveContainer width="100%" height={70}>
+                      <BarChart data={riskData.complianceTrend} barSize={14} margin={{ top: 5, right: 0, bottom: 0, left: -20 }}>
                         <XAxis dataKey="month" tick={{ fontSize: 8, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
                         <YAxis tick={{ fontSize: 8, fill: "#94a3b8" }} axisLine={false} tickLine={false} domain={[0, 14]} />
                         <Bar dataKey="nonCompliant" radius={[3, 3, 0, 0]}>
@@ -1373,11 +1374,21 @@ export function Dashboard() {
                           ))}
                         </Bar>
                         <Tooltip
-                          contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "6px", fontSize: "10px", color: "#f1f5f9" }}
-                          formatter={(v: number) => [`${v} plants`, "Non-Compliant"]}
+                          wrapperStyle={{ zIndex: 50 }}
+                          content={({ active, payload, label }) => {
+                            if (!active || !payload?.length) return null;
+                            const val = payload[0].value as number;
+                            return (
+                              <div style={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "8px", padding: "8px 12px", fontSize: "11px", color: "#f1f5f9", boxShadow: "0 4px 12px rgba(0,0,0,0.3)", whiteSpace: "nowrap" }}>
+                                <div style={{ fontWeight: 700, marginBottom: "2px" }}>{label}</div>
+                                <div>Non-Compliant: <span style={{ color: "#f87171", fontWeight: 700 }}>{val} plants</span></div>
+                              </div>
+                            );
+                          }}
                         />
                       </BarChart>
                     </ResponsiveContainer>
+                    </div>
                   </div>
                   <Separator />
                   <div>
