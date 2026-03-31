@@ -88,7 +88,7 @@ export function Layout() {
             <img src="/eesl-logo.svg" alt="EESL" className="w-10 h-7 rounded shadow-sm" />
             <div>
               <h1 className="font-bold text-white text-[15px] leading-tight tracking-wide">E-SAMMP</h1>
-              <p className="text-[10.5px] text-slate-400 leading-tight mt-0.5">EESL Solar Platform</p>
+              <p className="text-[10.5px] text-white/60 leading-tight mt-0.5">EESL Solar Platform</p>
             </div>
           </div>
           {isSidebarCollapsed && (
@@ -113,8 +113,8 @@ export function Layout() {
                         : "gap-3 px-3 py-2.5"
                     } ${
                       isActive
-                        ? "bg-white/15 text-white font-medium shadow-sm backdrop-blur-sm"
-                        : "text-slate-300/90 hover:bg-white/8 hover:text-white"
+                        ? "bg-white/20 text-white font-semibold shadow-sm backdrop-blur-sm"
+                        : "text-white/80 hover:bg-white/12 hover:text-white"
                     }`}
                     title={isSidebarCollapsed ? item.label : ""}
                   >
@@ -151,7 +151,7 @@ export function Layout() {
           <div className={`flex ${isSidebarCollapsed ? "flex-col items-center gap-1" : "items-center gap-1 px-1"}`}>
             <button
               onClick={() => setNotificationsOpen(true)}
-              className={`relative flex items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white transition-all duration-200 ${
+              className={`relative flex items-center justify-center rounded-lg text-white/70 hover:bg-white/12 hover:text-white transition-all duration-200 ${
                 isSidebarCollapsed ? "w-10 h-10" : "w-9 h-9"
               }`}
               title="Notifications"
@@ -166,7 +166,7 @@ export function Layout() {
 
             <button
               onClick={() => setCommandOpen(true)}
-              className={`flex items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white transition-all duration-200 ${
+              className={`flex items-center justify-center rounded-lg text-white/70 hover:bg-white/12 hover:text-white transition-all duration-200 ${
                 isSidebarCollapsed ? "w-10 h-10" : "w-9 h-9"
               }`}
               title={isSidebarCollapsed ? "Search (⌘K)" : "Search (⌘K)"}
@@ -179,7 +179,7 @@ export function Layout() {
               className={`flex items-center justify-center rounded-lg transition-all duration-200 ${
                 isDark
                   ? "text-amber-400 hover:bg-white/10 hover:text-amber-300"
-                  : "text-slate-400 hover:bg-white/10 hover:text-white"
+                  : "text-white/70 hover:bg-white/12 hover:text-white"
               } ${isSidebarCollapsed ? "w-10 h-10" : "w-9 h-9"}`}
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
@@ -188,7 +188,7 @@ export function Layout() {
 
             <button
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className={`flex items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white transition-all duration-200 ${
+              className={`flex items-center justify-center rounded-lg text-white/70 hover:bg-white/12 hover:text-white transition-all duration-200 ${
                 isSidebarCollapsed ? "w-10 h-10" : "w-9 h-9"
               }`}
               title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -201,7 +201,7 @@ export function Layout() {
             </button>
 
             {!isSidebarCollapsed && (
-              <kbd className="ml-auto inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 bg-white/8 rounded border border-white/8">
+              <kbd className="ml-auto inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-white/50 bg-white/10 rounded border border-white/15">
                 ⌘K
               </kbd>
             )}
@@ -225,9 +225,9 @@ export function Layout() {
                   isSidebarCollapsed ? "hidden" : "block"
                 }`}>
                   <p className="text-[13px] font-medium text-white truncate leading-tight">Admin User</p>
-                  <p className="text-[11px] text-slate-400 truncate leading-tight">admin@eesl.co.in</p>
+                  <p className="text-[11px] text-white/55 truncate leading-tight">admin@eesl.co.in</p>
                 </div>
-                <LogOut className={`w-4 h-4 text-slate-500 flex-shrink-0 transition-all duration-200 ${
+                <LogOut className={`w-4 h-4 text-white/50 flex-shrink-0 transition-all duration-200 ${
                   isSidebarCollapsed ? "hidden" : "block"
                 }`} />
               </button>
