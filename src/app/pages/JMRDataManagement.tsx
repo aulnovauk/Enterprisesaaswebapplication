@@ -1804,7 +1804,7 @@ export function JMRDataManagement() {
                                   Reset
                                 </Button>
                               )}
-                              <Button onClick={() => setEntryStep(4)} className="bg-[#0A2E4A]">
+                              <Button onClick={() => { validateForm(); setEntryStep(4); }} className="bg-[#0A2E4A]">
                                 Next Step
                                 <ArrowRight className="w-4 h-4 ml-2" />
                               </Button>
