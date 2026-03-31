@@ -533,11 +533,36 @@ export function JMRDataManagement() {
     ? ((parseFloat(operationalData.netExportEnergy) / parseFloat(commercialData.contractualTarget)) * 100).toFixed(2)
     : "—";
 
-  const cuf = "21.8";
-  const paf = "97.8";
-  const expectedGeneration = "2200";
-  const revenueShortfall = "1.58";
-  const ldRisk = "Low";
+  const capacityMW = parseFloat(plantMetadata.capacity) || 0;
+  const grossGen = parseFloat(operationalData.grossGeneration) || 0;
+  const netExport = parseFloat(operationalData.netExportEnergy) || 0;
+  const plantAvail = parseFloat(operationalData.plantAvailability) || 0;
+  const gridAvail = parseFloat(operationalData.gridAvailability) || 0;
+  const contractTarget = parseFloat(commercialData.contractualTarget) || 0;
+  const revRealized = parseFloat(commercialData.revenueRealized) || 0;
+  const omDeviation = parseFloat(commercialData.omDeviationAmount) || 0;
+  const hoursInMonth = 720;
+  const tariffRate = 3.50;
+
+  const cufVal = capacityMW > 0 ? (netExport / (capacityMW * hoursInMonth)) * 100 : 0;
+  const cuf = cufVal.toFixed(1);
+
+  const pafVal = plantAvail;
+  const paf = pafVal.toFixed(1);
+
+  const expectedGenVal = contractTarget;
+  const expectedGeneration = expectedGenVal.toFixed(0);
+
+  const expectedRevenue = contractTarget > 0 ? (contractTarget * tariffRate) / 100 : 0;
+  const revenueShortfallVal = Math.max(0, expectedRevenue - revRealized + omDeviation);
+  const revenueShortfall = revenueShortfallVal.toFixed(2);
+
+  const targetAchPct = contractTarget > 0 ? (netExport / contractTarget) * 100 : 0;
+  const ldRisk = targetAchPct >= 100 ? "None" : targetAchPct >= 95 ? "Low" : targetAchPct >= 90 ? "Medium" : "High";
+  const ldRiskColor = ldRisk === "None" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+    ldRisk === "Low" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+    ldRisk === "Medium" ? "bg-amber-50 text-amber-700 border-amber-200" :
+    "bg-rose-50 text-rose-700 border-rose-200";
 
   // Handle form validation
   const validateForm = () => {
@@ -1586,7 +1611,7 @@ export function JMRDataManagement() {
                                 Auto-Computed Preview
                               </CardTitle>
                               <CardDescription className="text-blue-700">
-                                Live calculated KPIs based on entered data
+                                Live calculated KPIs based on entered data — formulas shown below each value
                               </CardDescription>
                             </CardHeader>
                             <CardContent className="p-6">
@@ -1594,10 +1619,34 @@ export function JMRDataManagement() {
                                 <div className="bg-white p-4 rounded-lg border border-blue-200">
                                   <div className="text-xs font-bold text-slate-600 uppercase mb-1">CUF</div>
                                   <div className="text-2xl font-bold text-slate-900">{cuf}%</div>
+                                  <div className="mt-2 pt-2 border-t border-blue-100">
+                                    <div className="text-[9px] font-semibold text-blue-700 uppercase tracking-wide mb-1">Formula</div>
+                                    <div className="text-[10px] text-slate-600 leading-relaxed font-mono bg-slate-50 rounded px-2 py-1.5">
+                                      (Net Export ÷ (Capacity × Hours)) × 100
+                                    </div>
+                                    <div className="text-[9px] text-slate-500 mt-1.5 leading-relaxed">
+                                      = ({netExport} ÷ ({capacityMW} MW × {hoursInMonth} hrs)) × 100
+                                    </div>
+                                    <div className="text-[9px] font-semibold text-blue-800 mt-0.5">
+                                      = {cuf}%
+                                    </div>
+                                  </div>
                                 </div>
                                 <div className="bg-white p-4 rounded-lg border border-blue-200">
                                   <div className="text-xs font-bold text-slate-600 uppercase mb-1">PAF</div>
                                   <div className="text-2xl font-bold text-slate-900">{paf}%</div>
+                                  <div className="mt-2 pt-2 border-t border-blue-100">
+                                    <div className="text-[9px] font-semibold text-blue-700 uppercase tracking-wide mb-1">Formula</div>
+                                    <div className="text-[10px] text-slate-600 leading-relaxed font-mono bg-slate-50 rounded px-2 py-1.5">
+                                      Plant Availability Factor
+                                    </div>
+                                    <div className="text-[9px] text-slate-500 mt-1.5 leading-relaxed">
+                                      = Plant Availability entered
+                                    </div>
+                                    <div className="text-[9px] font-semibold text-blue-800 mt-0.5">
+                                      = {paf}%
+                                    </div>
+                                  </div>
                                 </div>
                                 <div className="bg-white p-4 rounded-lg border border-blue-200">
                                   <div className="text-xs font-bold text-slate-600 uppercase mb-1">
@@ -1605,6 +1654,18 @@ export function JMRDataManagement() {
                                   </div>
                                   <div className="text-2xl font-bold text-slate-900">{expectedGeneration}</div>
                                   <div className="text-xs text-slate-600">MWh</div>
+                                  <div className="mt-2 pt-2 border-t border-blue-100">
+                                    <div className="text-[9px] font-semibold text-blue-700 uppercase tracking-wide mb-1">Formula</div>
+                                    <div className="text-[10px] text-slate-600 leading-relaxed font-mono bg-slate-50 rounded px-2 py-1.5">
+                                      Contractual Target Generation
+                                    </div>
+                                    <div className="text-[9px] text-slate-500 mt-1.5 leading-relaxed">
+                                      = Target from contract
+                                    </div>
+                                    <div className="text-[9px] font-semibold text-blue-800 mt-0.5">
+                                      = {expectedGeneration} MWh
+                                    </div>
+                                  </div>
                                 </div>
                                 <div className="bg-white p-4 rounded-lg border border-blue-200">
                                   <div className="text-xs font-bold text-slate-600 uppercase mb-1">
@@ -1612,15 +1673,48 @@ export function JMRDataManagement() {
                                   </div>
                                   <div className="text-2xl font-bold text-rose-600">₹{revenueShortfall}</div>
                                   <div className="text-xs text-slate-600">Lakhs</div>
+                                  <div className="mt-2 pt-2 border-t border-blue-100">
+                                    <div className="text-[9px] font-semibold text-blue-700 uppercase tracking-wide mb-1">Formula</div>
+                                    <div className="text-[10px] text-slate-600 leading-relaxed font-mono bg-slate-50 rounded px-2 py-1.5">
+                                      (Target × Tariff) − Revenue + O&M Dev
+                                    </div>
+                                    <div className="text-[9px] text-slate-500 mt-1.5 leading-relaxed">
+                                      = ({contractTarget} × ₹{tariffRate}/100) − ₹{revRealized} + ₹{omDeviation}
+                                    </div>
+                                    <div className="text-[9px] text-slate-500">
+                                      = ₹{expectedRevenue.toFixed(2)} − ₹{revRealized} + ₹{omDeviation}
+                                    </div>
+                                    <div className="text-[9px] font-semibold text-blue-800 mt-0.5">
+                                      = ₹{revenueShortfall} Lakhs
+                                    </div>
+                                  </div>
                                 </div>
                                 <div className="bg-white p-4 rounded-lg border border-blue-200">
                                   <div className="text-xs font-bold text-slate-600 uppercase mb-1">LD Risk</div>
                                   <Badge
                                     variant="outline"
-                                    className="bg-emerald-50 text-emerald-700 border-emerald-200 mt-1"
+                                    className={`${ldRiskColor} mt-1`}
                                   >
                                     {ldRisk}
                                   </Badge>
+                                  <div className="mt-2 pt-2 border-t border-blue-100">
+                                    <div className="text-[9px] font-semibold text-blue-700 uppercase tracking-wide mb-1">Formula</div>
+                                    <div className="text-[10px] text-slate-600 leading-relaxed font-mono bg-slate-50 rounded px-2 py-1.5">
+                                      Based on Target Achievement %
+                                    </div>
+                                    <div className="text-[9px] text-slate-500 mt-1.5 leading-relaxed">
+                                      = ({netExport} ÷ {contractTarget}) × 100
+                                    </div>
+                                    <div className="text-[9px] font-semibold text-blue-800 mt-0.5">
+                                      = {targetAchPct.toFixed(1)}%
+                                    </div>
+                                    <div className="text-[8px] text-slate-400 mt-1 space-y-0.5">
+                                      <div>≥100% → None</div>
+                                      <div>95–99% → Low</div>
+                                      <div>90–94% → Medium</div>
+                                      <div>&lt;90% → High</div>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </CardContent>
