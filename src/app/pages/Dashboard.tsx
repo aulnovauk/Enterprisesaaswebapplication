@@ -21,6 +21,7 @@ import {
   Legend,
   ResponsiveContainer,
   ComposedChart,
+  ReferenceLine,
 } from "recharts";
 import { CustomChartTooltip } from "../components/ChartTooltip";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
@@ -370,18 +371,18 @@ const clusterComparisonData = [
 
 // Lost Production Index
 const lpiData = [
-  { month: "Mar", lpi: 8.5 },
-  { month: "Apr", lpi: 7.2 },
-  { month: "May", lpi: 6.8 },
-  { month: "Jun", lpi: 9.1 },
-  { month: "Jul", lpi: 12.5 },
-  { month: "Aug", lpi: 8.9 },
-  { month: "Sep", lpi: 7.5 },
-  { month: "Oct", lpi: 6.2 },
-  { month: "Nov", lpi: 7.8 },
-  { month: "Dec", lpi: 9.5 },
-  { month: "Jan", lpi: 7.1 },
-  { month: "Feb", lpi: 8.2 },
+  { month: "Mar", lpi: 8.5, gridLoss: 3.2, equipmentLoss: 2.1, plannedLoss: 1.8, curtailmentLoss: 1.4, energyLostMWh: 382, expectedMWh: 4494 },
+  { month: "Apr", lpi: 7.2, gridLoss: 2.8, equipmentLoss: 1.5, plannedLoss: 1.6, curtailmentLoss: 1.3, energyLostMWh: 324, expectedMWh: 4500 },
+  { month: "May", lpi: 6.8, gridLoss: 2.5, equipmentLoss: 1.3, plannedLoss: 1.5, curtailmentLoss: 1.5, energyLostMWh: 312, expectedMWh: 4588 },
+  { month: "Jun", lpi: 9.1, gridLoss: 3.8, equipmentLoss: 2.4, plannedLoss: 1.4, curtailmentLoss: 1.5, energyLostMWh: 410, expectedMWh: 4505 },
+  { month: "Jul", lpi: 12.5, gridLoss: 5.2, equipmentLoss: 3.5, plannedLoss: 2.0, curtailmentLoss: 1.8, energyLostMWh: 575, expectedMWh: 4600 },
+  { month: "Aug", lpi: 8.9, gridLoss: 3.5, equipmentLoss: 2.2, plannedLoss: 1.7, curtailmentLoss: 1.5, energyLostMWh: 396, expectedMWh: 4449 },
+  { month: "Sep", lpi: 7.5, gridLoss: 2.9, equipmentLoss: 1.8, plannedLoss: 1.5, curtailmentLoss: 1.3, energyLostMWh: 338, expectedMWh: 4507 },
+  { month: "Oct", lpi: 6.2, gridLoss: 2.3, equipmentLoss: 1.2, plannedLoss: 1.4, curtailmentLoss: 1.3, energyLostMWh: 279, expectedMWh: 4500 },
+  { month: "Nov", lpi: 7.8, gridLoss: 3.1, equipmentLoss: 1.9, plannedLoss: 1.5, curtailmentLoss: 1.3, energyLostMWh: 351, expectedMWh: 4500 },
+  { month: "Dec", lpi: 9.5, gridLoss: 4.0, equipmentLoss: 2.5, plannedLoss: 1.6, curtailmentLoss: 1.4, energyLostMWh: 428, expectedMWh: 4505 },
+  { month: "Jan", lpi: 7.1, gridLoss: 2.7, equipmentLoss: 1.6, plannedLoss: 1.5, curtailmentLoss: 1.3, energyLostMWh: 320, expectedMWh: 4507 },
+  { month: "Feb", lpi: 8.2, gridLoss: 3.3, equipmentLoss: 2.0, plannedLoss: 1.5, curtailmentLoss: 1.4, energyLostMWh: 369, expectedMWh: 4500 },
 ];
 
 // Asset Health Index Breakdown
@@ -1779,38 +1780,104 @@ export function Dashboard() {
             <Card className="col-span-6 border-2 border-slate-200 shadow-md">
               <CardHeader className="border-b border-slate-100 pb-3">
                 <CardTitle className="text-base">Lost Production Index (LPI)</CardTitle>
-                <CardDescription className="text-xs">Monthly energy loss percentage</CardDescription>
+                <CardDescription className="text-xs">Monthly energy loss breakdown by category</CardDescription>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="h-64">
+                <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={lpiData}>
+                    <ComposedChart data={lpiData} margin={{ top: 5, right: 10, bottom: 0, left: -10 }}>
                       <defs>
-                        <linearGradient id="colorLPI" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#EF4444" stopOpacity={0}/>
+                        <linearGradient id="colorGrid" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#EF4444" stopOpacity={0.6}/><stop offset="95%" stopColor="#EF4444" stopOpacity={0.1}/>
+                        </linearGradient>
+                        <linearGradient id="colorEquip" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#F97316" stopOpacity={0.6}/><stop offset="95%" stopColor="#F97316" stopOpacity={0.1}/>
+                        </linearGradient>
+                        <linearGradient id="colorPlanned" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.5}/><stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                        </linearGradient>
+                        <linearGradient id="colorCurtail" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.5}/><stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.1}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="#64748b" />
-                      <YAxis domain={[0, 15]} tick={{ fontSize: 10 }} stroke="#64748b" />
-                      <Tooltip content={<CustomChartTooltip unit="index" />} />
-                      <Area 
-                        type="monotone" 
-                        dataKey="lpi" 
-                        stroke="#EF4444" 
-                        strokeWidth={3}
-                        fill="url(#colorLPI)" 
-                        name="LPI (%)"
+                      <YAxis domain={[0, 15]} tick={{ fontSize: 10 }} stroke="#64748b" unit="%" />
+                      <Tooltip
+                        wrapperStyle={{ zIndex: 50 }}
+                        content={({ active, payload, label }) => {
+                          if (!active || !payload?.length) return null;
+                          const d = payload[0]?.payload;
+                          return (
+                            <div style={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "8px", padding: "10px 14px", fontSize: "11px", color: "#f1f5f9", boxShadow: "0 4px 12px rgba(0,0,0,0.3)", minWidth: "180px" }}>
+                              <div style={{ fontWeight: 700, fontSize: "12px", marginBottom: "6px", borderBottom: "1px solid #475569", paddingBottom: "4px" }}>{label}</div>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "2px" }}><span style={{ color: "#fca5a5" }}>Grid Outage</span><span style={{ fontWeight: 700 }}>{d.gridLoss}%</span></div>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "2px" }}><span style={{ color: "#fdba74" }}>Equipment</span><span style={{ fontWeight: 700 }}>{d.equipmentLoss}%</span></div>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "2px" }}><span style={{ color: "#93c5fd" }}>Planned</span><span style={{ fontWeight: 700 }}>{d.plannedLoss}%</span></div>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "2px" }}><span style={{ color: "#c4b5fd" }}>Curtailment</span><span style={{ fontWeight: 700 }}>{d.curtailmentLoss}%</span></div>
+                              <div style={{ borderTop: "1px solid #475569", paddingTop: "4px", marginTop: "4px", display: "flex", justifyContent: "space-between" }}><span style={{ fontWeight: 700 }}>Total LPI</span><span style={{ fontWeight: 700, color: "#f87171" }}>{d.lpi}%</span></div>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2px", color: "#94a3b8", fontSize: "10px" }}><span>Energy Lost</span><span>{d.energyLostMWh} MWh</span></div>
+                            </div>
+                          );
+                        }}
                       />
-                    </AreaChart>
+                      <ReferenceLine y={5} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2} label={{ value: "Target <5%", position: "right", fontSize: 9, fill: "#10b981" }} />
+                      <Area type="monotone" dataKey="gridLoss" stackId="1" stroke="#EF4444" strokeWidth={0} fill="url(#colorGrid)" name="Grid Outage" />
+                      <Area type="monotone" dataKey="equipmentLoss" stackId="1" stroke="#F97316" strokeWidth={0} fill="url(#colorEquip)" name="Equipment" />
+                      <Area type="monotone" dataKey="plannedLoss" stackId="1" stroke="#3B82F6" strokeWidth={0} fill="url(#colorPlanned)" name="Planned" />
+                      <Area type="monotone" dataKey="curtailmentLoss" stackId="1" stroke="#8B5CF6" strokeWidth={0} fill="url(#colorCurtail)" name="Curtailment" />
+                      <Line type="monotone" dataKey="lpi" stroke="#1e293b" strokeWidth={2} dot={{ r: 3, fill: "#1e293b" }} name="Total LPI" />
+                    </ComposedChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="mt-4 p-3 bg-rose-50 rounded-lg border-2 border-rose-200">
-                  <div className="text-xs font-semibold text-rose-700 mb-1">Average LPI (12M)</div>
-                  <div className="text-xl font-bold text-rose-900">8.3%</div>
-                  <div className="text-xs text-rose-600 mt-1">Target: &lt;5%</div>
+                <div className="flex items-center justify-center gap-4 mt-2 flex-wrap">
+                  <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded" style={{ background: "#EF4444" }} /><span className="text-[10px] text-slate-600">Grid Outage</span></div>
+                  <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded" style={{ background: "#F97316" }} /><span className="text-[10px] text-slate-600">Equipment</span></div>
+                  <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded" style={{ background: "#3B82F6" }} /><span className="text-[10px] text-slate-600">Planned</span></div>
+                  <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded" style={{ background: "#8B5CF6" }} /><span className="text-[10px] text-slate-600">Curtailment</span></div>
+                  <div className="flex items-center gap-1.5"><div className="w-6 border-t-2 border-slate-900" /><span className="text-[10px] text-slate-600">Total LPI</span></div>
+                  <div className="flex items-center gap-1.5"><div className="w-6 border-t-2 border-dashed border-emerald-500" /><span className="text-[10px] text-slate-600">Target</span></div>
                 </div>
+                {(() => {
+                  const avgLPI = lpiData.reduce((s, d) => s + d.lpi, 0) / lpiData.length;
+                  const totalLostMWh = lpiData.reduce((s, d) => s + d.energyLostMWh, 0);
+                  const totalExpectedMWh = lpiData.reduce((s, d) => s + d.expectedMWh, 0);
+                  const worstMonth = lpiData.reduce((w, d) => d.lpi > w.lpi ? d : w, lpiData[0]);
+                  const bestMonth = lpiData.reduce((b, d) => d.lpi < b.lpi ? d : b, lpiData[0]);
+                  const categories = [
+                    { name: "Grid Outage", avg: lpiData.reduce((s, d) => s + d.gridLoss, 0) / lpiData.length },
+                    { name: "Equipment", avg: lpiData.reduce((s, d) => s + d.equipmentLoss, 0) / lpiData.length },
+                    { name: "Planned", avg: lpiData.reduce((s, d) => s + d.plannedLoss, 0) / lpiData.length },
+                    { name: "Curtailment", avg: lpiData.reduce((s, d) => s + d.curtailmentLoss, 0) / lpiData.length },
+                  ];
+                  const topCat = categories.reduce((a, b) => b.avg > a.avg ? b : a, categories[0]);
+                  const topContributor = topCat.name;
+                  const topContribPct = topCat.avg;
+                  return (
+                    <div className="grid grid-cols-4 gap-3 mt-4">
+                      <div className="p-3 bg-rose-50 rounded-lg border border-rose-200">
+                        <div className="text-[10px] font-semibold text-rose-700 uppercase">Avg LPI (12M)</div>
+                        <div className="text-lg font-bold text-rose-900">{avgLPI.toFixed(1)}%</div>
+                        <div className="text-[10px] text-rose-600">Target: &lt;5%</div>
+                      </div>
+                      <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="text-[10px] font-semibold text-slate-700 uppercase">Energy Lost</div>
+                        <div className="text-lg font-bold text-slate-900">{(totalLostMWh / 1000).toFixed(1)}K</div>
+                        <div className="text-[10px] text-slate-600">MWh of {(totalExpectedMWh / 1000).toFixed(1)}K exp.</div>
+                      </div>
+                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                        <div className="text-[10px] font-semibold text-amber-700 uppercase">Top Loss Driver</div>
+                        <div className="text-sm font-bold text-amber-900">{topContributor}</div>
+                        <div className="text-[10px] text-amber-600">Avg {topContribPct.toFixed(1)}% / month</div>
+                      </div>
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="text-[10px] font-semibold text-blue-700 uppercase">Peak vs Best</div>
+                        <div className="text-sm font-bold text-blue-900">{worstMonth.month}: {worstMonth.lpi}%</div>
+                        <div className="text-[10px] text-blue-600">Best: {bestMonth.month} ({bestMonth.lpi}%)</div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
             <Card className="col-span-6 border-2 border-slate-200 shadow-md">
