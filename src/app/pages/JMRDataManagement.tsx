@@ -505,6 +505,26 @@ export function JMRDataManagement() {
   const [checkerComment, setCheckerComment] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
 
+  const [workflowTimestamps, setWorkflowTimestamps] = useState<{
+    submitted?: string;
+    checkerAssigned?: string;
+    checkerApproved?: string;
+    escalated?: string;
+    approved?: string;
+    locked?: string;
+  }>({});
+
+  const formatTimestamp = (date: Date) => {
+    return date.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }) +
+      " " + date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false });
+  };
+
+  const recordTimestamp = (key: string) => {
+    const now = formatTimestamp(new Date());
+    setWorkflowTimestamps(prev => ({ ...prev, [key]: now }));
+    return now;
+  };
+
   // T005: PDF dialog state
   const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
   const [pdfDialogRecord, setPdfDialogRecord] = useState<(typeof jmrRecords)[0] | null>(null);
@@ -600,6 +620,8 @@ export function JMRDataManagement() {
   const handleSubmitForReview = () => {
     if (validateForm()) {
       setWorkflowStage("submitted");
+      recordTimestamp("submitted");
+      recordTimestamp("checkerAssigned");
       toast.success("JMR submitted for Checker review");
     } else {
       toast.error("Please fix validation errors before submitting");
@@ -1997,7 +2019,7 @@ export function JMRDataManagement() {
                             </div>
                             <div className={`ml-4 pl-4 border-l-2 space-y-2 ${workflowStage === "draft" ? "border-blue-200" : "border-emerald-200"}`}>
                               <div className="text-sm"><span className="text-slate-600">Entered by:</span> <span className="font-semibold">Current User</span></div>
-                              <div className="text-sm"><span className="text-slate-600">Date:</span> <span className="font-semibold">Mar 5, 2026 10:30</span></div>
+                              <div className="text-sm"><span className="text-slate-600">Date:</span> <span className="font-semibold">{workflowTimestamps.submitted || formatTimestamp(new Date())}</span></div>
                               {workflowStage === "draft" && (
                                 <>
                                   <Badge className="bg-blue-100 text-blue-700 border-blue-200">In Progress</Badge>
@@ -2052,7 +2074,7 @@ export function JMRDataManagement() {
                               ) : workflowStage === "submitted" ? (
                                 <>
                                   <div className="text-sm"><span className="text-slate-600">Reviewer:</span> <span className="font-semibold">Priya Mehta</span></div>
-                                  <div className="text-sm"><span className="text-slate-600">Assigned:</span> <span className="font-semibold">Mar 5, 2026 11:00</span></div>
+                                  <div className="text-sm"><span className="text-slate-600">Assigned:</span> <span className="font-semibold">{workflowTimestamps.checkerAssigned || "—"}</span></div>
                                   <Textarea
                                     value={checkerComment}
                                     onChange={e => setCheckerComment(e.target.value)}
@@ -2060,7 +2082,7 @@ export function JMRDataManagement() {
                                     className="min-h-16 text-xs"
                                   />
                                   <div className="flex flex-col gap-2 pt-1">
-                                    <Button size="sm" className="gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => { setWorkflowStage("under_review"); toast.success("Checker approved — sent to Approver"); }}>
+                                    <Button size="sm" className="gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => { setWorkflowStage("under_review"); recordTimestamp("checkerApproved"); recordTimestamp("escalated"); toast.success("Checker approved — sent to Approver"); }}>
                                       <CheckCircle className="w-3 h-3" /> Approve →
                                     </Button>
                                     <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => { setWorkflowStage("draft"); toast.info("Sent back to Maker for revision"); }}>
@@ -2125,12 +2147,12 @@ export function JMRDataManagement() {
                               ) : workflowStage === "under_review" ? (
                                 <>
                                   <div className="text-sm"><span className="text-slate-600">Approver:</span> <span className="font-semibold">Rahul Sharma</span></div>
-                                  <div className="text-sm"><span className="text-slate-600">Escalated:</span> <span className="font-semibold">Mar 5, 2026 11:45</span></div>
+                                  <div className="text-sm"><span className="text-slate-600">Escalated:</span> <span className="font-semibold">{workflowTimestamps.escalated || "—"}</span></div>
                                   <div className="flex flex-col gap-2 pt-1">
-                                    <Button size="sm" className="gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => { setWorkflowStage("approved"); toast.success("JMR approved by Approver"); }}>
+                                    <Button size="sm" className="gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => { setWorkflowStage("approved"); recordTimestamp("approved"); toast.success("JMR approved by Approver"); }}>
                                       <CheckCircle className="w-3 h-3" /> Approve
                                     </Button>
-                                    <Button size="sm" className="gap-1 text-xs bg-[#0A2E4A] hover:bg-[#082a42]" onClick={() => { setWorkflowStage("locked"); toast.success("JMR approved and locked"); }}>
+                                    <Button size="sm" className="gap-1 text-xs bg-[#0A2E4A] hover:bg-[#082a42]" onClick={() => { setWorkflowStage("locked"); recordTimestamp("approved"); recordTimestamp("locked"); toast.success("JMR approved and locked"); }}>
                                       <Lock className="w-3 h-3" /> Approve & Lock
                                     </Button>
                                     <Button size="sm" variant="outline" className="gap-1 text-xs border-rose-300 text-rose-600 hover:bg-rose-50" onClick={() => { setWorkflowStage("rejected"); setRejectionReason("Rejected by Approver"); toast.error("JMR rejected by Approver"); }}>
@@ -2141,16 +2163,16 @@ export function JMRDataManagement() {
                               ) : workflowStage === "approved" ? (
                                 <>
                                   <div className="text-sm"><span className="text-slate-600">Approver:</span> <span className="font-semibold">Rahul Sharma</span></div>
-                                  <div className="text-sm"><span className="text-slate-600">Approved:</span> <span className="font-semibold">Mar 5, 2026 12:10</span></div>
+                                  <div className="text-sm"><span className="text-slate-600">Approved:</span> <span className="font-semibold">{workflowTimestamps.approved || "—"}</span></div>
                                   <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs">Approved</Badge>
-                                  <Button size="sm" className="gap-1 text-xs bg-[#0A2E4A] hover:bg-[#082a42] mt-1" onClick={() => { setWorkflowStage("locked"); toast.success("JMR record locked"); }}>
+                                  <Button size="sm" className="gap-1 text-xs bg-[#0A2E4A] hover:bg-[#082a42] mt-1" onClick={() => { setWorkflowStage("locked"); recordTimestamp("locked"); toast.success("JMR record locked"); }}>
                                     <Lock className="w-3 h-3" /> Lock Record
                                   </Button>
                                 </>
                               ) : (
                                 <>
                                   <div className="text-sm"><span className="text-slate-600">Approver:</span> <span className="font-semibold">Rahul Sharma</span></div>
-                                  <div className="text-sm"><span className="text-slate-600">Approved:</span> <span className="font-semibold">Mar 5, 2026 12:10</span></div>
+                                  <div className="text-sm"><span className="text-slate-600">Approved:</span> <span className="font-semibold">{workflowTimestamps.approved || "—"}</span></div>
                                   <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs">Finalised & Locked</Badge>
                                 </>
                               )}
