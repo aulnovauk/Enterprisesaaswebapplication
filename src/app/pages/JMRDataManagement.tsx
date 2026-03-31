@@ -101,7 +101,7 @@ const vendors = ["SolarCo India", "SunPower Tech", "Green Energy Ltd", "TechSola
 const ppaTypes = ["Long Term (25Y)", "Medium Term (15Y)", "Short Term (5Y)"];
 
 // JMR Repository Mock Data
-const initialJmrRecords = [
+export const initialJmrRecords = [
   {
     id: "JMR-2026-02-001",
     fy: "FY 2025-26",

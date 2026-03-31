@@ -25,6 +25,9 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
+  TableIcon,
+  BarChart3,
+  PieChart as PieChartIcon,
 } from "lucide-react";
 import {
   BarChart,
@@ -32,6 +35,8 @@ import {
   LineChart,
   Line,
   ComposedChart,
+  PieChart,
+  Pie,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -42,6 +47,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import { CustomChartTooltip } from "../components/ChartTooltip";
+import { initialJmrRecords } from "./JMRDataManagement";
 
 // Downtime categorization data
 const downtimeCategories = [
@@ -303,7 +309,36 @@ const PLANT_GANTT_MAP: Record<string, string> = {
 export function OutageLossAnalytics() {
   const [rootCauseFilter, setRootCauseFilter] = useState("all");
   const [plantFilter, setPlantFilter] = useState("all");
+  const [outageViewMode, setOutageViewMode] = useState<"table" | "bar" | "pie">("table");
   const pageRef = useRef<HTMLDivElement>(null);
+
+  const monthAbbr: Record<string, string> = {
+    January: "Jan", February: "Feb", March: "Mar", April: "Apr", May: "May", June: "Jun",
+    July: "Jul", August: "Aug", September: "Sep", October: "Oct", November: "Nov", December: "Dec",
+  };
+  const outageSummaryData = useMemo(() => {
+    return initialJmrRecords.map(rec => {
+      const fyParts = rec.fy.replace("FY ", "").split("-");
+      const startYear = parseInt(fyParts[0]);
+      const monthNum = Object.keys(monthAbbr).indexOf(rec.month);
+      const year = monthNum >= 3 ? startYear : startYear + 1;
+      const jmrMonth = `${monthAbbr[rec.month] || rec.month.substring(0, 3)}-${year}`;
+      const outageStr = rec.outage || "00:00";
+      const [h, m] = outageStr.split(":").map(Number);
+      const outageMinutes = (h || 0) * 60 + (m || 0);
+      return {
+        site: rec.plant,
+        district: rec.district,
+        vendor: rec.vendor,
+        capacityKWp: rec.capacityKWp,
+        jmrMonth,
+        energyExport: rec.energyExportKWh,
+        energyImport: rec.energyImportKWh,
+        outage: outageStr,
+        outageMinutes,
+      };
+    });
+  }, []);
 
   const plantFactor = PLANT_SCALE[plantFilter]?.factor ?? 1.0;
   const scale = (v: number) => Math.round(v * plantFactor * 10) / 10;
@@ -1208,60 +1243,192 @@ export function OutageLossAnalytics() {
 
       <Card className="border-2 border-slate-200">
         <CardHeader className="border-b border-slate-100">
-          <CardTitle className="text-base font-semibold">Site-wise Monthly Outage Summary</CardTitle>
-          <p className="text-xs text-slate-500 mt-1">Per-site outage duration by JMR month — matching client reporting format</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base font-semibold">Site-wise Monthly Outage Summary</CardTitle>
+              <p className="text-xs text-slate-500 mt-1">Per-site outage duration from JMR repository — {outageSummaryData.length} records</p>
+            </div>
+            <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+              <Button
+                size="sm"
+                variant={outageViewMode === "table" ? "default" : "ghost"}
+                className={`gap-1 text-xs h-7 px-2 ${outageViewMode === "table" ? "bg-[#0A2E4A]" : ""}`}
+                onClick={() => setOutageViewMode("table")}
+              >
+                <TableIcon className="w-3 h-3" /> Table
+              </Button>
+              <Button
+                size="sm"
+                variant={outageViewMode === "bar" ? "default" : "ghost"}
+                className={`gap-1 text-xs h-7 px-2 ${outageViewMode === "bar" ? "bg-[#0A2E4A]" : ""}`}
+                onClick={() => setOutageViewMode("bar")}
+              >
+                <BarChart3 className="w-3 h-3" /> Bar Chart
+              </Button>
+              <Button
+                size="sm"
+                variant={outageViewMode === "pie" ? "default" : "ghost"}
+                className={`gap-1 text-xs h-7 px-2 ${outageViewMode === "pie" ? "bg-[#0A2E4A]" : ""}`}
+                onClick={() => setOutageViewMode("pie")}
+              >
+                <PieChartIcon className="w-3 h-3" /> Pie Chart
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50">
-                  <TableHead className="font-bold">Site Name</TableHead>
-                  <TableHead className="font-bold">District</TableHead>
-                  <TableHead className="font-bold">Vendor</TableHead>
-                  <TableHead className="font-bold text-right">Capacity (KWp)</TableHead>
-                  <TableHead className="font-bold text-center">JMR Month</TableHead>
-                  <TableHead className="font-bold text-right">Energy Export (KWh)</TableHead>
-                  <TableHead className="font-bold text-right">Energy Import (KWh)</TableHead>
-                  <TableHead className="font-bold text-center">Outage (HH:MM)</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {[
-                  { site: "ABC Solar",           district: "Yavatmal",   vendor: "SolarCo India",  capacityKWp: 469.00,   jmrMonth: "Jan-2026", energyExport: 63760.00,  energyImport: 320.00,   outage: "00:00" },
-                  { site: "BCD Solar Park",      district: "Nagpur",     vendor: "SunPower Tech",  capacityKWp: 2555.19,  jmrMonth: "Nov-2025", energyExport: 261230.00, energyImport: 1620.00,  outage: "01:19" },
-                  { site: "CDE Solar Project",   district: "Nanded",     vendor: "SunPower Tech",  capacityKWp: 789.00,   jmrMonth: "Dec-2025", energyExport: 100878.00, energyImport: 661.00,   outage: "13:46" },
-                  { site: "DEF Solar Station",   district: "Osmanabad",  vendor: "SunPower Tech",  capacityKWp: 2777.77,  jmrMonth: "Jan-2026", energyExport: 396600.00, energyImport: 3400.00,  outage: "23:16" },
-                  { site: "EFG Solar Plant",     district: "Jalna",      vendor: "Mega Solar Inc", capacityKWp: 910.10,   jmrMonth: "Nov-2025", energyExport: 31790.00,  energyImport: 0.00,     outage: "01:29" },
-                  { site: "FGH Solar Unit",      district: "Jalna",      vendor: "SolarCo India",  capacityKWp: 340.92,   jmrMonth: "Nov-2025", energyExport: 38810.50,  energyImport: 553.50,   outage: "04:37" },
-                  { site: "GHI Solar Park",      district: "Nandurbar",  vendor: "SunPower Tech",  capacityKWp: 758.88,   jmrMonth: "Jan-2026", energyExport: 79132.78,  energyImport: 403.82,   outage: "08:46" },
-                  { site: "HIJ Solar Complex",   district: "Ahmednagar", vendor: "SolarCo India",  capacityKWp: 5009.99,  jmrMonth: "Jan-2026", energyExport: 645415.00, energyImport: 2495.00,  outage: "10:27" },
-                  { site: "IJK Solar Farm",      district: "Kolhapur",   vendor: "SunPower Tech",  capacityKWp: 549.88,   jmrMonth: "Feb-2026", energyExport: 69999.00,  energyImport: 341.30,   outage: "02:54" },
-                  { site: "JKL Solar Station",   district: "Hingoli",    vendor: "Mega Solar Inc", capacityKWp: 3122.49,  jmrMonth: "Dec-2025", energyExport: 419690.00, energyImport: 1640.00,  outage: "04:05" },
-                ].map((row, idx) => {
-                  const outageMinutes = (() => {
-                    const [h, m] = row.outage.split(":").map(Number);
-                    return h * 60 + m;
-                  })();
-                  const outageSeverity = outageMinutes === 0 ? "text-emerald-600" : outageMinutes <= 120 ? "text-amber-600" : "text-rose-600";
-                  return (
-                    <TableRow key={idx} className="hover:bg-slate-50">
-                      <TableCell className="font-semibold text-sm">{row.site}</TableCell>
-                      <TableCell className="text-sm">{row.district}</TableCell>
-                      <TableCell className="text-sm">{row.vendor}</TableCell>
-                      <TableCell className="text-right text-sm font-medium">{row.capacityKWp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                      <TableCell className="text-center text-sm">
-                        <Badge variant="outline" className="text-xs">{row.jmrMonth}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right text-sm font-medium">{row.energyExport.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                      <TableCell className="text-right text-sm font-medium">{row.energyImport.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                      <TableCell className={`text-center font-mono text-sm font-bold ${outageSeverity}`}>{row.outage}</TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          {outageViewMode === "table" && (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="font-bold">Site Name</TableHead>
+                    <TableHead className="font-bold">District</TableHead>
+                    <TableHead className="font-bold">Vendor</TableHead>
+                    <TableHead className="font-bold text-right">Capacity (KWp)</TableHead>
+                    <TableHead className="font-bold text-center">JMR Month</TableHead>
+                    <TableHead className="font-bold text-right">Energy Export (KWh)</TableHead>
+                    <TableHead className="font-bold text-right">Energy Import (KWh)</TableHead>
+                    <TableHead className="font-bold text-center">Outage (HH:MM)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {outageSummaryData.map((row, idx) => {
+                    const outageSeverity = row.outageMinutes === 0 ? "text-emerald-600" : row.outageMinutes <= 120 ? "text-amber-600" : "text-rose-600";
+                    return (
+                      <TableRow key={idx} className="hover:bg-slate-50">
+                        <TableCell className="font-semibold text-sm">{row.site}</TableCell>
+                        <TableCell className="text-sm">{row.district}</TableCell>
+                        <TableCell className="text-sm">{row.vendor}</TableCell>
+                        <TableCell className="text-right text-sm font-medium">{row.capacityKWp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                        <TableCell className="text-center text-sm">
+                          <Badge variant="outline" className="text-xs">{row.jmrMonth}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-medium">{row.energyExport.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                        <TableCell className="text-right text-sm font-medium">{row.energyImport.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                        <TableCell className={`text-center font-mono text-sm font-bold ${outageSeverity}`}>{row.outage}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {outageViewMode === "bar" && (
+            <div className="p-6">
+              <p className="text-xs text-slate-500 mb-4">Outage duration (minutes) per site — color coded by severity</p>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={outageSummaryData} margin={{ top: 10, right: 30, left: 20, bottom: 80 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis
+                    dataKey="site"
+                    tick={{ fontSize: 10 }}
+                    angle={-35}
+                    textAnchor="end"
+                    height={80}
+                    interval={0}
+                  />
+                  <YAxis tick={{ fontSize: 11 }} label={{ value: "Minutes", angle: -90, position: "insideLeft", style: { fontSize: 11 } }} />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const d = payload[0].payload;
+                      return (
+                        <div className="bg-white border border-slate-200 rounded-lg shadow-lg p-3 text-xs">
+                          <p className="font-bold text-sm mb-1">{d.site}</p>
+                          <p className="text-slate-600">{d.district} • {d.vendor}</p>
+                          <p className="text-slate-600">Month: {d.jmrMonth}</p>
+                          <Separator className="my-1.5" />
+                          <p className="font-semibold">Outage: <span className="font-mono">{d.outage}</span> ({d.outageMinutes} min)</p>
+                          <p>Capacity: {d.capacityKWp.toLocaleString()} KWp</p>
+                          <p>Export: {d.energyExport.toLocaleString()} KWh</p>
+                        </div>
+                      );
+                    }}
+                  />
+                  <ReferenceLine y={120} stroke="#f59e0b" strokeDasharray="5 5" label={{ value: "2 hr threshold", position: "right", fontSize: 10, fill: "#f59e0b" }} />
+                  <Bar dataKey="outageMinutes" name="Outage (min)" radius={[4, 4, 0, 0]}>
+                    {outageSummaryData.map((entry, index) => (
+                      <Cell
+                        key={index}
+                        fill={entry.outageMinutes === 0 ? "#10b981" : entry.outageMinutes <= 120 ? "#f59e0b" : "#ef4444"}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <div className="flex items-center justify-center gap-6 mt-3">
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-emerald-500" /><span className="text-xs text-slate-600">No Outage</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-amber-500" /><span className="text-xs text-slate-600">≤ 2 hrs</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-rose-500" /><span className="text-xs text-slate-600">&gt; 2 hrs</span></div>
+              </div>
+            </div>
+          )}
+
+          {outageViewMode === "pie" && (
+            <div className="p-6">
+              <p className="text-xs text-slate-500 mb-4">Outage distribution by severity category</p>
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={(() => {
+                          const noOutage = outageSummaryData.filter(d => d.outageMinutes === 0).length;
+                          const low = outageSummaryData.filter(d => d.outageMinutes > 0 && d.outageMinutes <= 120).length;
+                          const high = outageSummaryData.filter(d => d.outageMinutes > 120).length;
+                          return [
+                            { name: "No Outage", value: noOutage, fill: "#10b981" },
+                            { name: "Low (≤2 hrs)", value: low, fill: "#f59e0b" },
+                            { name: "High (>2 hrs)", value: high, fill: "#ef4444" },
+                          ].filter(d => d.value > 0);
+                        })()}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        innerRadius={50}
+                        dataKey="value"
+                        label={({ name, value }) => `${name}: ${value}`}
+                        labelLine
+                      >
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <p className="text-center text-xs font-semibold text-slate-700 mt-2">Sites by Severity</p>
+                </div>
+                <div>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={(() => {
+                          const noOutage = outageSummaryData.filter(d => d.outageMinutes === 0).reduce((s, d) => s + d.outageMinutes, 0);
+                          const low = outageSummaryData.filter(d => d.outageMinutes > 0 && d.outageMinutes <= 120).reduce((s, d) => s + d.outageMinutes, 0);
+                          const high = outageSummaryData.filter(d => d.outageMinutes > 120).reduce((s, d) => s + d.outageMinutes, 0);
+                          return [
+                            { name: "No Outage", value: noOutage, fill: "#10b981" },
+                            { name: "Low (≤2 hrs)", value: low, fill: "#f59e0b" },
+                            { name: "High (>2 hrs)", value: high, fill: "#ef4444" },
+                          ].filter(d => d.value > 0);
+                        })()}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        innerRadius={50}
+                        dataKey="value"
+                        label={({ name, value }) => `${name}: ${value}m`}
+                        labelLine
+                      >
+                      </Pie>
+                      <Tooltip formatter={(value: number) => [`${value} minutes`, "Total Outage"]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <p className="text-center text-xs font-semibold text-slate-700 mt-2">Total Minutes by Severity</p>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
       </div>
