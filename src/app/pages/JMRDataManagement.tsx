@@ -101,7 +101,7 @@ const vendors = ["SolarCo India", "SunPower Tech", "Green Energy Ltd", "TechSola
 const ppaTypes = ["Long Term (25Y)", "Medium Term (15Y)", "Short Term (5Y)"];
 
 // JMR Repository Mock Data
-const jmrRecords = [
+const initialJmrRecords = [
   {
     id: "JMR-2026-02-001",
     fy: "FY 2025-26",
@@ -392,7 +392,7 @@ const auditRecords = [
   },
 ];
 
-const plants = [...new Set(jmrRecords.map(r => r.plant))];
+const plants = [...new Set(initialJmrRecords.map(r => r.plant))];
 const APPROVAL_OPTIONS = [
   { value: "all", label: "All Status" },
   { value: "approved", label: "Approved" },
@@ -525,11 +525,13 @@ export function JMRDataManagement() {
     return now;
   };
 
+  const [jmrRecords, setJmrRecords] = useState([...initialJmrRecords]);
+
   // T005: PDF dialog state
   const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
-  const [pdfDialogRecord, setPdfDialogRecord] = useState<(typeof jmrRecords)[0] | null>(null);
+  const [pdfDialogRecord, setPdfDialogRecord] = useState<(typeof initialJmrRecords)[0] | null>(null);
   const [pdfUploadedSet, setPdfUploadedSet] = useState<Set<string>>(
-    new Set(jmrRecords.filter(r => r.pdfUploaded).map(r => r.id))
+    new Set(initialJmrRecords.filter(r => r.pdfUploaded).map(r => r.id))
   );
 
   // T006: Version comparison
@@ -679,7 +681,7 @@ export function JMRDataManagement() {
       record.district.toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesFY && matchesMonth && matchesPlant && matchesVendor && matchesStatus && matchesSearch;
-  }), [selectedFY, selectedMonth, selectedPlant, selectedVendor, selectedStatus, searchTerm]);
+  }), [jmrRecords, selectedFY, selectedMonth, selectedPlant, selectedVendor, selectedStatus, searchTerm]);
 
   const statusCounts = useMemo(() => {
     const byPeriod = jmrRecords.filter(r => r.fy === selectedFY && (selectedMonth === "All Months" || r.month === selectedMonth));
@@ -690,7 +692,56 @@ export function JMRDataManagement() {
       rejected: byPeriod.filter(r => r.approvalStatus === "rejected").length,
       total: byPeriod.length,
     };
-  }, [selectedFY, selectedMonth]);
+  }, [jmrRecords, selectedFY, selectedMonth]);
+
+  const updateRepositoryFromForm = (status: "approved" | "locked") => {
+    const capacityKWp = (parseFloat(plantMetadata.capacity) || 0) * 1000;
+    const grossGen = parseFloat(operationalData.grossGeneration) || 0;
+    const netExportKWh = parseFloat(operationalData.netExportEnergy) || 0;
+    const importKWh = parseFloat(operationalData.importUnits) || 0;
+    const rev = parseFloat(commercialData.revenueRealized) || 0;
+    const downtime = parseFloat(operationalData.solarDowntimeHours) || 0;
+    const dtHrs = Math.floor(downtime);
+    const dtMin = Math.round((downtime - dtHrs) * 60);
+    const outageStr = `${String(dtHrs).padStart(2, "0")}:${String(dtMin).padStart(2, "0")}`;
+    const today = new Date().toISOString().split("T")[0];
+
+    const matchIdx = jmrRecords.findIndex(
+      r => r.plant === plantMetadata.plantName && r.fy === selectedFY
+    );
+
+    const updatedRecord = {
+      id: matchIdx >= 0 ? jmrRecords[matchIdx].id : `JMR-${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-NEW`,
+      fy: selectedFY,
+      month: selectedMonth === "All Months" ? new Date().toLocaleString("en-US", { month: "long" }) : selectedMonth,
+      plant: plantMetadata.plantName,
+      district: plantMetadata.district,
+      vendor: plantMetadata.vendor,
+      capacityKWp,
+      grossGeneration: grossGen,
+      energyExportKWh: netExportKWh,
+      energyImportKWh: importKWh,
+      outage: outageStr,
+      revenue: rev,
+      approvalStatus: status === "locked" ? "approved" as const : "approved" as const,
+      lockStatus: status === "locked",
+      version: matchIdx >= 0 ? jmrRecords[matchIdx].version + 1 : 1,
+      pdfUploaded: matchIdx >= 0 ? jmrRecords[matchIdx].pdfUploaded : false,
+      submittedBy: "Current User",
+      approvedBy: "Rahul Sharma",
+      submittedDate: workflowTimestamps.submitted ? today : today,
+      approvedDate: today,
+    };
+
+    setJmrRecords(prev => {
+      if (matchIdx >= 0) {
+        const updated = [...prev];
+        updated[matchIdx] = updatedRecord;
+        return updated;
+      }
+      return [updatedRecord, ...prev];
+    });
+  };
 
   return (
     <div ref={pageRef} className="min-h-screen bg-slate-50 flex flex-col">
@@ -2149,10 +2200,10 @@ export function JMRDataManagement() {
                                   <div className="text-sm"><span className="text-slate-600">Approver:</span> <span className="font-semibold">Rahul Sharma</span></div>
                                   <div className="text-sm"><span className="text-slate-600">Escalated:</span> <span className="font-semibold">{workflowTimestamps.escalated || "—"}</span></div>
                                   <div className="flex flex-col gap-2 pt-1">
-                                    <Button size="sm" className="gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => { setWorkflowStage("approved"); recordTimestamp("approved"); toast.success("JMR approved by Approver"); }}>
+                                    <Button size="sm" className="gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => { setWorkflowStage("approved"); recordTimestamp("approved"); updateRepositoryFromForm("approved"); toast.success("JMR approved by Approver"); }}>
                                       <CheckCircle className="w-3 h-3" /> Approve
                                     </Button>
-                                    <Button size="sm" className="gap-1 text-xs bg-[#0A2E4A] hover:bg-[#082a42]" onClick={() => { setWorkflowStage("locked"); recordTimestamp("approved"); recordTimestamp("locked"); toast.success("JMR approved and locked"); }}>
+                                    <Button size="sm" className="gap-1 text-xs bg-[#0A2E4A] hover:bg-[#082a42]" onClick={() => { setWorkflowStage("locked"); recordTimestamp("approved"); recordTimestamp("locked"); updateRepositoryFromForm("locked"); toast.success("JMR approved and locked"); }}>
                                       <Lock className="w-3 h-3" /> Approve & Lock
                                     </Button>
                                     <Button size="sm" variant="outline" className="gap-1 text-xs border-rose-300 text-rose-600 hover:bg-rose-50" onClick={() => { setWorkflowStage("rejected"); setRejectionReason("Rejected by Approver"); toast.error("JMR rejected by Approver"); }}>
@@ -2165,7 +2216,7 @@ export function JMRDataManagement() {
                                   <div className="text-sm"><span className="text-slate-600">Approver:</span> <span className="font-semibold">Rahul Sharma</span></div>
                                   <div className="text-sm"><span className="text-slate-600">Approved:</span> <span className="font-semibold">{workflowTimestamps.approved || "—"}</span></div>
                                   <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs">Approved</Badge>
-                                  <Button size="sm" className="gap-1 text-xs bg-[#0A2E4A] hover:bg-[#082a42] mt-1" onClick={() => { setWorkflowStage("locked"); recordTimestamp("locked"); toast.success("JMR record locked"); }}>
+                                  <Button size="sm" className="gap-1 text-xs bg-[#0A2E4A] hover:bg-[#082a42] mt-1" onClick={() => { setWorkflowStage("locked"); recordTimestamp("locked"); updateRepositoryFromForm("locked"); toast.success("JMR record locked"); }}>
                                     <Lock className="w-3 h-3" /> Lock Record
                                   </Button>
                                 </>
