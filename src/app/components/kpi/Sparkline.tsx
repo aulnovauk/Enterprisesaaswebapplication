@@ -5,7 +5,7 @@ interface SparklineProps {
   color?: string;
 }
 
-export function Sparkline({ data, color = "#0B3D5B" }: SparklineProps) {
+export function Sparkline({ data, color = "#2955A0" }: SparklineProps) {
   const chartData = data.map((val, i) => ({ i, val }));
   
   return (

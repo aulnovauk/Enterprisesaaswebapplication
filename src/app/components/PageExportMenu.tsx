@@ -172,7 +172,7 @@ export function PageExportMenu({
 
   const buttonStyle =
     variant === "navy"
-      ? { backgroundColor: "#0B3D5B", color: "#ffffff" }
+      ? { backgroundColor: "#2955A0", color: "#ffffff" }
       : variant === "blue"
       ? { backgroundColor: "#2563EB", color: "#ffffff" }
       : undefined;

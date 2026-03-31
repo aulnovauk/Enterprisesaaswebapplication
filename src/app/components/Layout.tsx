@@ -76,7 +76,7 @@ export function Layout() {
         className={`flex flex-col transition-all duration-300 ease-in-out shadow-lg ${
           isSidebarCollapsed ? "w-16" : "w-[260px]"
         }`} 
-        style={{ background: "linear-gradient(180deg, #0B3D5B 0%, #0E4D6D 50%, #0A3A55 100%)" }}
+        style={{ background: "linear-gradient(180deg, #0089C9 0%, #2955A0 100%)" }}
       >
         {/* Logo */}
         <div className={`border-b border-white/10 flex items-center justify-center ${
@@ -158,7 +158,7 @@ export function Layout() {
             >
               <Bell className="w-[18px] h-[18px]" />
               {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-[#0B3D5B]">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-[#2955A0]">
                   {unreadCount}
                 </span>
               )}

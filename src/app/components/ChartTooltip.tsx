@@ -57,7 +57,7 @@ export function CustomChartTooltip({
 
   return (
     <div className="bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden min-w-[180px] max-w-[280px]">
-      <div className="h-[3px] bg-gradient-to-r from-[#0B3D5B] to-[#0E4D6D]" />
+      <div className="h-[3px] bg-gradient-to-r from-[#2955A0] to-[#0089C9]" />
 
       {displayLabel && (
         <div className="px-3 pt-2.5 pb-1.5 border-b border-slate-100">
@@ -82,7 +82,7 @@ export function CustomChartTooltip({
               <div className="flex items-center gap-2 min-w-0">
                 <div
                   className="w-2.5 h-2.5 rounded-full flex-shrink-0 ring-1 ring-white shadow-sm"
-                  style={{ backgroundColor: entry.color || "#0B3D5B" }}
+                  style={{ backgroundColor: entry.color || "#2955A0" }}
                 />
                 <span className="text-[11px] text-slate-600 truncate">
                   {formatLabel(entry.name)}

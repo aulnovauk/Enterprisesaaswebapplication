@@ -127,7 +127,7 @@ export function NotificationPanel({ open, onOpenChange }: NotificationPanelProps
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="fixed right-0 top-0 h-full w-[400px] max-w-[calc(100vw-48px)] bg-white shadow-2xl z-50 flex flex-col"
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200" style={{ background: "linear-gradient(135deg, #0B3D5B 0%, #0E4D6D 100%)" }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200" style={{ background: "linear-gradient(135deg, #2955A0 0%, #0089C9 100%)" }}>
               <div className="flex items-center gap-3">
                 <Bell className="w-5 h-5 text-white" />
                 <h2 className="text-[16px] font-semibold text-white">Notifications</h2>
@@ -165,7 +165,7 @@ export function NotificationPanel({ open, onOpenChange }: NotificationPanelProps
                       ? "text-white shadow-sm"
                       : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/60"
                   }`}
-                  style={activeFilter === tab.key ? { background: "#0B3D5B" } : undefined}
+                  style={activeFilter === tab.key ? { background: "#2955A0" } : undefined}
                 >
                   {tab.label}
                 </button>

@@ -286,7 +286,7 @@ export function AuditGovernanceConsole() {
       <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
         <div className="px-6 py-2 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-1.5 bg-[#0B3D5B] rounded-lg">
+            <div className="p-1.5 bg-[#2955A0] rounded-lg">
               <Shield className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -310,19 +310,19 @@ export function AuditGovernanceConsole() {
       <div className="flex-1 overflow-auto p-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-gray-100 border-2 border-gray-300">
-          <TabsTrigger value="activity" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'activity' ? '#0B3D5B' : 'transparent' }}>
+          <TabsTrigger value="activity" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'activity' ? '#2955A0' : 'transparent' }}>
             <Activity className="w-4 h-4 mr-2" />
             User Activity Log
           </TabsTrigger>
-          <TabsTrigger value="versions" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'versions' ? '#0B3D5B' : 'transparent' }}>
+          <TabsTrigger value="versions" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'versions' ? '#2955A0' : 'transparent' }}>
             <FileText className="w-4 h-4 mr-2" />
             JMR Version History
           </TabsTrigger>
-          <TabsTrigger value="email" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'email' ? '#0B3D5B' : 'transparent' }}>
+          <TabsTrigger value="email" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'email' ? '#2955A0' : 'transparent' }}>
             <Mail className="w-4 h-4 mr-2" />
             Email Dispatch Log
           </TabsTrigger>
-          <TabsTrigger value="dr" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'dr' ? '#0B3D5B' : 'transparent' }}>
+          <TabsTrigger value="dr" className="data-[state=active]:bg-white data-[state=active]:border-2" style={{ borderColor: activeTab === 'dr' ? '#2955A0' : 'transparent' }}>
             <Database className="w-4 h-4 mr-2" />
             DR Drill Records
           </TabsTrigger>

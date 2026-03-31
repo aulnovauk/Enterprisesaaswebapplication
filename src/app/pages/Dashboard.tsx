@@ -489,7 +489,7 @@ function KpiCardWithPreview({
               onMouseLeave={handlePreviewLeave}
             >
               <div className="w-[360px] max-h-[70vh] bg-white rounded-xl shadow-2xl border border-slate-200 ring-1 ring-black/5 flex flex-col overflow-hidden">
-                <div className="flex items-center justify-between px-3 py-1.5 bg-gradient-to-r from-[#0B3D5B] to-[#0E4D6D] shrink-0">
+                <div className="flex items-center justify-between px-3 py-1.5 bg-gradient-to-r from-[#2955A0] to-[#0089C9] shrink-0">
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-[10px] font-semibold text-white/90 uppercase tracking-wider">Quick Preview</span>
@@ -531,7 +531,7 @@ function KpiCardWithPreview({
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={preview.chart.data} barSize={20}>
                             <XAxis dataKey="name" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-                            <Bar dataKey="value" fill="#0B3D5B" radius={[3, 3, 0, 0]} />
+                            <Bar dataKey="value" fill="#2955A0" radius={[3, 3, 0, 0]} />
                           </BarChart>
                         </ResponsiveContainer>
                       </div>
@@ -630,12 +630,12 @@ function DraggableWidget({
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className={`relative group/widget ${isDragging ? "opacity-40" : ""} ${
         customizeMode ? "ring-2 ring-dashed ring-slate-300 rounded-xl" : ""
-      } ${isOver && customizeMode ? "ring-[#0B3D5B] ring-2" : ""}`}
+      } ${isOver && customizeMode ? "ring-[#2955A0] ring-2" : ""}`}
     >
       {customizeMode && (
         <div
           ref={drag}
-          className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-1 px-1.5 py-2 bg-white border-2 border-slate-300 rounded-lg shadow-md cursor-grab active:cursor-grabbing hover:border-[#0B3D5B] hover:shadow-lg transition-all"
+          className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-1 px-1.5 py-2 bg-white border-2 border-slate-300 rounded-lg shadow-md cursor-grab active:cursor-grabbing hover:border-[#2955A0] hover:shadow-lg transition-all"
         >
           <GripVertical className="w-4 h-4 text-slate-400" />
           <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider [writing-mode:vertical-lr] rotate-180">{title}</span>
@@ -1461,7 +1461,7 @@ export function Dashboard() {
                       <Legend wrapperStyle={{ fontSize: '11px' }} />
                       {showComparison && <Bar dataKey="prevActual" fill="#CBD5E1" name="PY Actual (MWh)" opacity={0.7} />}
                       <Bar dataKey="target" fill="#94A3B8" name="Target (MWh)" />
-                      <Bar dataKey="actual" fill="#0B3D5B" name="Actual (MWh)" />
+                      <Bar dataKey="actual" fill="#2955A0" name="Actual (MWh)" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -1510,10 +1510,10 @@ export function Dashboard() {
                       <Line 
                         type="monotone" 
                         dataKey="portfolio" 
-                        stroke="#0B3D5B" 
+                        stroke="#2955A0" 
                         strokeWidth={3}
                         name="Portfolio CUF (%)"
-                        dot={{ fill: '#0B3D5B', r: 4 }}
+                        dot={{ fill: '#2955A0', r: 4 }}
                       />
                       <Line 
                         type="monotone" 
@@ -1588,7 +1588,7 @@ export function Dashboard() {
                       <XAxis dataKey="stage" tick={{ fontSize: 10 }} stroke="#64748b" />
                       <YAxis domain={[25, 33]} tick={{ fontSize: 10 }} stroke="#64748b" />
                       <Tooltip content={<CustomChartTooltip unit="₹ Cr" />} />
-                      <Bar dataKey="value" fill="#0B3D5B" />
+                      <Bar dataKey="value" fill="#2955A0" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -1705,7 +1705,7 @@ export function Dashboard() {
                     {vendorRankingData.map((vendor) => (
                       <TableRow key={vendor.rank} className="hover:bg-slate-50 cursor-pointer">
                         <TableCell>
-                          <div className="w-7 h-7 rounded-lg bg-[#0B3D5B] text-white flex items-center justify-center font-bold text-xs">
+                          <div className="w-7 h-7 rounded-lg bg-[#2955A0] text-white flex items-center justify-center font-bold text-xs">
                             {vendor.rank}
                           </div>
                         </TableCell>
@@ -1740,7 +1740,7 @@ export function Dashboard() {
               <CardContent className="p-4">
                 <div className="space-y-4">
                   {clusterComparisonData.map((cluster) => (
-                    <div key={cluster.state} className="p-4 bg-slate-50 rounded-lg border-2 border-slate-200 hover:border-[#0B3D5B] transition-all cursor-pointer">
+                    <div key={cluster.state} className="p-4 bg-slate-50 rounded-lg border-2 border-slate-200 hover:border-[#2955A0] transition-all cursor-pointer">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="text-sm font-bold text-slate-900">{cluster.state}</h4>
                         <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
@@ -1913,7 +1913,7 @@ export function Dashboard() {
                     );
                   })}
                 </div>
-                <div className="mt-6 p-4 bg-gradient-to-r from-[#0B3D5B] to-[#0B3D5B]/80 rounded-lg text-white">
+                <div className="mt-6 p-4 bg-gradient-to-r from-[#2955A0] to-[#2955A0]/80 rounded-lg text-white">
                   <div className="text-xs font-semibold mb-2">Composite Asset Health Index</div>
                   <div className="text-4xl font-bold">82.5 <span className="text-xl">/100</span></div>
                   <div className="text-xs mt-2 flex items-center gap-1">
@@ -1937,7 +1937,7 @@ export function Dashboard() {
           {/* Row 1: Title & Meta Info */}
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-[#0B3D5B] rounded-lg">
+              <div className="p-1.5 bg-[#2955A0] rounded-lg">
                 <BarChart3 className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -1969,7 +1969,7 @@ export function Dashboard() {
                 onClick={() => setCustomizeMode((v) => !v)}
                 className={`h-7 text-xs gap-1.5 ${
                   customizeMode
-                    ? "bg-[#0B3D5B] text-white hover:bg-[#0B3D5B]/90"
+                    ? "bg-[#2955A0] text-white hover:bg-[#2955A0]/90"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -2046,7 +2046,7 @@ export function Dashboard() {
                   onClick={() => setDurationToggle(duration)}
                   className={`px-4 py-1 text-xs font-semibold rounded transition-all ${
                     durationToggle === duration
-                      ? "bg-[#0B3D5B] text-white shadow-sm"
+                      ? "bg-[#2955A0] text-white shadow-sm"
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >

@@ -358,7 +358,7 @@ export function ContractLDAnalytics() {
         <div className="px-6 py-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-[#0B3D5B] rounded-lg">
+              <div className="p-1.5 bg-[#2955A0] rounded-lg">
                 <FileText className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -372,7 +372,7 @@ export function ContractLDAnalytics() {
                 contentRef={pageRef}
                 label="Export LD Report"
               />
-              <Button size="sm" style={{ backgroundColor: "#0B3D5B" }} className="text-white h-7 px-3 text-xs">
+              <Button size="sm" style={{ backgroundColor: "#2955A0" }} className="text-white h-7 px-3 text-xs">
                 <Bell className="w-4 h-4 mr-2" />
                 Configure Alerts
               </Button>
@@ -883,7 +883,7 @@ export function ContractLDAnalytics() {
 
       {/* ── Client / Procurer-wise LD Dashboard ─────────────────────────── */}
       <Card className="mb-6 border-2 border-slate-200">
-        <CardHeader className="border-b bg-gradient-to-r from-[#0B3D5B] to-[#0B3D5B]/80 py-3 rounded-t-xl">
+        <CardHeader className="border-b bg-gradient-to-r from-[#2955A0] to-[#2955A0]/80 py-3 rounded-t-xl">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-white" />
             <div>
@@ -989,7 +989,7 @@ export function ContractLDAnalytics() {
                     <Cell key={`cell-${index}`} fill={entry.totalShortfall > 0 ? "#EF4444" : "#10B981"} />
                   ))}
                 </Bar>
-                <Line yAxisId="right" type="monotone" dataKey="ldExposure" name="LD Exposure (₹L)" stroke="#0B3D5B" strokeWidth={2.5} dot={{ r: 5, fill: "#0B3D5B" }} />
+                <Line yAxisId="right" type="monotone" dataKey="ldExposure" name="LD Exposure (₹L)" stroke="#2955A0" strokeWidth={2.5} dot={{ r: 5, fill: "#2955A0" }} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -1160,7 +1160,7 @@ export function ContractLDAnalytics() {
               <Tooltip content={<CustomChartTooltip unit="₹ Lakhs" />} />
               <Legend />
               <Bar yAxisId="left" dataKey="ldAmount" fill="#EF4444" name="LD Amount (₹ Lakhs)" />
-              <Line yAxisId="right" type="monotone" dataKey="complianceRate" stroke="#0B3D5B" strokeWidth={3} name="Compliance Rate (%)" dot={{ fill: "#0B3D5B", r: 5 }} />
+              <Line yAxisId="right" type="monotone" dataKey="complianceRate" stroke="#2955A0" strokeWidth={3} name="Compliance Rate (%)" dot={{ fill: "#2955A0", r: 5 }} />
               <ReferenceLine yAxisId="right" y={80} stroke="#F59E0B" strokeDasharray="5 5" label="Target: 80%" />
             </ComposedChart>
           </ResponsiveContainer>

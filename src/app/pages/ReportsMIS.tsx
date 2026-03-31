@@ -423,11 +423,11 @@ function DraggableField({ field }: { field: typeof dataFields[0] }) {
       ref={drag}
       className={`group flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all cursor-move
         ${isDragging 
-          ? "opacity-40 border-[#0B3D5B] bg-blue-50" 
-          : "border-slate-200 bg-white hover:border-[#0B3D5B] hover:bg-blue-50 hover:shadow-sm"
+          ? "opacity-40 border-[#2955A0] bg-blue-50" 
+          : "border-slate-200 bg-white hover:border-[#2955A0] hover:bg-blue-50 hover:shadow-sm"
         }`}
     >
-      <GripVertical className="w-3 h-3 text-slate-400 group-hover:text-[#0B3D5B]" />
+      <GripVertical className="w-3 h-3 text-slate-400 group-hover:text-[#2955A0]" />
       <Icon className="w-3.5 h-3.5 text-slate-500" />
       <span className="text-xs font-medium text-slate-700 flex-1">{field.name}</span>
       <Badge 
@@ -468,7 +468,7 @@ function FieldWell({
       ref={drop}
       className={`rounded-xl border-2 transition-all min-h-[100px] p-4
         ${isOver && canDrop
-          ? "border-[#0B3D5B] bg-blue-50 shadow-lg" 
+          ? "border-[#2955A0] bg-blue-50 shadow-lg" 
           : canDrop
           ? "border-dashed border-slate-300 bg-slate-50"
           : "border-dashed border-slate-200 bg-white"
@@ -478,7 +478,7 @@ function FieldWell({
         <Icon className="w-4 h-4 text-slate-600" />
         <Label className="text-xs font-bold text-slate-700 uppercase tracking-wide">{title}</Label>
         {fields.length > 0 && (
-          <Badge variant="secondary" className="ml-auto text-xs bg-[#0B3D5B] text-white">
+          <Badge variant="secondary" className="ml-auto text-xs bg-[#2955A0] text-white">
             {fields.length}
           </Badge>
         )}
@@ -639,7 +639,7 @@ function ReportPreviewContent({ template }: { template: typeof reportTemplates[0
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} width={50} />
                   <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6 }} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="gen" name="Actual (MWh)" fill="#0B3D5B" radius={[3,3,0,0]} />
+                  <Bar dataKey="gen" name="Actual (MWh)" fill="#2955A0" radius={[3,3,0,0]} />
                   <Bar dataKey="target" name="Target (MWh)" fill="#E8A800" opacity={0.6} radius={[3,3,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -691,7 +691,7 @@ function ReportPreviewContent({ template }: { template: typeof reportTemplates[0
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} width={50} />
                   <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6 }} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="gen" name="Generation (MWh)" stroke="#0B3D5B" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="gen" name="Generation (MWh)" stroke="#2955A0" strokeWidth={2} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="target" name="Target (MWh)" stroke="#E8A800" strokeDasharray="4 4" strokeWidth={1.5} dot={false} />
                 </RLineChart>
               </ResponsiveContainer>
@@ -779,7 +779,7 @@ function ReportPreviewContent({ template }: { template: typeof reportTemplates[0
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
                   <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6 }} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="cuf" name="CUF %" fill="#0B3D5B" radius={[3,3,0,0]} />
+                  <Bar dataKey="cuf" name="CUF %" fill="#2955A0" radius={[3,3,0,0]} />
                   <Bar dataKey="avail" name="Availability %" fill="#10B981" radius={[3,3,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -1027,11 +1027,11 @@ function buildReportHTML(template: typeof reportTemplates[0]): string {
 <title>${template.name} — E-SAMMP</title>
 <style>
   body{font-family:Arial,sans-serif;margin:0;padding:40px;color:#1e293b;background:#f8fafc;}
-  h1{color:#0B3D5B;font-size:24px;margin-bottom:4px;}
+  h1{color:#2955A0;font-size:24px;margin-bottom:4px;}
   .sub{color:#64748b;font-size:13px;margin-bottom:24px;}
   .badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:#e0f2fe;color:#0369a1;}
   .kpi-row{display:flex;gap:16px;margin-bottom:28px;}
-  .kpi{flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:14px;border-left:4px solid #0B3D5B;}
+  .kpi{flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:14px;border-left:4px solid #2955A0;}
   .kpi label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;}
   .kpi .val{font-size:22px;font-weight:800;color:#0f172a;margin-top:4px;}
   table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border-radius:8px;overflow:hidden;margin-bottom:24px;}
@@ -1048,10 +1048,10 @@ function buildReportHTML(template: typeof reportTemplates[0]): string {
     <p class="sub">${template.description} &nbsp;|&nbsp; <span class="badge">${template.category}</span></p>
   </div>
   <div style="text-align:right;font-size:12px;color:#64748b;">
-    <div style="font-weight:700;color:#0B3D5B;font-size:15px;">E-SAMMP</div>
+    <div style="font-weight:700;color:#2955A0;font-size:15px;">E-SAMMP</div>
     <div>EESL Solar Asset Management</div>
     <div>Generated: ${now}</div>
-    <button onclick="window.print()" style="margin-top:8px;padding:5px 12px;background:#0B3D5B;color:#fff;border:none;border-radius:5px;cursor:pointer;">Print / Save PDF</button>
+    <button onclick="window.print()" style="margin-top:8px;padding:5px 12px;background:#2955A0;color:#fff;border:none;border-radius:5px;cursor:pointer;">Print / Save PDF</button>
   </div>
 </div>
 
@@ -1062,7 +1062,7 @@ function buildReportHTML(template: typeof reportTemplates[0]): string {
   <div class="kpi"><label>Estimated Pages</label><div class="val">~12 pg</div></div>
 </div>
 
-<h2 style="font-size:15px;color:#0B3D5B;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:16px;">${template.name} — Summary Data</h2>
+<h2 style="font-size:15px;color:#2955A0;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:16px;">${template.name} — Summary Data</h2>
 
 <table>
   <tr><th>Metric</th><th>Current</th><th>Target</th><th>Status</th></tr>
@@ -1074,7 +1074,7 @@ function buildReportHTML(template: typeof reportTemplates[0]): string {
   <tr><td>Asset Health Index</td><td>90.5 / 100</td><td>90.0 / 100</td><td>✓ On Target</td></tr>
 </table>
 
-<h2 style="font-size:15px;color:#0B3D5B;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:16px;">Plant-wise Breakdown</h2>
+<h2 style="font-size:15px;color:#2955A0;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:16px;">Plant-wise Breakdown</h2>
 <table>
   <tr><th>Plant</th><th>State</th><th>Capacity (MW)</th><th>Generation (MWh)</th><th>CUF (%)</th><th>Availability (%)</th></tr>
   <tr><td>Pune Solar Park</td><td>Maharashtra</td><td>25</td><td>2,150</td><td>23.5</td><td>97.2</td></tr>
@@ -1221,7 +1221,7 @@ export function ReportsMIS() {
           <div className="px-6 py-2">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 bg-[#0B3D5B] rounded-lg">
+                <div className="p-1.5 bg-[#2955A0] rounded-lg">
                   <FileBarChart className="w-4 h-4 text-white" />
                 </div>
                 <div>
@@ -1243,7 +1243,7 @@ export function ReportsMIS() {
                 
                 <Button 
                   size="sm"
-                  className="gap-2 bg-[#0B3D5B] hover:bg-[#083347] text-white shadow-md h-7 px-3 text-xs"
+                  className="gap-2 bg-[#2955A0] hover:bg-[#1E4888] text-white shadow-md h-7 px-3 text-xs"
                   onClick={() => setViewMode("builder")}
                 >
                   <Wand2 className="w-3.5 h-3.5" />
@@ -1376,7 +1376,7 @@ export function ReportsMIS() {
                         whileHover={{ y: -4 }}
                         className="group"
                       >
-                        <Card className="border-2 border-slate-200 hover:border-[#0B3D5B] hover:shadow-xl transition-all cursor-pointer h-full">
+                        <Card className="border-2 border-slate-200 hover:border-[#2955A0] hover:shadow-xl transition-all cursor-pointer h-full">
                           <CardHeader className="pb-3">
                             {/* Thumbnail Preview */}
                             <div className={`h-32 rounded-lg mb-4 ${categoryStyle.bg} ${categoryStyle.border} border-2 flex items-center justify-center relative overflow-hidden`}>
@@ -1384,7 +1384,7 @@ export function ReportsMIS() {
                               <Icon className={`w-12 h-12 ${categoryStyle.text} relative z-10`} />
                               
                               {/* Hover Actions */}
-                              <div className="absolute inset-0 bg-[#0B3D5B]/90 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-20">
+                              <div className="absolute inset-0 bg-[#2955A0]/90 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-20">
                                 <Button
                                   size="sm"
                                   variant="secondary"
@@ -1504,7 +1504,7 @@ export function ReportsMIS() {
               
               {/* LEFT PANEL - Fields Palette */}
               <div className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 shadow-sm min-h-0 overflow-hidden">
-                <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-[#0B3D5B] to-[#0B3D5B]/90 shrink-0">
+                <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-[#2955A0] to-[#2955A0]/90 shrink-0">
                   <div className="flex items-center gap-2 mb-2">
                     <Database className="w-5 h-5 text-white" />
                     <h2 className="text-sm font-bold text-white">Data Fields</h2>
@@ -1597,7 +1597,7 @@ export function ReportsMIS() {
                       <Save className="w-4 h-4" />
                       Save
                     </Button>
-                    <Button size="sm" className="gap-2 bg-[#0B3D5B]">
+                    <Button size="sm" className="gap-2 bg-[#2955A0]">
                       <Play className="w-4 h-4" />
                       Generate Report
                     </Button>
@@ -1782,7 +1782,7 @@ export function ReportsMIS() {
                                       <Bar 
                                         key={field.id} 
                                         dataKey={field.id} 
-                                        fill={idx === 0 ? "#0B3D5B" : idx === 1 ? "#10B981" : "#E8A800"} 
+                                        fill={idx === 0 ? "#2955A0" : idx === 1 ? "#10B981" : "#E8A800"} 
                                         name={field.name}
                                       />
                                     ))}
@@ -1816,7 +1816,7 @@ export function ReportsMIS() {
                                         key={field.id} 
                                         type="monotone"
                                         dataKey={field.id} 
-                                        stroke={idx === 0 ? "#0B3D5B" : idx === 1 ? "#10B981" : "#E8A800"} 
+                                        stroke={idx === 0 ? "#2955A0" : idx === 1 ? "#10B981" : "#E8A800"} 
                                         strokeWidth={2}
                                         name={field.name}
                                       />
@@ -1832,8 +1832,8 @@ export function ReportsMIS() {
                                   <AreaChart data={sampleData}>
                                     <defs>
                                       <linearGradient id="colorField1" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#0B3D5B" stopOpacity={0.3}/>
-                                        <stop offset="95%" stopColor="#0B3D5B" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="#2955A0" stopOpacity={0.3}/>
+                                        <stop offset="95%" stopColor="#2955A0" stopOpacity={0}/>
                                       </linearGradient>
                                       <linearGradient id="colorField2" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
@@ -1861,7 +1861,7 @@ export function ReportsMIS() {
                                         key={field.id} 
                                         type="monotone"
                                         dataKey={field.id} 
-                                        stroke={idx === 0 ? "#0B3D5B" : "#10B981"} 
+                                        stroke={idx === 0 ? "#2955A0" : "#10B981"} 
                                         strokeWidth={2}
                                         fill={idx === 0 ? "url(#colorField1)" : "url(#colorField2)"}
                                         name={field.name}
@@ -1888,7 +1888,7 @@ export function ReportsMIS() {
                                       {sampleData.slice(0, 5).map((entry, index) => (
                                         <Cell 
                                           key={`cell-${index}`} 
-                                          fill={['#0B3D5B', '#10B981', '#E8A800', '#8B5CF6', '#EF4444'][index]}
+                                          fill={['#2955A0', '#10B981', '#E8A800', '#8B5CF6', '#EF4444'][index]}
                                         />
                                       ))}
                                     </Pie>
@@ -1936,7 +1936,7 @@ export function ReportsMIS() {
 
               {/* RIGHT PANEL - Settings & Export */}
               <div className="w-64 bg-white border-l border-slate-200 flex flex-col shrink-0 shadow-sm min-h-0 overflow-hidden">
-                <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-[#0B3D5B] to-[#0B3D5B]/90 shrink-0">
+                <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-[#2955A0] to-[#2955A0]/90 shrink-0">
                   <div className="flex items-center gap-2 mb-2">
                     <Settings className="w-5 h-5 text-white" />
                     <h2 className="text-sm font-bold text-white">Settings & Export</h2>
@@ -2026,7 +2026,7 @@ export function ReportsMIS() {
 
                 {/* Save Actions */}
                 <div className="p-4 border-t border-slate-200 bg-slate-50 space-y-2 shrink-0">
-                  <Button className="w-full gap-2 bg-[#0B3D5B]">
+                  <Button className="w-full gap-2 bg-[#2955A0]">
                     <Save className="w-4 h-4" />
                     Save as Template
                   </Button>
@@ -2050,7 +2050,7 @@ export function ReportsMIS() {
                     <p className="text-slate-600 mt-1">Automated report generation and distribution</p>
                   </div>
                   <Button 
-                    className="gap-2 bg-[#0B3D5B]"
+                    className="gap-2 bg-[#2955A0]"
                     onClick={() => setScheduleDialogOpen(true)}
                   >
                     <Plus className="w-4 h-4" />
@@ -2315,8 +2315,8 @@ export function ReportsMIS() {
                         <AreaChart data={usageAnalytics}>
                           <defs>
                             <linearGradient id="colorReports" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#0B3D5B" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#0B3D5B" stopOpacity={0}/>
+                              <stop offset="5%" stopColor="#2955A0" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#2955A0" stopOpacity={0}/>
                             </linearGradient>
                             <linearGradient id="colorDownloads" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
@@ -2338,7 +2338,7 @@ export function ReportsMIS() {
                           <Area 
                             type="monotone" 
                             dataKey="reports" 
-                            stroke="#0B3D5B" 
+                            stroke="#2955A0" 
                             strokeWidth={2}
                             fill="url(#colorReports)" 
                             name="Reports Generated"
@@ -2496,7 +2496,7 @@ export function ReportsMIS() {
                   Cancel
                 </Button>
                 <Button 
-                  className="flex-1 bg-[#0B3D5B]"
+                  className="flex-1 bg-[#2955A0]"
                   onClick={() => {
                     toast.success("Report schedule created successfully");
                     setScheduleDialogOpen(false);
@@ -2515,7 +2515,7 @@ export function ReportsMIS() {
             <DialogHeader className="shrink-0 border-b border-slate-100 pb-3">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <DialogTitle className="text-xl text-[#0B3D5B]">{selectedTemplate?.name}</DialogTitle>
+                  <DialogTitle className="text-xl text-[#2955A0]">{selectedTemplate?.name}</DialogTitle>
                   <DialogDescription className="mt-0.5">{selectedTemplate?.description}</DialogDescription>
                 </div>
                 <div className="flex gap-2 shrink-0">
@@ -2558,9 +2558,9 @@ export function ReportsMIS() {
         <Dialog open={generateDialogOpen} onOpenChange={(open) => { if (!isGenerating) setGenerateDialogOpen(open); }}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-[#0B3D5B]">
+              <DialogTitle className="flex items-center gap-2 text-[#2955A0]">
                 {generateProgress < 100 ? (
-                  <><div className="w-5 h-5 border-2 border-[#0B3D5B] border-t-transparent rounded-full animate-spin" /> Generating Report…</>
+                  <><div className="w-5 h-5 border-2 border-[#2955A0] border-t-transparent rounded-full animate-spin" /> Generating Report…</>
                 ) : (
                   <><CheckCircle className="w-5 h-5 text-emerald-600" /> Report Ready</>
                 )}
@@ -2571,7 +2571,7 @@ export function ReportsMIS() {
               <Progress value={generateProgress} className="h-2.5" />
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-600">{generateStep}</span>
-                <span className="font-bold text-[#0B3D5B]">{generateProgress}%</span>
+                <span className="font-bold text-[#2955A0]">{generateProgress}%</span>
               </div>
               {generateProgress === 100 && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm text-emerald-800 flex items-center gap-2">
@@ -2583,7 +2583,7 @@ export function ReportsMIS() {
             {generateProgress === 100 && (
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setGenerateDialogOpen(false)}>Close</Button>
-                <Button className="bg-[#0B3D5B] gap-2" onClick={() => { setGenerateDialogOpen(false); setPreviewDialogOpen(true); }}>
+                <Button className="bg-[#2955A0] gap-2" onClick={() => { setGenerateDialogOpen(false); setPreviewDialogOpen(true); }}>
                   <Eye className="w-4 h-4" /> View Preview
                 </Button>
               </div>

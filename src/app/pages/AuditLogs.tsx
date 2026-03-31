@@ -351,7 +351,7 @@ export function AuditLogs() {
         <div className="px-6 py-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-[#0B3D5B] rounded-lg">
+              <div className="p-1.5 bg-[#2955A0] rounded-lg">
                 <FileSearch className="w-4 h-4 text-white" />
               </div>
               <div>
