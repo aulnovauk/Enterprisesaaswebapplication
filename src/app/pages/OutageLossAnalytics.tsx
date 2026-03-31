@@ -91,16 +91,16 @@ const downtimeCategories = [
 
 // Waterfall chart data: Budgeted → Expected → Actual → Evacuated
 const waterfallData = [
-  { name: "Budgeted Generation", value: 5200, cumulative: 5200, fill: "#0A2E4A" },
+  { name: "Budgeted Generation", value: 5200, cumulative: 5200, fill: "#0B3D5B" },
   { name: "Grid Curtailment", value: -180, cumulative: 5020, fill: "#EF4444" },
   { name: "Equipment Loss", value: -245, cumulative: 4775, fill: "#F59E0B" },
   { name: "Planned Shutdown", value: -125, cumulative: 4650, fill: "#10B981" },
   { name: "Force Majeure", value: -95, cumulative: 4555, fill: "#6366F1" },
-  { name: "Expected Generation", value: 4555, cumulative: 4555, fill: "#0A2E4A" },
+  { name: "Expected Generation", value: 4555, cumulative: 4555, fill: "#0B3D5B" },
   { name: "Additional Loss", value: -70, cumulative: 4485, fill: "#DC2626" },
   { name: "Actual Generation", value: 4485, cumulative: 4485, fill: "#059669" },
   { name: "Auxiliary Consumption", value: -35, cumulative: 4450, fill: "#9333EA" },
-  { name: "Net Evacuated", value: 4450, cumulative: 4450, fill: "#0A2E4A" },
+  { name: "Net Evacuated", value: 4450, cumulative: 4450, fill: "#0B3D5B" },
 ];
 
 // Loss bucketing table
@@ -520,7 +520,7 @@ export function OutageLossAnalytics() {
         <div className="px-6 py-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-[#0A2E4A] rounded-lg">
+              <div className="p-1.5 bg-[#0B3D5B] rounded-lg">
                 <TrendingDown className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -674,9 +674,9 @@ export function OutageLossAnalytics() {
               <Line 
                 type="stepAfter" 
                 dataKey="cumulative" 
-                stroke="#0A2E4A" 
+                stroke="#0B3D5B" 
                 strokeWidth={2}
-                dot={{ fill: "#0A2E4A", r: 4 }}
+                dot={{ fill: "#0B3D5B", r: 4 }}
                 name="Cumulative"
               />
             </ComposedChart>
@@ -713,7 +713,7 @@ export function OutageLossAnalytics() {
                     </div>
                     <div>
                       <div className="text-xs text-gray-600 mb-1">Net Evacuated</div>
-                      <div className="text-xl font-bold" style={{ color: "#0A2E4A" }}>{Math.round(evacuated).toLocaleString()}</div>
+                      <div className="text-xl font-bold" style={{ color: "#0B3D5B" }}>{Math.round(evacuated).toLocaleString()}</div>
                       <div className="text-xs text-gray-500">MWh</div>
                     </div>
                   </>
@@ -810,7 +810,7 @@ export function OutageLossAnalytics() {
                 <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" />
                 <Tooltip content={<CustomChartTooltip unit="MWh" />} />
                 <Legend />
-                <Bar dataKey="budgeted" fill="#0A2E4A" name="Budgeted (MWh)" />
+                <Bar dataKey="budgeted" fill="#0B3D5B" name="Budgeted (MWh)" />
                 <Bar dataKey="actual" fill="#10B981" name="Actual (MWh)" />
                 <Line 
                   type="monotone" 
@@ -845,7 +845,7 @@ export function OutageLossAnalytics() {
                     />
                   ))}
                 </Bar>
-                <ReferenceLine y={scale(4750)} stroke="#0A2E4A" strokeDasharray="3 3" label="Baseline" />
+                <ReferenceLine y={scale(4750)} stroke="#0B3D5B" strokeDasharray="3 3" label="Baseline" />
               </BarChart>
             </ResponsiveContainer>
             {(() => {
@@ -878,7 +878,7 @@ export function OutageLossAnalytics() {
 
       {/* ── YTD Loss Comparison ─────────────────────────────────────────── */}
       <Card className="mb-8 border-2 border-slate-200">
-        <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-[#0A2E4A] to-[#0A2E4A]/80 rounded-t-xl">
+        <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-[#0B3D5B] to-[#0B3D5B]/80 rounded-t-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CalendarDays className="w-5 h-5 text-white" />
@@ -947,7 +947,7 @@ export function OutageLossAnalytics() {
                 <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-[#F59E0B]" />Equipment Failure</span>
                 <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-[#10B981]" />Planned Shutdown</span>
                 <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-[#6366F1]" />Force Majeure</span>
-                <span className="flex items-center gap-1.5"><span className="inline-block w-8 h-0.5 bg-[#0A2E4A] border-dashed border-t-2 border-[#0A2E4A]" />SPYL Total</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block w-8 h-0.5 bg-[#0B3D5B] border-dashed border-t-2 border-[#0B3D5B]" />SPYL Total</span>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={280}>
@@ -990,10 +990,10 @@ export function OutageLossAnalytics() {
                   type="monotone"
                   dataKey="spylTotal"
                   name="SPYL Total"
-                  stroke="#0A2E4A"
+                  stroke="#0B3D5B"
                   strokeWidth={2}
                   strokeDasharray="5 3"
-                  dot={{ r: 3, fill: "#0A2E4A" }}
+                  dot={{ r: 3, fill: "#0B3D5B" }}
                 />
               </ComposedChart>
             </ResponsiveContainer>
@@ -1117,7 +1117,7 @@ export function OutageLossAnalytics() {
               <Bar 
                 yAxisId="left" 
                 dataKey="energyLoss" 
-                fill="#0A2E4A" 
+                fill="#0B3D5B" 
                 name="Energy Loss (MWh)"
               />
               <Line 
@@ -1252,7 +1252,7 @@ export function OutageLossAnalytics() {
               <Button
                 size="sm"
                 variant={outageViewMode === "table" ? "default" : "ghost"}
-                className={`gap-1 text-xs h-7 px-2 ${outageViewMode === "table" ? "bg-[#0A2E4A]" : ""}`}
+                className={`gap-1 text-xs h-7 px-2 ${outageViewMode === "table" ? "bg-[#0B3D5B]" : ""}`}
                 onClick={() => setOutageViewMode("table")}
               >
                 <TableIcon className="w-3 h-3" /> Table
@@ -1260,7 +1260,7 @@ export function OutageLossAnalytics() {
               <Button
                 size="sm"
                 variant={outageViewMode === "bar" ? "default" : "ghost"}
-                className={`gap-1 text-xs h-7 px-2 ${outageViewMode === "bar" ? "bg-[#0A2E4A]" : ""}`}
+                className={`gap-1 text-xs h-7 px-2 ${outageViewMode === "bar" ? "bg-[#0B3D5B]" : ""}`}
                 onClick={() => setOutageViewMode("bar")}
               >
                 <BarChart3 className="w-3 h-3" /> Bar Chart
@@ -1268,7 +1268,7 @@ export function OutageLossAnalytics() {
               <Button
                 size="sm"
                 variant={outageViewMode === "pie" ? "default" : "ghost"}
-                className={`gap-1 text-xs h-7 px-2 ${outageViewMode === "pie" ? "bg-[#0A2E4A]" : ""}`}
+                className={`gap-1 text-xs h-7 px-2 ${outageViewMode === "pie" ? "bg-[#0B3D5B]" : ""}`}
                 onClick={() => setOutageViewMode("pie")}
               >
                 <PieChartIcon className="w-3 h-3" /> Pie Chart

@@ -96,7 +96,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 onSelect={() => handlePageSelect(page.path)}
                 className="cursor-pointer"
               >
-                <Icon className="w-4 h-4" style={{ color: "#0A2E4A" }} />
+                <Icon className="w-4 h-4" style={{ color: "#0B3D5B" }} />
                 <span>{page.label}</span>
               </CommandItem>
             );
@@ -115,7 +115,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 onSelect={() => handleActionSelect(action.id)}
                 className="cursor-pointer"
               >
-                <Icon className="w-4 h-4" style={{ color: "#0A2E4A" }} />
+                <Icon className="w-4 h-4" style={{ color: "#0B3D5B" }} />
                 <span>{action.label}</span>
               </CommandItem>
             );
@@ -132,7 +132,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               onSelect={() => handlePlantSelect(plant.id)}
               className="cursor-pointer"
             >
-              <MapPin className="w-4 h-4" style={{ color: "#0A2E4A" }} />
+              <MapPin className="w-4 h-4" style={{ color: "#0B3D5B" }} />
               <span>{plant.label}</span>
             </CommandItem>
           ))}

@@ -751,7 +751,7 @@ export function JMRDataManagement() {
           {/* Row 1: Title & Actions */}
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-gradient-to-br from-[#0A2E4A] to-[#0A2E4A]/80 rounded-xl shadow-md">
+              <div className="p-1.5 bg-gradient-to-br from-[#0B3D5B] to-[#0B3D5B]/80 rounded-xl shadow-md">
                 <Database className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -909,28 +909,28 @@ export function JMRDataManagement() {
               <TabsList className="bg-transparent h-12 p-0 gap-1">
                 <TabsTrigger
                   value="manual-entry"
-                  className="gap-2 data-[state=active]:bg-[#0A2E4A] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
+                  className="gap-2 data-[state=active]:bg-[#0B3D5B] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
                 >
                   <Edit3 className="w-4 h-4" />
                   Manual Entry
                 </TabsTrigger>
                 <TabsTrigger
                   value="bulk-upload"
-                  className="gap-2 data-[state=active]:bg-[#0A2E4A] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
+                  className="gap-2 data-[state=active]:bg-[#0B3D5B] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
                 >
                   <FileUp className="w-4 h-4" />
                   Excel Bulk Upload
                 </TabsTrigger>
                 <TabsTrigger
                   value="repository"
-                  className="gap-2 data-[state=active]:bg-[#0A2E4A] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
+                  className="gap-2 data-[state=active]:bg-[#0B3D5B] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
                 >
                   <Database className="w-4 h-4" />
                   JMR Repository
                 </TabsTrigger>
                 <TabsTrigger
                   value="audit"
-                  className="gap-2 data-[state=active]:bg-[#0A2E4A] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
+                  className="gap-2 data-[state=active]:bg-[#0B3D5B] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
                 >
                   <History className="w-4 h-4" />
                   Audit & Version History
@@ -968,7 +968,7 @@ export function JMRDataManagement() {
                                         isCompleted
                                           ? "bg-emerald-600 text-white"
                                           : isActive
-                                          ? "bg-[#0A2E4A] text-white"
+                                          ? "bg-[#0B3D5B] text-white"
                                           : "bg-slate-200 text-slate-500"
                                       }`}
                                     >
@@ -980,7 +980,7 @@ export function JMRDataManagement() {
                                     </div>
                                     <span
                                       className={`text-xs font-semibold mt-2 ${
-                                        isActive ? "text-[#0A2E4A]" : "text-slate-600"
+                                        isActive ? "text-[#0B3D5B]" : "text-slate-600"
                                       }`}
                                     >
                                       {step.label}
@@ -1026,7 +1026,7 @@ export function JMRDataManagement() {
                           <Card className="border-2 border-slate-200">
                             <CardHeader className="border-b border-slate-100">
                               <CardTitle className="flex items-center gap-2">
-                                <Building2 className="w-5 h-5 text-[#0A2E4A]" />
+                                <Building2 className="w-5 h-5 text-[#0B3D5B]" />
                                 Plant Metadata
                               </CardTitle>
                               <CardDescription>
@@ -1216,7 +1216,7 @@ export function JMRDataManagement() {
                                 Reset
                               </Button>
                             )}
-                            <Button onClick={() => setEntryStep(2)} className="bg-[#0A2E4A]">
+                            <Button onClick={() => setEntryStep(2)} className="bg-[#0B3D5B]">
                               Next Step
                               <ArrowRight className="w-4 h-4 ml-2" />
                             </Button>
@@ -1234,7 +1234,7 @@ export function JMRDataManagement() {
                           <Card className="border-2 border-slate-200">
                             <CardHeader className="border-b border-slate-100">
                               <CardTitle className="flex items-center gap-2">
-                                <Zap className="w-5 h-5 text-[#0A2E4A]" />
+                                <Zap className="w-5 h-5 text-[#0B3D5B]" />
                                 Operational Parameters
                               </CardTitle>
                               <CardDescription>Monthly generation and operational metrics</CardDescription>
@@ -1243,7 +1243,7 @@ export function JMRDataManagement() {
                               {/* Generation Metrics */}
                               <div>
                                 <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                  <div className="w-1 h-4 bg-[#0A2E4A] rounded"></div>
+                                  <div className="w-1 h-4 bg-[#0B3D5B] rounded"></div>
                                   Generation Metrics
                                 </h3>
                                 <div className="grid grid-cols-3 gap-4">
@@ -1321,7 +1321,7 @@ export function JMRDataManagement() {
                               {/* Availability Metrics */}
                               <div>
                                 <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                  <div className="w-1 h-4 bg-[#0A2E4A] rounded"></div>
+                                  <div className="w-1 h-4 bg-[#0B3D5B] rounded"></div>
                                   Availability Metrics
                                 </h3>
                                 <div className="grid grid-cols-3 gap-4">
@@ -1386,7 +1386,7 @@ export function JMRDataManagement() {
                               {/* Downtime Metrics */}
                               <div>
                                 <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                  <div className="w-1 h-4 bg-[#0A2E4A] rounded"></div>
+                                  <div className="w-1 h-4 bg-[#0B3D5B] rounded"></div>
                                   Downtime Hours
                                 </h3>
                                 <div className="grid grid-cols-4 gap-4">
@@ -1469,7 +1469,7 @@ export function JMRDataManagement() {
                               {/* Other Parameters */}
                               <div>
                                 <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                  <div className="w-1 h-4 bg-[#0A2E4A] rounded"></div>
+                                  <div className="w-1 h-4 bg-[#0B3D5B] rounded"></div>
                                   Other Parameters
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4">
@@ -1581,7 +1581,7 @@ export function JMRDataManagement() {
                                   Reset
                                 </Button>
                               )}
-                              <Button onClick={() => setEntryStep(3)} className="bg-[#0A2E4A]">
+                              <Button onClick={() => setEntryStep(3)} className="bg-[#0B3D5B]">
                                 Next Step
                                 <ArrowRight className="w-4 h-4 ml-2" />
                               </Button>
@@ -1600,7 +1600,7 @@ export function JMRDataManagement() {
                           <Card className="border-2 border-slate-200">
                             <CardHeader className="border-b border-slate-100">
                               <CardTitle className="flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-[#0A2E4A]" />
+                                <TrendingUp className="w-5 h-5 text-[#0B3D5B]" />
                                 Commercial Parameters
                               </CardTitle>
                               <CardDescription>Revenue and contractual compliance data</CardDescription>
@@ -1804,7 +1804,7 @@ export function JMRDataManagement() {
                                   Reset
                                 </Button>
                               )}
-                              <Button onClick={() => { validateForm(); setEntryStep(4); }} className="bg-[#0A2E4A]">
+                              <Button onClick={() => { validateForm(); setEntryStep(4); }} className="bg-[#0B3D5B]">
                                 Next Step
                                 <ArrowRight className="w-4 h-4 ml-2" />
                               </Button>
@@ -1839,7 +1839,7 @@ export function JMRDataManagement() {
                           <Card className="border-2 border-slate-200">
                             <CardHeader className="border-b border-slate-100">
                               <CardTitle className="flex items-center gap-2">
-                                <ShieldCheck className="w-5 h-5 text-[#0A2E4A]" />
+                                <ShieldCheck className="w-5 h-5 text-[#0B3D5B]" />
                                 Validation & Compliance Check
                               </CardTitle>
                               <CardDescription>
@@ -2078,7 +2078,7 @@ export function JMRDataManagement() {
                                     <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={handleSaveDraft}>
                                       <Save className="w-3 h-3" /> Save Draft
                                     </Button>
-                                    <Button size="sm" className="gap-1 text-xs bg-[#0A2E4A] hover:bg-[#082a42]" onClick={handleSubmitForReview}>
+                                    <Button size="sm" className="gap-1 text-xs bg-[#0B3D5B] hover:bg-[#083347]" onClick={handleSubmitForReview}>
                                       <Send className="w-3 h-3" /> Submit for Review
                                     </Button>
                                   </div>
@@ -2203,7 +2203,7 @@ export function JMRDataManagement() {
                                     <Button size="sm" className="gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => { setWorkflowStage("approved"); recordTimestamp("approved"); updateRepositoryFromForm("approved"); toast.success("JMR approved by Approver"); }}>
                                       <CheckCircle className="w-3 h-3" /> Approve
                                     </Button>
-                                    <Button size="sm" className="gap-1 text-xs bg-[#0A2E4A] hover:bg-[#082a42]" onClick={() => { setWorkflowStage("locked"); recordTimestamp("approved"); recordTimestamp("locked"); updateRepositoryFromForm("locked"); toast.success("JMR approved and locked"); }}>
+                                    <Button size="sm" className="gap-1 text-xs bg-[#0B3D5B] hover:bg-[#083347]" onClick={() => { setWorkflowStage("locked"); recordTimestamp("approved"); recordTimestamp("locked"); updateRepositoryFromForm("locked"); toast.success("JMR approved and locked"); }}>
                                       <Lock className="w-3 h-3" /> Approve & Lock
                                     </Button>
                                     <Button size="sm" variant="outline" className="gap-1 text-xs border-rose-300 text-rose-600 hover:bg-rose-50" onClick={() => { setWorkflowStage("rejected"); setRejectionReason("Rejected by Approver"); toast.error("JMR rejected by Approver"); }}>
@@ -2216,7 +2216,7 @@ export function JMRDataManagement() {
                                   <div className="text-sm"><span className="text-slate-600">Approver:</span> <span className="font-semibold">Rahul Sharma</span></div>
                                   <div className="text-sm"><span className="text-slate-600">Approved:</span> <span className="font-semibold">{workflowTimestamps.approved || "—"}</span></div>
                                   <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs">Approved</Badge>
-                                  <Button size="sm" className="gap-1 text-xs bg-[#0A2E4A] hover:bg-[#082a42] mt-1" onClick={() => { setWorkflowStage("locked"); recordTimestamp("locked"); updateRepositoryFromForm("locked"); toast.success("JMR record locked"); }}>
+                                  <Button size="sm" className="gap-1 text-xs bg-[#0B3D5B] hover:bg-[#083347] mt-1" onClick={() => { setWorkflowStage("locked"); recordTimestamp("locked"); updateRepositoryFromForm("locked"); toast.success("JMR record locked"); }}>
                                     <Lock className="w-3 h-3" /> Lock Record
                                   </Button>
                                 </>
@@ -2250,7 +2250,7 @@ export function JMRDataManagement() {
                   {!showWorkflowPanel && (
                     <Button
                       onClick={() => setShowWorkflowPanel(true)}
-                      className="fixed right-0 top-1/2 -translate-y-1/2 rounded-l-lg rounded-r-none h-32 w-10 bg-[#0A2E4A] hover:bg-[#082a42] shadow-lg z-20"
+                      className="fixed right-0 top-1/2 -translate-y-1/2 rounded-l-lg rounded-r-none h-32 w-10 bg-[#0B3D5B] hover:bg-[#083347] shadow-lg z-20"
                       style={{ writingMode: "vertical-rl" }}
                     >
                       <span className="transform rotate-180">Workflow Panel</span>
@@ -2621,7 +2621,7 @@ export function JMRDataManagement() {
                           </SelectContent>
                         </Select>
 
-                        <Button className="bg-[#0A2E4A] gap-2" onClick={() => { if (compareV1 !== compareV2) { setShowDiff(true); } else { toast.warning("Please select two different versions"); } }}>
+                        <Button className="bg-[#0B3D5B] gap-2" onClick={() => { if (compareV1 !== compareV2) { setShowDiff(true); } else { toast.warning("Please select two different versions"); } }}>
                           <GitCompare className="w-4 h-4" />
                           Compare
                         </Button>
@@ -2631,7 +2631,7 @@ export function JMRDataManagement() {
                       {showDiff && compareV1 !== compareV2 && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-2">
                           <div className="bg-white rounded-xl border-2 border-blue-200 overflow-hidden">
-                            <div className="grid grid-cols-[1fr_120px_16px_120px] bg-[#0A2E4A] text-white text-xs font-bold px-4 py-2.5 gap-2">
+                            <div className="grid grid-cols-[1fr_120px_16px_120px] bg-[#0B3D5B] text-white text-xs font-bold px-4 py-2.5 gap-2">
                               <span>Parameter</span>
                               <span className="text-center">Version {compareV1 < compareV2 ? compareV1 : compareV2}</span>
                               <span></span>
@@ -2687,7 +2687,7 @@ export function JMRDataManagement() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-[#0A2E4A]" />
+              <FileText className="w-5 h-5 text-[#0B3D5B]" />
               PDF Document Preview
             </DialogTitle>
             <DialogDescription>
@@ -2712,7 +2712,7 @@ export function JMRDataManagement() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPdfDialogOpen(false)}>Close</Button>
-            <Button className="bg-[#0A2E4A] gap-2" onClick={() => { toast.success("Downloading PDF…"); }}>
+            <Button className="bg-[#0B3D5B] gap-2" onClick={() => { toast.success("Downloading PDF…"); }}>
               <Download className="w-4 h-4" /> Download
             </Button>
           </DialogFooter>
@@ -2792,7 +2792,7 @@ function BulkUploadContent() {
               <h3 className="font-bold text-blue-900 mb-1">Step 1: Download Template</h3>
               <p className="text-sm text-blue-700">Download the standardized Excel template with all required fields</p>
             </div>
-            <Button className="bg-[#0A2E4A] gap-2" onClick={() => toast.success("Template downloaded")}>
+            <Button className="bg-[#0B3D5B] gap-2" onClick={() => toast.success("Template downloaded")}>
               <Download className="w-4 h-4" /> Download Template
             </Button>
           </div>
@@ -2808,7 +2808,7 @@ function BulkUploadContent() {
         <CardContent className="p-6">
           <label
             htmlFor="file-upload"
-            className="block border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-[#0A2E4A] hover:bg-blue-50 transition-all"
+            className="block border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-[#0B3D5B] hover:bg-blue-50 transition-all"
           >
             <input id="file-upload" type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileUpload} />
             <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
@@ -2877,7 +2877,7 @@ function BulkUploadContent() {
                 })}
               </div>
               <div className="flex justify-end mt-4">
-                <Button className="bg-[#0A2E4A] gap-2" onClick={handleConfirmMapping}>
+                <Button className="bg-[#0B3D5B] gap-2" onClick={handleConfirmMapping}>
                   <CheckCircle className="w-4 h-4" /> Confirm Mapping & Validate
                 </Button>
               </div>

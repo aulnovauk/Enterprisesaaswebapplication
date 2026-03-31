@@ -64,7 +64,7 @@ export function GlobalFilterBar({
       <div className="px-6 py-2">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 bg-[#0A2E4A] rounded-lg">
+            <div className="p-1.5 bg-[#0B3D5B] rounded-lg">
               <Activity className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -95,7 +95,7 @@ export function GlobalFilterBar({
               <Filter className="w-3.5 h-3.5" />
               More Filters
             </Button>
-            <Button size="sm" className="h-7 px-3 text-xs gap-2 bg-[#0A2E4A] hover:bg-[#092e48] text-white">
+            <Button size="sm" className="h-7 px-3 text-xs gap-2 bg-[#0B3D5B] hover:bg-[#093349] text-white">
               <Download className="w-3.5 h-3.5" />
               Export Report
             </Button>

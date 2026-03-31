@@ -3,8 +3,8 @@
 :root {
   --font-size: 16px;
   
-  --deep-blue: #0A2E4A;
-  --deep-blue-light: #0E4265;
+  --deep-blue: #0B3D5B;
+  --deep-blue-light: #0E4D6D;
   --solar-yellow: #E8A800;
   --solar-yellow-light: #FFC72C;
   --saffron: #F27B21;
@@ -26,7 +26,7 @@
   --card-foreground: #0F172A;
   --popover: #FFFFFF;
   --popover-foreground: #0F172A;
-  --primary: #0A2E4A;
+  --primary: #0B3D5B;
   --primary-foreground: #FFFFFF;
   --secondary: #F1F5F9;
   --secondary-foreground: #0F172A;
@@ -40,7 +40,7 @@
   --input: #E2E8F0;
   --input-background: #FFFFFF;
   --switch-background: #CBD5E1;
-  --ring: #0A2E4A;
+  --ring: #0B3D5B;
   
   --success: #059669;
   --success-light: #D1FAE5;
@@ -51,7 +51,7 @@
   --info: #2563EB;
   --info-light: #DBEAFE;
   
-  --chart-1: #0A2E4A;
+  --chart-1: #0B3D5B;
   --chart-2: #2563EB;
   --chart-3: #059669;
   --chart-4: #D97706;
@@ -72,7 +72,7 @@
   
   --radius: 6px;
   
-  --sidebar: #0A2E4A;
+  --sidebar: #0B3D5B;
   --sidebar-foreground: #FFFFFF;
   --sidebar-primary: #E8A800;
   --sidebar-primary-foreground: #0F172A;

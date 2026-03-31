@@ -210,7 +210,7 @@ export default function SolarMap({ plantMarkers }: SolarMapProps) {
               cursor: "pointer", border: "none", letterSpacing: "0.04em",
               transition: "background 0.18s, color 0.18s",
               background: viewMode === mode.id ? "#E8A800" : "transparent",
-              color: viewMode === mode.id ? "#0A2E4A" : "#64748b",
+              color: viewMode === mode.id ? "#0B3D5B" : "#64748b",
               borderRight: "1px solid rgba(226,232,240,0.6)",
             }}
           >

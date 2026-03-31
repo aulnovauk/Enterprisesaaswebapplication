@@ -422,7 +422,7 @@ export function FormulaBuilder({ isOpen, onClose, kpi }: FormulaBuilderProps) {
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="fixed right-0 top-0 h-full w-[680px] bg-white shadow-2xl z-50 flex flex-col border-l border-slate-200"
           >
-            <div className="flex items-center justify-between px-6 py-3 border-b border-slate-200 bg-gradient-to-r from-[#0A2E4A] to-[#0d3a5c] text-white shrink-0">
+            <div className="flex items-center justify-between px-6 py-3 border-b border-slate-200 bg-gradient-to-r from-[#0B3D5B] to-[#0E4D6D] text-white shrink-0">
               <div>
                 <h2 className="text-base font-bold">Formula Configuration</h2>
                 <p className="text-xs text-blue-200 mt-0.5">Editing logic for <span className="font-semibold text-white">{kpi.name}</span></p>
@@ -504,8 +504,8 @@ export function FormulaBuilder({ isOpen, onClose, kpi }: FormulaBuilderProps) {
                       <div className="rounded-xl border border-slate-200 overflow-hidden">
                         <button onClick={() => setShowTemplates(v => !v)} className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50 hover:bg-slate-100 transition-colors text-left">
                           <span className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wide">
-                            <BookOpen className="w-3.5 h-3.5 text-[#0A2E4A]" /> Formula Template Library
-                            <Badge className="bg-[#0A2E4A] text-white text-[9px] ml-1">{FORMULA_TEMPLATES.length}</Badge>
+                            <BookOpen className="w-3.5 h-3.5 text-[#0B3D5B]" /> Formula Template Library
+                            <Badge className="bg-[#0B3D5B] text-white text-[9px] ml-1">{FORMULA_TEMPLATES.length}</Badge>
                           </span>
                           {showTemplates ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
                         </button>
@@ -549,7 +549,7 @@ export function FormulaBuilder({ isOpen, onClose, kpi }: FormulaBuilderProps) {
                                 ))}
                               </SelectContent>
                             </Select>
-                            <Button size="sm" className="h-7 text-xs bg-[#0A2E4A]" onClick={() => {
+                            <Button size="sm" className="h-7 text-xs bg-[#0B3D5B]" onClick={() => {
                               if (!selectedNewParam) { toast.error("Select a parameter first"); return; }
                               setCustomParams(prev => [...prev, { name: selectedNewParam, source: "Derived / Custom", type: "Derived", unit: "—", sampleValue: "—", refreshRate: "On Demand", description: "Custom parameter added for this KPI formula" }]);
                               insertAtCursor(selectedNewParam);
@@ -587,7 +587,7 @@ export function FormulaBuilder({ isOpen, onClose, kpi }: FormulaBuilderProps) {
                         </div>
 
                         {hoveredParam && (
-                          <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-[#0A2E4A] text-white rounded-xl text-xs space-y-1.5 shadow-xl border border-slate-700">
+                          <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-[#0B3D5B] text-white rounded-xl text-xs space-y-1.5 shadow-xl border border-slate-700">
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-sm">{hoveredParam.name}</span>
                               <Badge className={`text-[9px] ${hoveredParam.type === "Constant" ? "bg-amber-600" : hoveredParam.type === "Derived" ? "bg-purple-600" : "bg-blue-600"}`}>{hoveredParam.type}</Badge>
@@ -698,7 +698,7 @@ export function FormulaBuilder({ isOpen, onClose, kpi }: FormulaBuilderProps) {
                             <Button size="sm" variant="ghost" className="h-6 text-[10px] gap-1 text-slate-400" onClick={() => setEditingScenario(editingScenario !== null ? null : 0)}>
                               <Edit3 className="w-2.5 h-2.5" /> {editingScenario !== null ? "Done" : "Edit Values"}
                             </Button>
-                            <Button size="sm" className="h-6 text-[10px] bg-[#0A2E4A] hover:bg-[#082a42] gap-1" onClick={runSimulation} disabled={simRunning}>
+                            <Button size="sm" className="h-6 text-[10px] bg-[#0B3D5B] hover:bg-[#083347] gap-1" onClick={runSimulation} disabled={simRunning}>
                               {simRunning ? <><RefreshCw className="w-2.5 h-2.5 animate-spin" /> Running…</> : <><Play className="w-2.5 h-2.5" /> Run Simulation</>}
                             </Button>
                           </div>
@@ -823,7 +823,7 @@ export function FormulaBuilder({ isOpen, onClose, kpi }: FormulaBuilderProps) {
                     </div>
                     <div className="flex gap-2 overflow-x-auto pb-1">
                       {ppaContracts.map(c => (
-                        <button key={c.id} onClick={() => setActivePPA(c.id)} className={`shrink-0 flex flex-col items-start px-3 py-2 rounded-lg border text-left transition-all ${activePPA === c.id ? "border-[#0A2E4A] bg-[#0A2E4A] text-white shadow-md" : "border-slate-200 bg-white hover:border-slate-300"}`}>
+                        <button key={c.id} onClick={() => setActivePPA(c.id)} className={`shrink-0 flex flex-col items-start px-3 py-2 rounded-lg border text-left transition-all ${activePPA === c.id ? "border-[#0B3D5B] bg-[#0B3D5B] text-white shadow-md" : "border-slate-200 bg-white hover:border-slate-300"}`}>
                           <span className="text-[10px] font-bold">{c.id}</span>
                           <span className={`text-[11px] font-semibold ${activePPA === c.id ? "text-blue-200" : "text-slate-700"}`}>{c.counterparty}</span>
                           <div className="flex items-center gap-1 mt-0.5">
@@ -925,7 +925,7 @@ export function FormulaBuilder({ isOpen, onClose, kpi }: FormulaBuilderProps) {
                                   <>
                                     <span className="font-mono font-semibold text-slate-700">{ov.param}</span>
                                     <span className="text-slate-400 line-through text-[11px]">{ov.masterValue}</span>
-                                    <span className="font-bold text-[#0A2E4A]">{ov.contractValue}</span>
+                                    <span className="font-bold text-[#0B3D5B]">{ov.contractValue}</span>
                                     <span className="text-slate-400 text-[10px]">{ov.unit}</span>
                                     <div className="flex gap-0.5">
                                       <button onClick={() => setEditingOverride(i)} className="text-slate-400 hover:text-blue-600"><Edit3 className="w-3 h-3" /></button>
@@ -1046,7 +1046,7 @@ export function FormulaBuilder({ isOpen, onClose, kpi }: FormulaBuilderProps) {
                       )}
 
                       <div className="rounded-xl border-2 border-slate-200 overflow-hidden">
-                        <div className="px-4 py-3 bg-gradient-to-r from-[#0A2E4A] to-[#0d3a5c] flex items-center justify-between">
+                        <div className="px-4 py-3 bg-gradient-to-r from-[#0B3D5B] to-[#0E4D6D] flex items-center justify-between">
                           <h3 className="text-sm font-bold text-white flex items-center gap-2"><ShieldCheck className="w-4 h-4" /> Approval Workflow</h3>
                           <Badge className={`text-[10px] font-bold gap-1 ${
                             approvalStage === "draft" ? "bg-slate-600 text-white" :
@@ -1236,7 +1236,7 @@ export function FormulaBuilder({ isOpen, onClose, kpi }: FormulaBuilderProps) {
                                     }}>
                                       <CheckCircle className="w-3 h-3" /> Approve
                                     </Button>
-                                    <Button size="sm" className="h-7 text-[10px] gap-1 bg-[#0A2E4A] hover:bg-[#082a42] text-white" onClick={() => {
+                                    <Button size="sm" className="h-7 text-[10px] gap-1 bg-[#0B3D5B] hover:bg-[#083347] text-white" onClick={() => {
                                       setApprovalStage("locked");
                                       setVersion(v => v.replace(/\(.*\)/, "(Locked)"));
                                       toast.success("Formula approved and locked for billing cycle");
@@ -1261,7 +1261,7 @@ export function FormulaBuilder({ isOpen, onClose, kpi }: FormulaBuilderProps) {
                                     <p><span className="text-slate-400">Approved:</span> <span className="font-medium text-slate-700">Mar 5, 2026 12:00</span></p>
                                     {approverComment && <p><span className="text-slate-400">Comment:</span> <span className="font-medium text-slate-700">{approverComment}</span></p>}
                                   </div>
-                                  <Button size="sm" className="h-7 text-[10px] gap-1 bg-[#0A2E4A] hover:bg-[#082a42] text-white" onClick={() => {
+                                  <Button size="sm" className="h-7 text-[10px] gap-1 bg-[#0B3D5B] hover:bg-[#083347] text-white" onClick={() => {
                                     setApprovalStage("locked");
                                     setVersion(v => v.replace(/\(.*\)/, "(Locked)"));
                                     toast.success("Formula locked for billing cycle");
@@ -1299,7 +1299,7 @@ export function FormulaBuilder({ isOpen, onClose, kpi }: FormulaBuilderProps) {
                       {/* ── AUDIT TRAIL ── */}
                       <div className="rounded-xl border border-slate-200 overflow-hidden">
                         <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200">
-                          <h3 className="text-xs font-bold text-slate-700 uppercase flex items-center gap-2"><History className="w-3.5 h-3.5 text-[#0A2E4A]" /> Approval Audit Trail</h3>
+                          <h3 className="text-xs font-bold text-slate-700 uppercase flex items-center gap-2"><History className="w-3.5 h-3.5 text-[#0B3D5B]" /> Approval Audit Trail</h3>
                         </div>
                         <div className="divide-y divide-slate-100">
                           {approvalHistory.map((entry, i) => (
@@ -1381,12 +1381,12 @@ export function FormulaBuilder({ isOpen, onClose, kpi }: FormulaBuilderProps) {
                     {isFormulaLocked ? "Close" : "Cancel"}
                   </Button>
                   {approvalStage === "draft" && (
-                    <Button size="sm" className="bg-[#0A2E4A] text-white hover:bg-[#082a42] gap-2 text-xs h-8" onClick={handleSaveSubmit}>
+                    <Button size="sm" className="bg-[#0B3D5B] text-white hover:bg-[#083347] gap-2 text-xs h-8" onClick={handleSaveSubmit}>
                       <Send className="w-3.5 h-3.5" /> Save & Submit
                     </Button>
                   )}
                   {approvalStage === "rejected" && (
-                    <Button size="sm" className="bg-[#0A2E4A] text-white hover:bg-[#082a42] gap-2 text-xs h-8" onClick={handleResetToDraft}>
+                    <Button size="sm" className="bg-[#0B3D5B] text-white hover:bg-[#083347] gap-2 text-xs h-8" onClick={handleResetToDraft}>
                       <Edit3 className="w-3.5 h-3.5" /> Edit & Resubmit
                     </Button>
                   )}

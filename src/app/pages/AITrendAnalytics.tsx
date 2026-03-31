@@ -220,7 +220,7 @@ export function AITrendAnalytics() {
         <div className="px-6 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-[#0A2E4A] rounded-lg">
+              <div className="p-1.5 bg-[#0B3D5B] rounded-lg">
                 <BrainCircuit className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -398,13 +398,13 @@ export function AITrendAnalytics() {
               <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" label={{ value: 'Generation (MWh)', angle: -90, position: 'insideLeft' }} />
               <Tooltip content={<CustomChartTooltip unit="MWh" />} />
               <Legend />
-              <Area type="monotone" dataKey="generation" fill="#0A2E4A20" stroke="none" />
+              <Area type="monotone" dataKey="generation" fill="#0B3D5B20" stroke="none" />
               <Line
                 type="monotone"
                 dataKey="generation"
-                stroke="#0A2E4A"
+                stroke="#0B3D5B"
                 strokeWidth={2}
-                dot={{ fill: "#0A2E4A", r: 3 }}
+                dot={{ fill: "#0B3D5B", r: 3 }}
                 name="Monthly Generation"
               />
               <ReferenceLine y={4900} stroke="#F59E0B" strokeDasharray="5 5" label="Avg: 4,900 MWh" />
@@ -475,9 +475,9 @@ export function AITrendAnalytics() {
                   yAxisId="left"
                   type="monotone"
                   dataKey="performance"
-                  stroke="#0A2E4A"
+                  stroke="#0B3D5B"
                   strokeWidth={3}
-                  dot={{ fill: "#0A2E4A", r: 5 }}
+                  dot={{ fill: "#0B3D5B", r: 5 }}
                   name="Performance (%)"
                 />
                 <ReferenceLine yAxisId="left" y={98} stroke="#EF4444" strokeDasharray="5 5" label="Warning: 98%" />
@@ -601,9 +601,9 @@ export function AITrendAnalytics() {
               <Line
                 type="monotone"
                 dataKey="actual"
-                stroke="#0A2E4A"
+                stroke="#0B3D5B"
                 strokeWidth={3}
-                dot={{ fill: "#0A2E4A", r: 5 }}
+                dot={{ fill: "#0B3D5B", r: 5 }}
                 name="Actual"
               />
               <Line
