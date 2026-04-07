@@ -97,8 +97,8 @@ export default function SolarMap({ plantMarkers }: SolarMapProps) {
   return (
     <div className="relative w-full h-full rounded-xl overflow-hidden">
       <MapContainer
-        center={[17.5, 76.5]}
-        zoom={5}
+        center={[19.5, 76.5]}
+        zoom={7}
         zoomControl={false}
         scrollWheelZoom={true}
         style={{ width: "100%", height: "100%", background: "#f8fafc" }}

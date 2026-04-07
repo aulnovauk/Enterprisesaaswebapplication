@@ -111,7 +111,7 @@ const months = [
   "April", "May", "June", "July", "August", "September",
   "October", "November", "December", "January", "February", "March"
 ];
-const states = ["Maharashtra", "Tamil Nadu", "Rajasthan", "Gujarat", "Karnataka", "Andhra Pradesh"];
+const states = ["Maharashtra", "Maharashtra", "Maharashtra", "Maharashtra", "Maharashtra", "Maharashtra"];
 const vendors = ["SolarCo India", "SunPower Tech", "Green Energy Ltd", "TechSolar Pvt", "Mega Solar Inc"];
 const ppaTypes = ["Long Term (25Y)", "Medium Term (15Y)", "Short Term (5Y)"];
 
@@ -3704,10 +3704,10 @@ const SYSTEM_FIELDS = [
 
 const VALID_PREVIEW_ROWS = [
   { row: 2, plant: "Sangli Solar Farm", month: "Feb", gross: "2,150", net: "2,120", revenue: "20.42", status: "valid" },
-  { row: 3, plant: "Nashik Site A", month: "Feb", gross: "1,180", net: "1,162", revenue: "11.18", status: "valid" },
-  { row: 4, plant: "Aurangabad Project", month: "Feb", gross: "2,380", net: "2,345", revenue: "22.56", status: "valid" },
-  { row: 5, plant: "Solapur SPV", month: "Feb", gross: "1,720", net: "1,695", revenue: "16.31", status: "warning" },
-  { row: 6, plant: "Chennai Coastal", month: "Feb", gross: "1,920", net: "1,892", revenue: "18.20", status: "valid" },
+  { row: 3, plant: "Sangli Solar Farm", month: "Feb", gross: "1,180", net: "1,162", revenue: "11.18", status: "valid" },
+  { row: 4, plant: "Osmanabad Solar Plant", month: "Feb", gross: "2,380", net: "2,345", revenue: "22.56", status: "valid" },
+  { row: 5, plant: "Latur Solar Station", month: "Feb", gross: "1,720", net: "1,695", revenue: "16.31", status: "warning" },
+  { row: 6, plant: "Beed Solar Park", month: "Feb", gross: "1,920", net: "1,892", revenue: "18.20", status: "valid" },
 ];
 
 function BulkUploadContent() {

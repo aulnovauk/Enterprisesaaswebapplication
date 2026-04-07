@@ -97,7 +97,7 @@ const userActivityLogs = [
 const jmrSubmissions = [
   {
     id: "JMR-2026-02-001",
-    plant: "Plant A - Jaipur (10 MW)",
+    plant: "Sakri Solar Park (10 MW)",
     month: "February 2026",
     submittedBy: "Amit Patel",
     submittedDate: "2026-02-28 11:45",
@@ -108,7 +108,7 @@ const jmrSubmissions = [
   },
   {
     id: "JMR-2026-02-002",
-    plant: "Plant B - Gandhinagar (25 MW)",
+    plant: "Osmanabad Solar Plant (25 MW)",
     month: "February 2026",
     submittedBy: "Vikram Desai",
     submittedDate: "2026-02-28 10:30",
@@ -119,7 +119,7 @@ const jmrSubmissions = [
   },
   {
     id: "JMR-2026-02-003",
-    plant: "Plant C - Rewa (50 MW)",
+    plant: "Latur Solar Station (50 MW)",
     month: "February 2026",
     submittedBy: "Anjali Verma",
     submittedDate: "2026-02-27 16:20",
@@ -141,7 +141,7 @@ const jmrSubmissions = [
   },
   {
     id: "JMR-2026-02-005",
-    plant: "Plant E - Varanasi (15 MW)",
+    plant: "Ahmednagar Solar Plant (15 MW)",
     month: "February 2026",
     submittedBy: "Rahul Gupta",
     submittedDate: "2026-02-28 14:10",

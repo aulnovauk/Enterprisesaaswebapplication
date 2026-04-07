@@ -62,7 +62,7 @@ const portfolioSummary = {
 const sitewiseLD = [
   {
     siteId: "EESL-RAJ-001",
-    siteName: "Plant A - Jaipur",
+    siteName: "Sakri Solar Park",
     capacity: 10,
     vendor: "SolarTech India",
     contractedGen: 850,
@@ -78,7 +78,7 @@ const sitewiseLD = [
   },
   {
     siteId: "EESL-GUJ-002",
-    siteName: "Plant B - Gandhinagar",
+    siteName: "Osmanabad Solar Plant",
     capacity: 25,
     vendor: "SunPower Solutions",
     contractedGen: 2100,
@@ -94,7 +94,7 @@ const sitewiseLD = [
   },
   {
     siteId: "EESL-MP-003",
-    siteName: "Plant C - Rewa",
+    siteName: "Latur Solar Station",
     capacity: 50,
     vendor: "SolarTech India",
     contractedGen: 4200,
@@ -126,7 +126,7 @@ const sitewiseLD = [
   },
   {
     siteId: "EESL-UP-005",
-    siteName: "Plant E - Varanasi",
+    siteName: "Ahmednagar Solar Plant",
     capacity: 15,
     vendor: "SunPower Solutions",
     contractedGen: 1250,
@@ -218,7 +218,7 @@ const clientwiseLD = [
     status: "warning",
   },
   {
-    clientName: "Gujarat Urja Vikas",
+    clientName: "Maharashtra Urja Vikas",
     clientType: "State Utility",
     procurerType: "State Agency",
     sites: 1,
@@ -256,7 +256,7 @@ const escalationAlerts = [
   },
   {
     id: "ESC-2026-007",
-    site: "Plant B - Gandhinagar",
+    site: "Osmanabad Solar Plant",
     vendor: "SunPower Solutions",
     severity: "high",
     issue: "Generation shortfall exceeds 5% threshold",
@@ -266,7 +266,7 @@ const escalationAlerts = [
   },
   {
     id: "ESC-2026-006",
-    site: "Plant C - Rewa",
+    site: "Latur Solar Station",
     vendor: "SolarTech India",
     severity: "medium",
     issue: "CUF below guaranteed for 2 months",

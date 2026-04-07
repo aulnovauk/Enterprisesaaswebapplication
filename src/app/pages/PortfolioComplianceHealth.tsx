@@ -104,11 +104,11 @@ const radarData = [
 
 // Heat map data (site-wise compliance)
 const siteHeatMap = [
-  { site: "Plant A - Jaipur", generation: 95, availability: 96, ld: 100, jmr: 100, reporting: 95, overall: 96.8 },
-  { site: "Plant B - Gandhinagar", generation: 93, availability: 94, ld: 85, jmr: 100, reporting: 90, overall: 91.2 },
-  { site: "Plant C - Rewa", generation: 88, availability: 92, ld: 65, jmr: 100, reporting: 85, overall: 84.5 },
+  { site: "Sakri Solar Park", generation: 95, availability: 96, ld: 100, jmr: 100, reporting: 95, overall: 96.8 },
+  { site: "Osmanabad Solar Plant", generation: 93, availability: 94, ld: 85, jmr: 100, reporting: 90, overall: 91.2 },
+  { site: "Latur Solar Station", generation: 88, availability: 92, ld: 65, jmr: 100, reporting: 85, overall: 84.5 },
   { site: "Plant D - Beed", generation: 85, availability: 89, ld: 60, jmr: 90, reporting: 80, overall: 79.8 },
-  { site: "Plant E - Varanasi", generation: 96, availability: 97, ld: 95, jmr: 100, reporting: 92, overall: 95.4 },
+  { site: "Ahmednagar Solar Plant", generation: 96, availability: 97, ld: 95, jmr: 100, reporting: 92, overall: 95.4 },
 ];
 
 // Vendor-wise risk table
@@ -186,10 +186,10 @@ const escalationTriggers = [
 // Top 5 risk sites
 const topRiskSites = [
   { rank: 1, site: "Plant D - Beed", score: 79.8, issues: "High LD exposure, Low availability", critical: 2 },
-  { rank: 2, site: "Plant C - Rewa", score: 84.5, issues: "LD exposure, Reporting gaps", critical: 1 },
-  { rank: 3, site: "Plant F - Bikaner", score: 86.2, issues: "Generation underperformance", critical: 0 },
-  { rank: 4, site: "Plant G - Wardha", score: 87.5, issues: "Recurring availability issues", critical: 0 },
-  { rank: 5, site: "Plant B - Gandhinagar", score: 91.2, issues: "Minor LD exposure", critical: 0 },
+  { rank: 2, site: "Latur Solar Station", score: 84.5, issues: "LD exposure, Reporting gaps", critical: 1 },
+  { rank: 3, site: "Buldhana Solar Farm", score: 86.2, issues: "Generation underperformance", critical: 0 },
+  { rank: 4, site: "Wardha Solar Park", score: 87.5, issues: "Recurring availability issues", critical: 0 },
+  { rank: 5, site: "Osmanabad Solar Plant", score: 91.2, issues: "Minor LD exposure", critical: 0 },
 ];
 
 // Compliance trend (last 12 months)

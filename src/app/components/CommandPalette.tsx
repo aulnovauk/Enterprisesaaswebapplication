@@ -51,11 +51,11 @@ const quickActions = [
 ];
 
 const plants = [
-  { id: "plant-a", label: "Plant A - Jaipur (10 MW)" },
-  { id: "plant-b", label: "Plant B - Gandhinagar (25 MW)" },
+  { id: "plant-a", label: "Sakri Solar Park (10 MW)" },
+  { id: "plant-b", label: "Osmanabad Solar Plant (25 MW)" },
   { id: "plant-c", label: "Plant C - Jaisalmer (50 MW)" },
-  { id: "plant-d", label: "Plant D - Sangli (30 MW)" },
-  { id: "plant-e", label: "Plant E - Osmanabad (15 MW)" },
+  { id: "plant-d", label: "Sangli Solar Farm (30 MW)" },
+  { id: "plant-e", label: "Ahmednagar Solar Plant (15 MW)" },
 ];
 
 interface CommandPaletteProps {

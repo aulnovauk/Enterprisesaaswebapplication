@@ -164,11 +164,11 @@ const visualizationTypes = [
 
 // Sample preview data
 const sampleData = [
-  { plant: "Plant A - Jaipur", state: "Rajasthan", region: "North", generation: 820, availability: 96.2, cuf: 21.8, revenue: 245, ldAmount: 0.36, energyLoss: 12.5, downtime: 8.2 },
-  { plant: "Plant B - Gandhinagar", state: "Gujarat", region: "West", generation: 1980, availability: 93.8, cuf: 22.1, revenue: 592, ldAmount: 1.8, energyLoss: 45.2, downtime: 14.5 },
-  { plant: "Plant C - Rewa", state: "Madhya Pradesh", region: "Central", generation: 4100, availability: 94.5, cuf: 22.3, revenue: 1225, ldAmount: 1.0, energyLoss: 38.6, downtime: 11.8 },
-  { plant: "Plant D - Bangalore", state: "Karnataka", region: "South", generation: 2300, availability: 92.1, cuf: 20.8, revenue: 687, ldAmount: 3.6, energyLoss: 62.3, downtime: 18.9 },
-  { plant: "Plant E - Lucknow", state: "Uttar Pradesh", region: "North", generation: 1280, availability: 97.3, cuf: 23.5, revenue: 382, ldAmount: 0, energyLoss: 8.1, downtime: 4.2 },
+  { plant: "Sakri Solar Park", state: "Maharashtra", region: "North", generation: 820, availability: 96.2, cuf: 21.8, revenue: 245, ldAmount: 0.36, energyLoss: 12.5, downtime: 8.2 },
+  { plant: "Osmanabad Solar Plant", state: "Maharashtra", region: "West", generation: 1980, availability: 93.8, cuf: 22.1, revenue: 592, ldAmount: 1.8, energyLoss: 45.2, downtime: 14.5 },
+  { plant: "Latur Solar Station", state: "Maharashtra", region: "Central", generation: 4100, availability: 94.5, cuf: 22.3, revenue: 1225, ldAmount: 1.0, energyLoss: 38.6, downtime: 11.8 },
+  { plant: "Plant D - Bangalore", state: "Maharashtra", region: "South", generation: 2300, availability: 92.1, cuf: 20.8, revenue: 687, ldAmount: 3.6, energyLoss: 62.3, downtime: 18.9 },
+  { plant: "Plant E - Lucknow", state: "Maharashtra", region: "North", generation: 1280, availability: 97.3, cuf: 23.5, revenue: 382, ldAmount: 0, energyLoss: 8.1, downtime: 4.2 },
   { plant: "Plant F - Pune", state: "Maharashtra", region: "West", generation: 3200, availability: 95.8, cuf: 22.8, revenue: 956, ldAmount: 0.5, energyLoss: 28.4, downtime: 9.6 },
   { plant: "Plant G - Hyderabad", state: "Telangana", region: "South", generation: 2850, availability: 94.2, cuf: 21.9, revenue: 852, ldAmount: 1.2, energyLoss: 34.7, downtime: 12.3 },
 ];
@@ -524,12 +524,12 @@ type ViewMode = "gallery" | "builder" | "scheduled" | "history" | "analytics";
 
 // ── Per-template preview mock data ────────────────────────────────────────
 const PREVIEW_MONTHLY_PLANTS = [
-  { plant: "Pune Solar Park",     gen: 2150, target: 2100, cuf: 23.5, avail: 97.2, status: "Compliant" },
-  { plant: "Aurangabad Project",  gen: 2380, target: 2450, cuf: 24.1, avail: 96.8, status: "Warning" },
-  { plant: "Solapur SPV",         gen: 1720, target: 1680, cuf: 23.8, avail: 97.5, status: "Compliant" },
-  { plant: "Chennai Coastal",     gen: 1920, target: 1850, cuf: 24.5, avail: 98.1, status: "Compliant" },
-  { plant: "Coimbatore Solar",    gen: 2120, target: 2350, cuf: 20.8, avail: 93.5, status: "Non-Compliant" },
-  { plant: "Nagpur Plant",        gen: 1310, target: 1580, cuf: 19.5, avail: 91.2, status: "Non-Compliant" },
+  { plant: "Sakri Solar Park",     gen: 2150, target: 2100, cuf: 23.5, avail: 97.2, status: "Compliant" },
+  { plant: "Osmanabad Solar Plant",  gen: 2380, target: 2450, cuf: 24.1, avail: 96.8, status: "Warning" },
+  { plant: "Latur Solar Station",         gen: 1720, target: 1680, cuf: 23.8, avail: 97.5, status: "Compliant" },
+  { plant: "Beed Solar Park",     gen: 1920, target: 1850, cuf: 24.5, avail: 98.1, status: "Compliant" },
+  { plant: "Wardha Solar Park",    gen: 2120, target: 2350, cuf: 20.8, avail: 93.5, status: "Non-Compliant" },
+  { plant: "Devdaithan Solar Plant",        gen: 1310, target: 1580, cuf: 19.5, avail: 91.2, status: "Non-Compliant" },
 ];
 const PREVIEW_MONTHLY_CHART = [
   { month: "Sep", gen: 38200, target: 40000 },
@@ -554,11 +554,11 @@ const PREVIEW_VENDOR_DATA = [
   { vendor: "Vendor D", cuf: 23.7, avail: 97.8, ld: 0.00, plants: 3 },
 ];
 const PREVIEW_OUTAGE_LOG = [
-  { date: "Feb 18", plant: "Nagpur Plant",    type: "Grid Curtailment",   duration: "6.2 hrs", loss: "184 MWh", severity: "high" },
-  { date: "Feb 14", plant: "Trichy Site B",   type: "Equipment Fault",    duration: "4.0 hrs", loss: "95 MWh",  severity: "high" },
-  { date: "Feb 11", plant: "Coimbatore",      type: "Scheduled Maint.",   duration: "3.5 hrs", loss: "72 MWh",  severity: "medium" },
-  { date: "Feb 07", plant: "Nashik Site A",   type: "Transmission Loss",  duration: "2.0 hrs", loss: "48 MWh",  severity: "medium" },
-  { date: "Feb 03", plant: "Aurangabad",      type: "Force Majeure",      duration: "1.5 hrs", loss: "38 MWh",  severity: "low" },
+  { date: "Feb 18", plant: "Devdaithan Solar Plant",    type: "Grid Curtailment",   duration: "6.2 hrs", loss: "184 MWh", severity: "high" },
+  { date: "Feb 14", plant: "Amravati Solar Unit",   type: "Equipment Fault",    duration: "4.0 hrs", loss: "95 MWh",  severity: "high" },
+  { date: "Feb 11", plant: "Wardha Solar Park",      type: "Scheduled Maint.",   duration: "3.5 hrs", loss: "72 MWh",  severity: "medium" },
+  { date: "Feb 07", plant: "Sangli Solar Farm",   type: "Transmission Loss",  duration: "2.0 hrs", loss: "48 MWh",  severity: "medium" },
+  { date: "Feb 03", plant: "Osmanabad Solar Plant",      type: "Force Majeure",      duration: "1.5 hrs", loss: "38 MWh",  severity: "low" },
 ];
 const PREVIEW_FORECAST_DATA = [
   { day: "Mar 6",  actual: null,  forecast: 1540, upper: 1620, lower: 1460 },
@@ -571,17 +571,17 @@ const PREVIEW_FORECAST_DATA = [
 ];
 const PREVIEW_JMR_RECORDS = [
   { id: "JMR-2026-02-001", plant: "Sakri Solar Park",  gross: 4520, net: 4418, avail: 97.2, status: "approved" },
-  { id: "JMR-2026-02-002", plant: "Chennai Coastal",     gross: 1920, net: 1882, avail: 98.1, status: "approved" },
-  { id: "JMR-2026-02-003", plant: "Nagpur Plant",        gross: 1310, net: 1274, avail: 91.2, status: "pending" },
-  { id: "JMR-2026-02-004", plant: "Coimbatore Solar",    gross: 2120, net: 2066, avail: 93.5, status: "review" },
-  { id: "JMR-2026-02-005", plant: "Pune Solar Park",     gross: 2150, net: 2107, avail: 97.2, status: "approved" },
+  { id: "JMR-2026-02-002", plant: "Beed Solar Park",     gross: 1920, net: 1882, avail: 98.1, status: "approved" },
+  { id: "JMR-2026-02-003", plant: "Devdaithan Solar Plant",        gross: 1310, net: 1274, avail: 91.2, status: "pending" },
+  { id: "JMR-2026-02-004", plant: "Wardha Solar Park",    gross: 2120, net: 2066, avail: 93.5, status: "review" },
+  { id: "JMR-2026-02-005", plant: "Sakri Solar Park",     gross: 2150, net: 2107, avail: 97.2, status: "approved" },
 ];
 const PREVIEW_LD_DATA = [
-  { vendor: "Vendor C", plant: "Nagpur Plant",     clause: "Cl. 8.2 – CUF",    breach: "4.5%", penalty: "₹0.55 Cr", risk: "high" },
-  { vendor: "Vendor C", plant: "Trichy Site B",    clause: "Cl. 8.2 – CUF",    breach: "5.5%", penalty: "₹0.69 Cr", risk: "high" },
-  { vendor: "Vendor A", plant: "Nashik Site A",    clause: "Cl. 9.1 – Avail",  breach: "3.5%", penalty: "₹0.28 Cr", risk: "medium" },
-  { vendor: "Vendor C", plant: "Coimbatore Solar", clause: "Cl. 8.2 – CUF",    breach: "3.2%", penalty: "₹0.20 Cr", risk: "medium" },
-  { vendor: "Vendor D", plant: "Pune Solar Park",  clause: "—",                 breach: "—",    penalty: "₹0.00 Cr", risk: "none" },
+  { vendor: "Vendor C", plant: "Devdaithan Solar Plant",     clause: "Cl. 8.2 – CUF",    breach: "4.5%", penalty: "₹0.55 Cr", risk: "high" },
+  { vendor: "Vendor C", plant: "Amravati Solar Unit",    clause: "Cl. 8.2 – CUF",    breach: "5.5%", penalty: "₹0.69 Cr", risk: "high" },
+  { vendor: "Vendor A", plant: "Sangli Solar Farm",    clause: "Cl. 9.1 – Avail",  breach: "3.5%", penalty: "₹0.28 Cr", risk: "medium" },
+  { vendor: "Vendor C", plant: "Wardha Solar Park", clause: "Cl. 8.2 – CUF",    breach: "3.2%", penalty: "₹0.20 Cr", risk: "medium" },
+  { vendor: "Vendor D", plant: "Sakri Solar Park",  clause: "—",                 breach: "—",    penalty: "₹0.00 Cr", risk: "none" },
 ];
 
 function ReportPreviewContent({ template }: { template: typeof reportTemplates[0] | null }) {
@@ -1077,13 +1077,13 @@ function buildReportHTML(template: typeof reportTemplates[0]): string {
 <h2 style="font-size:15px;color:#2955A0;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:16px;">Plant-wise Breakdown</h2>
 <table>
   <tr><th>Plant</th><th>State</th><th>Capacity (MW)</th><th>Generation (MWh)</th><th>CUF (%)</th><th>Availability (%)</th></tr>
-  <tr><td>Pune Solar Park</td><td>Maharashtra</td><td>25</td><td>2,150</td><td>23.5</td><td>97.2</td></tr>
-  <tr><td>Nashik Site A</td><td>Maharashtra</td><td>15</td><td>1,180</td><td>21.2</td><td>94.5</td></tr>
-  <tr><td>Aurangabad Project</td><td>Maharashtra</td><td>30</td><td>2,380</td><td>24.1</td><td>96.8</td></tr>
-  <tr><td>Solapur SPV</td><td>Maharashtra</td><td>20</td><td>1,720</td><td>23.8</td><td>97.5</td></tr>
-  <tr><td>Nagpur Plant</td><td>Maharashtra</td><td>18</td><td>1,310</td><td>19.5</td><td>91.2</td></tr>
-  <tr><td>Chennai Coastal</td><td>Tamil Nadu</td><td>22</td><td>1,920</td><td>24.5</td><td>98.1</td></tr>
-  <tr><td>Coimbatore Solar</td><td>Tamil Nadu</td><td>28</td><td>2,120</td><td>20.8</td><td>93.5</td></tr>
+  <tr><td>Sakri Solar Park</td><td>Maharashtra</td><td>25</td><td>2,150</td><td>23.5</td><td>97.2</td></tr>
+  <tr><td>Sangli Solar Farm</td><td>Maharashtra</td><td>15</td><td>1,180</td><td>21.2</td><td>94.5</td></tr>
+  <tr><td>Osmanabad Solar Plant</td><td>Maharashtra</td><td>30</td><td>2,380</td><td>24.1</td><td>96.8</td></tr>
+  <tr><td>Latur Solar Station</td><td>Maharashtra</td><td>20</td><td>1,720</td><td>23.8</td><td>97.5</td></tr>
+  <tr><td>Devdaithan Solar Plant</td><td>Maharashtra</td><td>18</td><td>1,310</td><td>19.5</td><td>91.2</td></tr>
+  <tr><td>Beed Solar Park</td><td>Maharashtra</td><td>22</td><td>1,920</td><td>24.5</td><td>98.1</td></tr>
+  <tr><td>Wardha Solar Park</td><td>Maharashtra</td><td>28</td><td>2,120</td><td>20.8</td><td>93.5</td></tr>
 </table>
 
 <p class="footer">

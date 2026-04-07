@@ -191,9 +191,9 @@ export function ExportMenu({ kpis, plants, dashboardRef }: ExportMenuProps) {
       });
 
       const underperforming = [
-        { plant: "Trichy Site B", state: "Tamil Nadu", cuf: 18.5, gap: -5.5 },
-        { plant: "Nagpur Plant", state: "Maharashtra", cuf: 19.5, gap: -4.5 },
-        { plant: "Coimbatore Solar", state: "Tamil Nadu", cuf: 20.8, gap: -3.2 },
+        { plant: "Amravati Solar Unit", state: "Maharashtra", cuf: 18.5, gap: -5.5 },
+        { plant: "Devdaithan Solar Plant", state: "Maharashtra", cuf: 19.5, gap: -4.5 },
+        { plant: "Wardha Solar Park", state: "Maharashtra", cuf: 20.8, gap: -3.2 },
       ];
 
       s4.addText("TOP UNDERPERFORMING PLANTS", { x: 0.4, y: 3.95, w: 12.5, h: 0.35, color: GOLD, fontSize: 10, bold: true, fontFace: "Calibri" });

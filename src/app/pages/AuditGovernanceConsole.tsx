@@ -97,7 +97,7 @@ const jmrVersionHistory = [
   {
     id: "VER-2026-324",
     jmrId: "JMR-2026-02-003",
-    plant: "Plant C - Rewa",
+    plant: "Latur Solar Station",
     version: "v2.2",
     timestamp: "2026-02-28 14:32:15",
     modifiedBy: "Rajesh Kumar",
@@ -110,7 +110,7 @@ const jmrVersionHistory = [
   {
     id: "VER-2026-323",
     jmrId: "JMR-2026-02-003",
-    plant: "Plant C - Rewa",
+    plant: "Latur Solar Station",
     version: "v2.1",
     timestamp: "2026-02-28 12:18:40",
     modifiedBy: "Anjali Verma",
@@ -123,7 +123,7 @@ const jmrVersionHistory = [
   {
     id: "VER-2026-322",
     jmrId: "JMR-2026-02-003",
-    plant: "Plant C - Rewa",
+    plant: "Latur Solar Station",
     version: "v2.0",
     timestamp: "2026-02-27 16:45:22",
     modifiedBy: "Anjali Verma",
@@ -136,7 +136,7 @@ const jmrVersionHistory = [
   {
     id: "VER-2026-321",
     jmrId: "JMR-2026-02-001",
-    plant: "Plant A - Jaipur",
+    plant: "Sakri Solar Park",
     version: "v1.1",
     timestamp: "2026-02-27 14:20:10",
     modifiedBy: "Amit Patel",

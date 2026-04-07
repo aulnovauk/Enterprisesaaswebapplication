@@ -80,7 +80,7 @@ import {
 const PORTFOLIO_CONFIG = {
   totalCapacity: 220, // MW
   totalPlants: 45,
-  states: ["Maharashtra", "Tamil Nadu", "Goa"],
+  states: ["Maharashtra"],
 };
 
 // Strategic KPI Cards Data
@@ -217,22 +217,20 @@ const strategicKPIs = [
   },
 ];
 
-// Plant Markers for India Map (Simplified representation)
+// Plant Markers for India Map — All Maharashtra EESL Solar Sites
 const plantMarkers = [
-  // Maharashtra
-  { id: 1, name: "Pune Solar Park",     state: "Maharashtra", district: "Pune",        lat: 18.5, lon: 73.8, capacity: 25, status: "compliant",     cuf: 23.5, generation: 2150, target: 2100, availability: 97.2, ldRisk: "none",   vendor: "Vendor D" },
-  { id: 2, name: "Nashik Site A",        state: "Maharashtra", district: "Nashik",      lat: 19.9, lon: 73.7, capacity: 15, status: "warning",       cuf: 21.2, generation: 1180, target: 1260, availability: 94.5, ldRisk: "low",    vendor: "Vendor A" },
-  { id: 3, name: "Aurangabad Project",   state: "Maharashtra", district: "Aurangabad",  lat: 19.8, lon: 75.3, capacity: 30, status: "compliant",     cuf: 24.1, generation: 2380, target: 2450, availability: 96.8, ldRisk: "none",   vendor: "Vendor B" },
-  { id: 4, name: "Solapur SPV",          state: "Maharashtra", district: "Solapur",     lat: 17.6, lon: 75.9, capacity: 20, status: "compliant",     cuf: 23.8, generation: 1720, target: 1680, availability: 97.5, ldRisk: "none",   vendor: "Vendor D" },
-  { id: 5, name: "Nagpur Plant",         state: "Maharashtra", district: "Nagpur",      lat: 21.1, lon: 79.0, capacity: 18, status: "curtailment",   cuf: 19.5, generation: 1310, target: 1580, availability: 91.2, ldRisk: "high",   vendor: "Vendor C" },
-  // Tamil Nadu
-  { id: 6, name: "Chennai Coastal",      state: "Tamil Nadu",  district: "Chennai",     lat: 13.0, lon: 80.2, capacity: 22, status: "compliant",     cuf: 24.5, generation: 1920, target: 1850, availability: 98.1, ldRisk: "none",   vendor: "Vendor D" },
-  { id: 7, name: "Coimbatore Solar",     state: "Tamil Nadu",  district: "Coimbatore",  lat: 11.0, lon: 76.9, capacity: 28, status: "warning",       cuf: 20.8, generation: 2120, target: 2350, availability: 93.5, ldRisk: "medium", vendor: "Vendor C" },
-  { id: 8, name: "Madurai Project",      state: "Tamil Nadu",  district: "Madurai",     lat:  9.9, lon: 78.1, capacity: 16, status: "compliant",     cuf: 23.2, generation: 1560, target: 1480, availability: 96.4, ldRisk: "none",   vendor: "Vendor A" },
-  { id: 9, name: "Trichy Site B",        state: "Tamil Nadu",  district: "Tiruchirappalli", lat: 10.8, lon: 78.7, capacity: 19, status: "non-compliant", cuf: 18.5, generation: 1140, target: 1680, availability: 88.3, ldRisk: "high",   vendor: "Vendor C" },
-  // Goa
-  { id: 10, name: "Panaji Solar Farm",   state: "Goa",         district: "North Goa",   lat: 15.4, lon: 73.8, capacity: 8,  status: "compliant",     cuf: 22.8, generation:  720, target:  700, availability: 97.0, ldRisk: "none",   vendor: "Vendor B" },
-  { id: 11, name: "Margao SPV",          state: "Goa",         district: "South Goa",   lat: 15.2, lon: 73.9, capacity: 7,  status: "warning",       cuf: 21.5, generation:  580, target:  630, availability: 93.8, ldRisk: "low",    vendor: "Vendor A" },
+  { id: 1,  name: "Sakri Solar Park",          state: "Maharashtra", district: "Dhule",        lat: 20.98, lon: 74.15, capacity: 25, status: "compliant",     cuf: 23.5, generation: 2150, target: 2100, availability: 97.2, ldRisk: "none",   vendor: "SolarCo India" },
+  { id: 2,  name: "Sangli Solar Farm",          state: "Maharashtra", district: "Sangli",       lat: 16.85, lon: 74.56, capacity: 15, status: "warning",       cuf: 21.2, generation: 1180, target: 1260, availability: 94.5, ldRisk: "low",    vendor: "SunPower Tech" },
+  { id: 3,  name: "Osmanabad Solar Plant",      state: "Maharashtra", district: "Osmanabad",    lat: 18.18, lon: 76.04, capacity: 30, status: "compliant",     cuf: 24.1, generation: 2380, target: 2450, availability: 96.8, ldRisk: "none",   vendor: "Green Energy Ltd" },
+  { id: 4,  name: "Latur Solar Station",         state: "Maharashtra", district: "Latur",        lat: 18.40, lon: 76.57, capacity: 20, status: "compliant",     cuf: 23.8, generation: 1720, target: 1680, availability: 97.5, ldRisk: "none",   vendor: "TechSolar Pvt" },
+  { id: 5,  name: "Beed Solar Park",            state: "Maharashtra", district: "Beed",         lat: 18.99, lon: 75.76, capacity: 30, status: "compliant",     cuf: 24.5, generation: 1920, target: 1850, availability: 98.1, ldRisk: "none",   vendor: "Mega Solar Inc" },
+  { id: 6,  name: "Ahmednagar Solar Plant",     state: "Maharashtra", district: "Ahmednagar",   lat: 19.09, lon: 74.74, capacity: 12, status: "compliant",     cuf: 23.2, generation: 1560, target: 1480, availability: 96.4, ldRisk: "none",   vendor: "SolarCo India" },
+  { id: 7,  name: "Devdaithan Solar Plant",     state: "Maharashtra", district: "Ahmednagar",   lat: 19.20, lon: 74.28, capacity: 18, status: "curtailment",   cuf: 19.5, generation: 1310, target: 1580, availability: 91.2, ldRisk: "high",   vendor: "Mega Solar Inc" },
+  { id: 8,  name: "Amravati Solar Unit",        state: "Maharashtra", district: "Amravati",     lat: 20.93, lon: 77.75, capacity: 14, status: "non-compliant", cuf: 18.5, generation: 1140, target: 1680, availability: 88.3, ldRisk: "high",   vendor: "SolarCo India" },
+  { id: 9,  name: "Wardha Solar Park",          state: "Maharashtra", district: "Wardha",       lat: 20.73, lon: 78.60, capacity: 16, status: "warning",       cuf: 20.8, generation: 2120, target: 2350, availability: 93.5, ldRisk: "medium", vendor: "SunPower Tech" },
+  { id: 10, name: "Buldhana Solar Farm",        state: "Maharashtra", district: "Buldhana",     lat: 20.53, lon: 76.18, capacity: 10, status: "compliant",     cuf: 22.8, generation:  720, target:  700, availability: 97.0, ldRisk: "none",   vendor: "SunPower Tech" },
+  { id: 11, name: "Chandrapur Solar Project",   state: "Maharashtra", district: "Chandrapur",   lat: 19.95, lon: 79.30, capacity: 22, status: "warning",       cuf: 21.5, generation:  580, target:  630, availability: 93.8, ldRisk: "low",    vendor: "SunPower Tech" },
+  { id: 12, name: "Bhandara Solar Station",     state: "Maharashtra", district: "Bhandara",     lat: 21.17, lon: 79.65, capacity: 8,  status: "compliant",     cuf: 23.0, generation:  640, target:  620, availability: 96.5, ldRisk: "none",   vendor: "Mega Solar Inc" },
 ];
 
 // Risk & Alert Data
@@ -245,9 +243,9 @@ const riskData = {
   ldExposureCr: 1.24,
   riskScore: 62,
   topUnderperforming: [
-    { plant: "Trichy Site B", state: "Tamil Nadu", cuf: 18.5, gap: -5.5 },
-    { plant: "Nagpur Plant", state: "Maharashtra", cuf: 19.5, gap: -4.5 },
-    { plant: "Coimbatore Solar", state: "Tamil Nadu", cuf: 20.8, gap: -3.2 },
+    { plant: "Amravati Solar Unit", state: "Maharashtra", cuf: 18.5, gap: -5.5 },
+    { plant: "Devdaithan Solar Plant", state: "Maharashtra", cuf: 19.5, gap: -4.5 },
+    { plant: "Wardha Solar Park", state: "Maharashtra", cuf: 20.8, gap: -3.2 },
   ],
   complianceTrend: [
     { month: "Sep", nonCompliant: 10 },
@@ -258,11 +256,11 @@ const riskData = {
     { month: "Feb", nonCompliant: 8 },
   ],
   recentAlerts: [
-    { id: 1, category: "Non-Compliant", plant: "Trichy Site B",    state: "Tamil Nadu",    daysOpen: 2,  severity: "critical", detail: "CUF 18.5% — 5.5% below target" },
-    { id: 2, category: "Curtailment",   plant: "Nagpur Plant",     state: "Maharashtra",   daysOpen: 5,  severity: "high",     detail: "Grid curtailment — 18.8% generation loss" },
-    { id: 3, category: "JMR Overdue",   plant: "Nashik Site A",    state: "Maharashtra",   daysOpen: 9,  severity: "high",     detail: "JMR submission pending — SLA breached" },
-    { id: 4, category: "Warning",       plant: "Coimbatore Solar", state: "Tamil Nadu",    daysOpen: 1,  severity: "medium",   detail: "CUF trending below threshold for 3 days" },
-    { id: 5, category: "JMR Overdue",   plant: "Margao SPV",       state: "Goa",           daysOpen: 11, severity: "high",     detail: "JMR submission pending — SLA breached" },
+    { id: 1, category: "Non-Compliant", plant: "Amravati Solar Unit",      state: "Maharashtra",   daysOpen: 2,  severity: "critical", detail: "CUF 18.5% — 5.5% below target" },
+    { id: 2, category: "Curtailment",   plant: "Devdaithan Solar Plant",   state: "Maharashtra",   daysOpen: 5,  severity: "high",     detail: "Grid curtailment — 18.8% generation loss" },
+    { id: 3, category: "JMR Overdue",   plant: "Sangli Solar Farm",        state: "Maharashtra",   daysOpen: 9,  severity: "high",     detail: "JMR submission pending — SLA breached" },
+    { id: 4, category: "Warning",       plant: "Wardha Solar Park",        state: "Maharashtra",   daysOpen: 1,  severity: "medium",   detail: "CUF trending below threshold for 3 days" },
+    { id: 5, category: "JMR Overdue",   plant: "Chandrapur Solar Project", state: "Maharashtra",   daysOpen: 11, severity: "high",     detail: "JMR submission pending — SLA breached" },
   ],
   vendorLDExposure: [
     { vendor: "Vendor C", plants: 15, ldCr: 0.54, risk: "high" },
@@ -273,12 +271,12 @@ const riskData = {
 
 // Generation Analytics Data
 const mtdGenerationData = [
-  { plant: "Chennai Coastal", target: 1850, actual: 1920 },
-  { plant: "Aurangabad Project", target: 2450, actual: 2380 },
-  { plant: "Pune Solar Park", target: 2100, actual: 2150 },
-  { plant: "Coimbatore Solar", target: 2350, actual: 2120 },
-  { plant: "Solapur SPV", target: 1680, actual: 1720 },
-  { plant: "Nashik Site A", target: 1260, actual: 1180 },
+  { plant: "Beed Solar Park", target: 1850, actual: 1920 },
+  { plant: "Osmanabad Solar Plant", target: 2450, actual: 2380 },
+  { plant: "Sakri Solar Park", target: 2100, actual: 2150 },
+  { plant: "Wardha Solar Park", target: 2350, actual: 2120 },
+  { plant: "Latur Solar Station", target: 1680, actual: 1720 },
+  { plant: "Sangli Solar Farm", target: 1260, actual: 1180 },
 ];
 
 const cufTrendData = [
@@ -298,12 +296,12 @@ const cufTrendData = [
 
 // Previous year data for comparison mode
 const prevYearMtdGenerationData = [
-  { plant: "Chennai Coastal", target: 1700, actual: 1680 },
-  { plant: "Aurangabad Project", target: 2250, actual: 2190 },
-  { plant: "Pune Solar Park", target: 1950, actual: 1920 },
-  { plant: "Coimbatore Solar", target: 2150, actual: 1980 },
-  { plant: "Solapur SPV", target: 1550, actual: 1530 },
-  { plant: "Nashik Site A", target: 1180, actual: 1050 },
+  { plant: "Beed Solar Park", target: 1700, actual: 1680 },
+  { plant: "Osmanabad Solar Plant", target: 2250, actual: 2190 },
+  { plant: "Sakri Solar Park", target: 1950, actual: 1920 },
+  { plant: "Wardha Solar Park", target: 2150, actual: 1980 },
+  { plant: "Latur Solar Station", target: 1550, actual: 1530 },
+  { plant: "Sangli Solar Farm", target: 1180, actual: 1050 },
 ];
 
 const prevYearCufTrendData = [
@@ -364,9 +362,9 @@ const vendorRankingData = [
 
 // Cluster Comparison
 const clusterComparisonData = [
-  { state: "Maharashtra", capacity: 108, generation: 24580, cuf: 22.8, availability: 96.5, ldExposure: 0.52 },
-  { state: "Tamil Nadu", capacity: 85, generation: 18240, cuf: 21.5, availability: 95.2, ldExposure: 0.58 },
-  { state: "Goa", capacity: 15, generation: 3420, cuf: 22.8, availability: 97.8, ldExposure: 0.14 },
+  { state: "Western Maharashtra", capacity: 82, generation: 18650, cuf: 22.8, availability: 96.5, ldExposure: 0.32 },
+  { state: "Vidarbha Region", capacity: 78, generation: 17240, cuf: 21.5, availability: 94.2, ldExposure: 0.58 },
+  { state: "Marathwada Region", capacity: 60, generation: 13580, cuf: 22.6, availability: 96.8, ldExposure: 0.24 },
 ];
 
 // Lost Production Index
@@ -2020,8 +2018,8 @@ export function Dashboard() {
                 <SelectContent>
                   <SelectItem value="All States">All States</SelectItem>
                   <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                  <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
-                  <SelectItem value="Goa">Goa</SelectItem>
+                  <SelectItem value="Vidarbha">Vidarbha Region</SelectItem>
+                  <SelectItem value="Marathwada">Marathwada Region</SelectItem>
                 </SelectContent>
               </Select>
 

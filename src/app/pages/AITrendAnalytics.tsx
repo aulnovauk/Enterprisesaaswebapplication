@@ -105,7 +105,7 @@ const forecastData = [
 // Cleaning cycle recommendations
 const cleaningRecommendations = [
   {
-    site: "Plant A - Jaipur",
+    site: "Sakri Solar Park",
     lastCleaning: "2026-02-10",
     nextRecommended: "2026-03-15",
     daysUntil: 15,
@@ -114,7 +114,7 @@ const cleaningRecommendations = [
     soilingRate: "0.15%/day",
   },
   {
-    site: "Plant B - Gandhinagar",
+    site: "Osmanabad Solar Plant",
     lastCleaning: "2026-01-28",
     nextRecommended: "2026-03-05",
     daysUntil: 5,
@@ -123,7 +123,7 @@ const cleaningRecommendations = [
     soilingRate: "0.22%/day",
   },
   {
-    site: "Plant C - Rewa",
+    site: "Latur Solar Station",
     lastCleaning: "2026-02-18",
     nextRecommended: "2026-03-25",
     daysUntil: 25,

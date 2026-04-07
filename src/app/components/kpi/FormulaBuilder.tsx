@@ -132,7 +132,7 @@ const PPA_CONTRACTS: PPAContract[] = [
     ],
   },
   {
-    id: "PPA-TN-002", name: "TANGEDCO FiT — Tamil Nadu", counterparty: "TANGEDCO", type: "FiT",
+    id: "PPA-MH-002", name: "MSEDCL FiT — Maharashtra", counterparty: "MSEDCL", type: "FiT",
     capacity: 22, tariff: 3.47, contractedCUF: 20.0, ldRate: 0.35,
     effectiveFrom: "2019-09-01", expiresOn: "2044-08-31", status: "active",
     overrides: [

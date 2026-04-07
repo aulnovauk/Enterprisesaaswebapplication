@@ -27,7 +27,7 @@ const plants = [
   {
     id: "PLT-002",
     name: "Plant B",
-    location: "Bikaner, Rajasthan",
+    location: "Buldhana, Maharashtra",
     capacity: "25 MW",
     commissionDate: "2019-11-20",
     technology: "Poly-crystalline",
@@ -39,7 +39,7 @@ const plants = [
   {
     id: "PLT-003",
     name: "Plant C",
-    location: "Jaisalmer, Rajasthan",
+    location: "Latur, Maharashtra",
     capacity: "50 MW",
     commissionDate: "2021-06-10",
     technology: "Mono-crystalline",
