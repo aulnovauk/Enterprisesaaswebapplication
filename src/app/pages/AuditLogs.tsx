@@ -130,7 +130,7 @@ const jmrSubmissions = [
   },
   {
     id: "JMR-2026-02-004",
-    plant: "Plant D - Tumkur (30 MW)",
+    plant: "Plant D - Beed (30 MW)",
     month: "February 2026",
     submittedBy: "-",
     submittedDate: "-",

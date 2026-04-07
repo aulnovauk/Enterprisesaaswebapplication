@@ -55,7 +55,7 @@ const plants = [
   { id: "plant-b", label: "Plant B - Gandhinagar (25 MW)" },
   { id: "plant-c", label: "Plant C - Jaisalmer (50 MW)" },
   { id: "plant-d", label: "Plant D - Sangli (30 MW)" },
-  { id: "plant-e", label: "Plant E - Anantapur (15 MW)" },
+  { id: "plant-e", label: "Plant E - Osmanabad (15 MW)" },
 ];
 
 interface CommandPaletteProps {

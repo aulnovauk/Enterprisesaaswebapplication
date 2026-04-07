@@ -132,7 +132,7 @@ const cleaningRecommendations = [
     soilingRate: "0.08%/day",
   },
   {
-    site: "Plant D - Tumkur",
+    site: "Plant D - Beed",
     lastCleaning: "2026-01-20",
     nextRecommended: "2026-03-01",
     daysUntil: 1,

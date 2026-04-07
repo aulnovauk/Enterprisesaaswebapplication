@@ -46,7 +46,7 @@ const topInsights = [
     severity: "high",
     icon: TrendingDown,
     title: "Degradation Trend Alert",
-    subtitle: "Plant D - Tumkur",
+    subtitle: "Plant D - Beed",
     metric: "0.82% annual",
     baseline: "vs. 0.50% industry standard",
     insight: "Accelerated degradation detected over the last 12 months. Module inspection recommended.",

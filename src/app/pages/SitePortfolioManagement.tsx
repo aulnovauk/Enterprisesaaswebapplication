@@ -15,7 +15,7 @@ const plants = [
   {
     id: "PLT-001",
     name: "Plant A",
-    location: "Jodhpur, Rajasthan",
+    location: "Dhule, Maharashtra",
     capacity: "10 MW",
     commissionDate: "2020-04-15",
     technology: "Mono-crystalline",
@@ -63,7 +63,7 @@ const plants = [
   {
     id: "PLT-005",
     name: "Plant E",
-    location: "Anantapur, Andhra Pradesh",
+    location: "Osmanabad, Maharashtra",
     capacity: "15 MW",
     commissionDate: "2022-01-18",
     technology: "Mono-crystalline",

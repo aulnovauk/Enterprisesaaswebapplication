@@ -110,7 +110,7 @@ const sitewiseLD = [
   },
   {
     siteId: "EESL-KAR-004",
-    siteName: "Plant D - Tumkur",
+    siteName: "Plant D - Beed",
     capacity: 30,
     vendor: "GreenEnergy Corp",
     contractedGen: 2500,
@@ -246,7 +246,7 @@ const guaranteedVsActual = [
 const escalationAlerts = [
   {
     id: "ESC-2026-008",
-    site: "Plant D - Tumkur",
+    site: "Plant D - Beed",
     vendor: "GreenEnergy Corp",
     severity: "critical",
     issue: "Consistent availability below 93% for 3 consecutive months",

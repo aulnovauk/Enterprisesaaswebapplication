@@ -570,7 +570,7 @@ const PREVIEW_FORECAST_DATA = [
   { day: "Mar 12", actual: null,  forecast: 1680, upper: 1770, lower: 1580 },
 ];
 const PREVIEW_JMR_RECORDS = [
-  { id: "JMR-2026-02-001", plant: "Jodhpur Solar Park",  gross: 4520, net: 4418, avail: 97.2, status: "approved" },
+  { id: "JMR-2026-02-001", plant: "Sakri Solar Park",  gross: 4520, net: 4418, avail: 97.2, status: "approved" },
   { id: "JMR-2026-02-002", plant: "Chennai Coastal",     gross: 1920, net: 1882, avail: 98.1, status: "approved" },
   { id: "JMR-2026-02-003", plant: "Nagpur Plant",        gross: 1310, net: 1274, avail: 91.2, status: "pending" },
   { id: "JMR-2026-02-004", plant: "Coimbatore Solar",    gross: 2120, net: 2066, avail: 93.5, status: "review" },
