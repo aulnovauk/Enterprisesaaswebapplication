@@ -263,9 +263,9 @@ const riskData = {
     { id: 5, category: "JMR Overdue",   plant: "Chandrapur Solar Project", state: "Maharashtra",   daysOpen: 11, severity: "high",     detail: "JMR submission pending — SLA breached" },
   ],
   vendorLDExposure: [
-    { vendor: "Vendor C", plants: 15, ldCr: 0.54, risk: "high" },
-    { vendor: "Vendor A", plants: 12, ldCr: 0.42, risk: "medium" },
-    { vendor: "Vendor B", plants: 8,  ldCr: 0.28, risk: "low" },
+    { vendor: "SunPower Tech", plants: 15, ldCr: 0.54, risk: "high" },
+    { vendor: "SolarCo India", plants: 12, ldCr: 0.42, risk: "medium" },
+    { vendor: "Green Energy Ltd", plants: 8,  ldCr: 0.28, risk: "low" },
   ],
 };
 
@@ -339,10 +339,11 @@ const revenueWaterfallData = [
 
 // LD Exposure by Vendor
 const ldExposureData = [
-  { vendor: "Vendor A", plants: 12, ldAmount: 0.42, severity: "medium" },
-  { vendor: "Vendor B", plants: 8, ldAmount: 0.28, severity: "low" },
-  { vendor: "Vendor C", plants: 15, ldAmount: 0.54, severity: "high" },
-  { vendor: "Vendor D", plants: 10, ldAmount: 0.00, severity: "none" },
+  { vendor: "SolarCo India", plants: 12, ldAmount: 0.42, severity: "medium" },
+  { vendor: "SunPower Tech", plants: 15, ldAmount: 0.54, severity: "high" },
+  { vendor: "Mega Solar Inc", plants: 10, ldAmount: 0.55, severity: "high" },
+  { vendor: "Green Energy Ltd", plants: 4, ldAmount: 0.00, severity: "none" },
+  { vendor: "TechSolar Pvt", plants: 4, ldAmount: 0.00, severity: "none" },
 ];
 
 // O&M Deviation Data
@@ -354,10 +355,11 @@ const omDeviationData = {
 
 // Vendor Performance Ranking
 const vendorRankingData = [
-  { rank: 1, vendor: "Vendor D", plants: 10, avgCuf: 23.8, avgAvailability: 97.5, ldExposure: 0.00, compliance: 98.5 },
-  { rank: 2, vendor: "Vendor A", plants: 12, avgCuf: 22.5, avgAvailability: 96.2, ldExposure: 0.42, compliance: 94.2 },
-  { rank: 3, vendor: "Vendor B", plants: 8, avgCuf: 22.1, avgAvailability: 95.8, ldExposure: 0.28, compliance: 95.8 },
-  { rank: 4, vendor: "Vendor C", plants: 15, avgCuf: 20.8, avgAvailability: 93.5, ldExposure: 0.54, compliance: 88.5 },
+  { rank: 1, vendor: "TechSolar Pvt", plants: 4, avgCuf: 23.8, avgAvailability: 97.5, ldExposure: 0.00, compliance: 98.5 },
+  { rank: 2, vendor: "Mega Solar Inc", plants: 10, avgCuf: 23.7, avgAvailability: 97.8, ldExposure: 0.55, compliance: 94.2 },
+  { rank: 3, vendor: "SolarCo India", plants: 12, avgCuf: 22.1, avgAvailability: 96.2, ldExposure: 0.42, compliance: 92.8 },
+  { rank: 4, vendor: "Green Energy Ltd", plants: 4, avgCuf: 24.1, avgAvailability: 96.8, ldExposure: 0.00, compliance: 95.8 },
+  { rank: 5, vendor: "SunPower Tech", plants: 15, avgCuf: 20.8, avgAvailability: 93.5, ldExposure: 0.54, compliance: 88.5 },
 ];
 
 // Cluster Comparison
@@ -1316,7 +1318,7 @@ export function Dashboard() {
                     <div>
                       <div className="text-[9px] font-bold text-orange-600 uppercase tracking-wide mb-0.5">Total LD Financial Exposure</div>
                       <div className="text-lg font-bold text-orange-800">₹{riskData.ldExposureCr} Cr at risk</div>
-                      <div className="text-[9px] text-orange-600">Across {riskData.highLDRisk} plants · Vendor C highest</div>
+                      <div className="text-[9px] text-orange-600">Across {riskData.highLDRisk} plants · SunPower Tech highest</div>
                     </div>
                     <div className="text-right">
                       <div className="text-[9px] text-orange-500 mb-1">vs Budget</div>
@@ -2029,10 +2031,11 @@ export function Dashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All Vendors">All Vendors</SelectItem>
-                  <SelectItem value="Vendor A">Vendor A</SelectItem>
-                  <SelectItem value="Vendor B">Vendor B</SelectItem>
-                  <SelectItem value="Vendor C">Vendor C</SelectItem>
-                  <SelectItem value="Vendor D">Vendor D</SelectItem>
+                  <SelectItem value="SolarCo India">SolarCo India</SelectItem>
+                  <SelectItem value="SunPower Tech">SunPower Tech</SelectItem>
+                  <SelectItem value="Mega Solar Inc">Mega Solar Inc</SelectItem>
+                  <SelectItem value="Green Energy Ltd">Green Energy Ltd</SelectItem>
+                  <SelectItem value="TechSolar Pvt">TechSolar Pvt</SelectItem>
                 </SelectContent>
               </Select>
             </div>

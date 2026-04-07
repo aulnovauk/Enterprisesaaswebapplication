@@ -114,7 +114,7 @@ const siteHeatMap = [
 // Vendor-wise risk table
 const vendorRiskData = [
   {
-    vendor: "Vendor A",
+    vendor: "SolarCo India",
     sites: 8,
     avgCompliance: 92.5,
     activeLDs: 2,
@@ -122,7 +122,7 @@ const vendorRiskData = [
     status: "green",
   },
   {
-    vendor: "Vendor B",
+    vendor: "Green Energy Ltd",
     sites: 12,
     avgCompliance: 87.3,
     activeLDs: 5,
@@ -130,7 +130,7 @@ const vendorRiskData = [
     status: "amber",
   },
   {
-    vendor: "Vendor C",
+    vendor: "SunPower Tech",
     sites: 6,
     avgCompliance: 79.8,
     activeLDs: 8,
@@ -138,10 +138,18 @@ const vendorRiskData = [
     status: "red",
   },
   {
-    vendor: "Vendor D",
+    vendor: "Mega Solar Inc",
     sites: 10,
     avgCompliance: 94.1,
     activeLDs: 1,
+    riskScore: "Low",
+    status: "green",
+  },
+  {
+    vendor: "TechSolar Pvt",
+    sites: 4,
+    avgCompliance: 95.2,
+    activeLDs: 0,
     riskScore: "Low",
     status: "green",
   },
@@ -159,7 +167,7 @@ const escalationTriggers = [
   },
   {
     id: 2,
-    trigger: "Vendor C - 3 Sites Below 80% Compliance",
+    trigger: "SunPower Tech - 3 Sites Below 80% Compliance",
     severity: "high",
     daysOpen: 5,
     owner: "Vendor Manager",

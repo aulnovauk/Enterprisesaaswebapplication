@@ -548,10 +548,11 @@ const PREVIEW_REVENUE_CHART = [
   { month: "Feb", realized: 7.7, target: 9.0 },
 ];
 const PREVIEW_VENDOR_DATA = [
-  { vendor: "Vendor A", cuf: 22.1, avail: 96.2, ld: 0.42, plants: 3 },
-  { vendor: "Vendor B", cuf: 23.4, avail: 97.5, ld: 0.00, plants: 2 },
-  { vendor: "Vendor C", cuf: 19.8, avail: 91.5, ld: 1.24, plants: 3 },
-  { vendor: "Vendor D", cuf: 23.7, avail: 97.8, ld: 0.00, plants: 3 },
+  { vendor: "SolarCo India", cuf: 22.1, avail: 96.2, ld: 0.42, plants: 3 },
+  { vendor: "SunPower Tech", cuf: 20.8, avail: 93.5, ld: 0.48, plants: 4 },
+  { vendor: "Mega Solar Inc", cuf: 23.7, avail: 97.8, ld: 0.55, plants: 3 },
+  { vendor: "Green Energy Ltd", cuf: 24.1, avail: 96.8, ld: 0.00, plants: 1 },
+  { vendor: "TechSolar Pvt", cuf: 23.8, avail: 97.5, ld: 0.00, plants: 1 },
 ];
 const PREVIEW_OUTAGE_LOG = [
   { date: "Feb 18", plant: "Devdaithan Solar Plant",    type: "Grid Curtailment",   duration: "6.2 hrs", loss: "184 MWh", severity: "high" },
@@ -577,11 +578,11 @@ const PREVIEW_JMR_RECORDS = [
   { id: "JMR-2026-02-005", plant: "Sakri Solar Park",     gross: 2150, net: 2107, avail: 97.2, status: "approved" },
 ];
 const PREVIEW_LD_DATA = [
-  { vendor: "Vendor C", plant: "Devdaithan Solar Plant",     clause: "Cl. 8.2 – CUF",    breach: "4.5%", penalty: "₹0.55 Cr", risk: "high" },
-  { vendor: "Vendor C", plant: "Amravati Solar Unit",    clause: "Cl. 8.2 – CUF",    breach: "5.5%", penalty: "₹0.69 Cr", risk: "high" },
-  { vendor: "Vendor A", plant: "Sangli Solar Farm",    clause: "Cl. 9.1 – Avail",  breach: "3.5%", penalty: "₹0.28 Cr", risk: "medium" },
-  { vendor: "Vendor C", plant: "Wardha Solar Park", clause: "Cl. 8.2 – CUF",    breach: "3.2%", penalty: "₹0.20 Cr", risk: "medium" },
-  { vendor: "Vendor D", plant: "Sakri Solar Park",  clause: "—",                 breach: "—",    penalty: "₹0.00 Cr", risk: "none" },
+  { vendor: "Mega Solar Inc", plant: "Devdaithan Solar Plant",     clause: "Cl. 8.2 – CUF",    breach: "4.5%", penalty: "₹0.55 Cr", risk: "high" },
+  { vendor: "SolarCo India", plant: "Amravati Solar Unit",    clause: "Cl. 8.2 – CUF",    breach: "5.5%", penalty: "₹0.69 Cr", risk: "high" },
+  { vendor: "SunPower Tech", plant: "Sangli Solar Farm",    clause: "Cl. 9.1 – Avail",  breach: "3.5%", penalty: "₹0.28 Cr", risk: "medium" },
+  { vendor: "SunPower Tech", plant: "Wardha Solar Park", clause: "Cl. 8.2 – CUF",    breach: "3.2%", penalty: "₹0.20 Cr", risk: "medium" },
+  { vendor: "SolarCo India", plant: "Sakri Solar Park",  clause: "—",                 breach: "—",    penalty: "₹0.00 Cr", risk: "none" },
 ];
 
 function ReportPreviewContent({ template }: { template: typeof reportTemplates[0] | null }) {
@@ -764,9 +765,9 @@ function ReportPreviewContent({ template }: { template: typeof reportTemplates[0
       return (
         <div className="space-y-5">
           <div className="grid grid-cols-4 gap-3">
-            <KpiMini label="Best CUF"     value="Vendor D" sub="23.7% avg CUF" color="green" />
-            <KpiMini label="Best Avail."  value="Vendor D" sub="97.8% avg" color="green" />
-            <KpiMini label="Most LD"      value="Vendor C" sub="₹1.24 Cr exposure" color="red" />
+            <KpiMini label="Best CUF"     value="Mega Solar Inc" sub="23.7% avg CUF" color="green" />
+            <KpiMini label="Best Avail."  value="Mega Solar Inc" sub="97.8% avg" color="green" />
+            <KpiMini label="Most LD"      value="SunPower Tech" sub="₹1.24 Cr exposure" color="red" />
             <KpiMini label="Total Plants" value="11 plants" sub="Across 4 vendors" color="blue" />
           </div>
           <div>
