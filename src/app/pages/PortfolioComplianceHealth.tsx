@@ -183,7 +183,7 @@ const escalationTriggers = [
   },
   {
     id: 4,
-    trigger: "JMR Submission Delay - Plant B (Feb 2026)",
+    trigger: "JMR Submission Delay - Beed Solar Park (Apr 2026)",
     severity: "medium",
     daysOpen: 2,
     owner: "Plant Manager",
@@ -214,6 +214,8 @@ const complianceTrend = [
   { month: "Dec 25", score: 88.6, target: 90 },
   { month: "Jan 26", score: 87.1, target: 90 },
   { month: "Feb 26", score: 87.4, target: 90 },
+  { month: "Mar 26", score: 88.9, target: 90 },
+  { month: "Apr 26", score: 89.5, target: 90 },
 ];
 
 const getScoreColor = (score: number) => {
@@ -261,7 +263,7 @@ export function PortfolioComplianceHealth() {
           <div className="flex items-center gap-3">
             <Badge className="bg-blue-100 text-blue-800 px-3 py-1">
               <Clock className="w-3 h-3 mr-1" />
-              Last Updated: 28-Feb-2026 23:59
+              Last Updated: 07-Apr-2026 23:59
             </Badge>
             <PageExportMenu
               pageTitle="Portfolio Compliance Health"

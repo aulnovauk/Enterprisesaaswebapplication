@@ -70,6 +70,8 @@ const generationTrend = [
   { month: "Dec 25", generation: 4850, year: 2025 },
   { month: "Jan 26", generation: 4620, year: 2026 },
   { month: "Feb 26", generation: 4485, year: 2026 },
+  { month: "Mar 26", generation: 4950, year: 2026 },
+  { month: "Apr 26", generation: 5210, year: 2026 },
 ];
 
 // Degradation analysis
@@ -89,13 +91,15 @@ const curtailmentPatterns = [
   { month: "Dec 25", curtailment: 210, pattern: "Critical" },
   { month: "Jan 26", curtailment: 195, pattern: "Critical" },
   { month: "Feb 26", curtailment: 180, pattern: "High" },
+  { month: "Mar 26", curtailment: 155, pattern: "High" },
+  { month: "Apr 26", curtailment: 110, pattern: "Medium" },
 ];
 
 // Forecasted generation (next 6 months)
 const forecastData = [
   { month: "Feb 26", actual: 4485, forecast: null, lower: null, upper: null },
-  { month: "Mar 26", actual: null, forecast: 4950, lower: 4750, upper: 5150 },
-  { month: "Apr 26", actual: null, forecast: 5180, lower: 4950, upper: 5400 },
+  { month: "Mar 26", actual: 4950, forecast: null, lower: null, upper: null },
+  { month: "Apr 26", actual: 5210, forecast: null, lower: null, upper: null },
   { month: "May 26", actual: null, forecast: 5320, lower: 5050, upper: 5600 },
   { month: "Jun 26", actual: null, forecast: 4850, lower: 4600, upper: 5100 },
   { month: "Jul 26", actual: null, forecast: 4580, lower: 4350, upper: 4800 },
@@ -234,7 +238,7 @@ export function AITrendAnalytics() {
                 AI Model v2.4.1
               </Badge>
               <Badge className="bg-blue-100 text-blue-800 px-3 py-1">
-                Last Updated: Feb 28, 2026
+                Last Updated: Apr 07, 2026
               </Badge>
             </div>
           </div>

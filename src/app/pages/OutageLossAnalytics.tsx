@@ -156,13 +156,14 @@ const momData = [
   { month: "Dec", budgeted: 5220, actual: 4880, loss: 340 },
   { month: "Jan", budgeted: 5200, actual: 4920, loss: 280 },
   { month: "Feb", budgeted: 5200, actual: 4485, loss: 715 },
+  { month: "Mar", budgeted: 5300, actual: 4950, loss: 350 },
 ];
 
 // YoY comparison data
 const yoyData = [
-  { month: "Feb 2024", actual: 4750 },
-  { month: "Feb 2025", actual: 4680 },
-  { month: "Feb 2026", actual: 4485 },
+  { month: "Apr 2024", actual: 5050 },
+  { month: "Apr 2025", actual: 5180 },
+  { month: "Apr 2026", actual: 5210 },
 ];
 
 // YTD monthly loss by category (Apr → Feb, FY 2025-26)
@@ -178,6 +179,7 @@ const ytdMonthlyLossData = [
   { month: "Dec", gridOutage: 160, equipFailure: 95,  plannedShutdown: 55, forceMajeure: 30, spylTotal: 328 },
   { month: "Jan", gridOutage: 135, equipFailure: 78,  plannedShutdown: 40, forceMajeure: 22, spylTotal: 262 },
   { month: "Feb", gridOutage: 180, equipFailure: 110, plannedShutdown: 48, forceMajeure: 35, spylTotal: 310 },
+  { month: "Mar", gridOutage: 145, equipFailure: 88,  plannedShutdown: 42, forceMajeure: 20, spylTotal: 282 },
 ];
 
 // YTD summary vs Same Period Last Year (SPYL)
@@ -886,7 +888,7 @@ export function OutageLossAnalytics() {
                 Year-to-Date (YTD) Loss Comparison — FY 2025-26
               </CardTitle>
             </div>
-            <span className="text-xs text-blue-200 font-medium">Apr 2025 – Feb 2026 &nbsp;·&nbsp; 11 months</span>
+            <span className="text-xs text-blue-200 font-medium">Apr 2025 – Mar 2026 &nbsp;·&nbsp; 12 months</span>
           </div>
         </CardHeader>
 

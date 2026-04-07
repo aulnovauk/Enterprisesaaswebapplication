@@ -254,6 +254,8 @@ const riskData = {
     { month: "Dec", nonCompliant: 9 },
     { month: "Jan", nonCompliant: 9 },
     { month: "Feb", nonCompliant: 8 },
+    { month: "Mar", nonCompliant: 7 },
+    { month: "Apr", nonCompliant: 6 },
   ],
   recentAlerts: [
     { id: 1, category: "Non-Compliant", plant: "Amravati Solar Unit",      state: "Maharashtra",   daysOpen: 2,  severity: "critical", detail: "CUF 18.5% — 5.5% below target" },
@@ -371,7 +373,6 @@ const clusterComparisonData = [
 
 // Lost Production Index
 const lpiData = [
-  { month: "Mar", lpi: 8.5, gridLoss: 3.2, equipmentLoss: 2.1, plannedLoss: 1.8, curtailmentLoss: 1.4, energyLostMWh: 382, expectedMWh: 4494 },
   { month: "Apr", lpi: 7.2, gridLoss: 2.8, equipmentLoss: 1.5, plannedLoss: 1.6, curtailmentLoss: 1.3, energyLostMWh: 324, expectedMWh: 4500 },
   { month: "May", lpi: 6.8, gridLoss: 2.5, equipmentLoss: 1.3, plannedLoss: 1.5, curtailmentLoss: 1.5, energyLostMWh: 312, expectedMWh: 4588 },
   { month: "Jun", lpi: 9.1, gridLoss: 3.8, equipmentLoss: 2.4, plannedLoss: 1.4, curtailmentLoss: 1.5, energyLostMWh: 410, expectedMWh: 4505 },
@@ -383,6 +384,7 @@ const lpiData = [
   { month: "Dec", lpi: 9.5, gridLoss: 4.0, equipmentLoss: 2.5, plannedLoss: 1.6, curtailmentLoss: 1.4, energyLostMWh: 428, expectedMWh: 4505 },
   { month: "Jan", lpi: 7.1, gridLoss: 2.7, equipmentLoss: 1.6, plannedLoss: 1.5, curtailmentLoss: 1.3, energyLostMWh: 320, expectedMWh: 4507 },
   { month: "Feb", lpi: 8.2, gridLoss: 3.3, equipmentLoss: 2.0, plannedLoss: 1.5, curtailmentLoss: 1.4, energyLostMWh: 369, expectedMWh: 4500 },
+  { month: "Mar", lpi: 6.5, gridLoss: 2.4, equipmentLoss: 1.4, plannedLoss: 1.4, curtailmentLoss: 1.3, energyLostMWh: 292, expectedMWh: 4490 },
 ];
 
 // Asset Health Index Breakdown

@@ -285,6 +285,8 @@ const monthlyLDTrend = [
   { month: "Dec", ldAmount: 9.2, complianceRate: 40 },
   { month: "Jan", ldAmount: 5.5, complianceRate: 60 },
   { month: "Feb", ldAmount: 14.2, complianceRate: 40 },
+  { month: "Mar", ldAmount: 6.8, complianceRate: 80 },
+  { month: "Apr", ldAmount: 4.5, complianceRate: 80 },
 ];
 
 export function ContractLDAnalytics() {

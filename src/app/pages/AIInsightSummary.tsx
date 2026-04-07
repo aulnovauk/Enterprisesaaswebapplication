@@ -126,8 +126,8 @@ const generationTrend = [
   { month: "Dec 25", generation: 4850, forecast: null },
   { month: "Jan 26", generation: 4620, forecast: null },
   { month: "Feb 26", generation: 4485, forecast: null },
-  { month: "Mar 26", generation: null, forecast: 4950 },
-  { month: "Apr 26", generation: null, forecast: 5180 },
+  { month: "Mar 26", generation: 4950, forecast: null },
+  { month: "Apr 26", generation: 5210, forecast: null },
   { month: "May 26", generation: null, forecast: 5320 },
 ];
 
@@ -212,7 +212,7 @@ export function AIInsightSummary() {
               ML Model v2.4.1
             </Badge>
             <Badge className="bg-gray-100 text-gray-800 border border-gray-300 h-7 px-3 text-xs font-semibold">
-              Data through Feb 2026
+              Data through Apr 2026
             </Badge>
           </div>
         </div>

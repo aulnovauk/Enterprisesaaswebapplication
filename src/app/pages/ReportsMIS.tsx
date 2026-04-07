@@ -351,8 +351,8 @@ const recentReports = [
   },
   {
     id: "RPT-2026-0228",
-    name: "Monthly Performance Report - February",
-    generatedAt: "Feb 28, 2026 8:00 AM",
+    name: "Monthly Performance Report - April",
+    generatedAt: "Apr 30, 2026 8:00 AM",
     generatedBy: "Rajesh Kumar",
     format: "Excel",
     size: "5.8 MB",
@@ -361,8 +361,8 @@ const recentReports = [
   },
   {
     id: "RPT-2026-0228B",
-    name: "JMR Data Summary - February",
-    generatedAt: "Feb 28, 2026 10:30 AM",
+    name: "JMR Data Summary - April",
+    generatedAt: "Apr 30, 2026 10:30 AM",
     generatedBy: "System Scheduler",
     format: "PDF",
     size: "1.2 MB",
@@ -388,6 +388,8 @@ const usageAnalytics = [
   { month: "Dec", reports: 48, downloads: 128 },
   { month: "Jan", reports: 58, downloads: 155 },
   { month: "Feb", reports: 62, downloads: 168 },
+  { month: "Mar", reports: 55, downloads: 148 },
+  { month: "Apr", reports: 68, downloads: 182 },
 ];
 
 const categoryColors: any = {
@@ -538,6 +540,8 @@ const PREVIEW_MONTHLY_CHART = [
   { month: "Dec", gen: 36200, target: 40000 },
   { month: "Jan", gen: 38900, target: 42000 },
   { month: "Feb", gen: 42580, target: 45000 },
+  { month: "Mar", gen: 44850, target: 46000 },
+  { month: "Apr", gen: 45730, target: 47000 },
 ];
 const PREVIEW_REVENUE_CHART = [
   { month: "Sep", realized: 7.1, target: 8.0 },
@@ -546,6 +550,8 @@ const PREVIEW_REVENUE_CHART = [
   { month: "Dec", realized: 6.8, target: 8.0 },
   { month: "Jan", realized: 7.3, target: 9.0 },
   { month: "Feb", realized: 7.7, target: 9.0 },
+  { month: "Mar", realized: 8.2, target: 9.2 },
+  { month: "Apr", realized: 8.5, target: 9.4 },
 ];
 const PREVIEW_VENDOR_DATA = [
   { vendor: "SolarCo India", cuf: 22.1, avail: 96.2, ld: 0.42, plants: 3 },
@@ -1057,7 +1063,7 @@ function buildReportHTML(template: typeof reportTemplates[0]): string {
 </div>
 
 <div class="kpi-row">
-  <div class="kpi"><label>Report Period</label><div class="val">Feb 2026</div></div>
+  <div class="kpi"><label>Report Period</label><div class="val">Apr 2026</div></div>
   <div class="kpi"><label>Plants Covered</label><div class="val">11</div></div>
   <div class="kpi"><label>Frequency</label><div class="val">${template.frequency}</div></div>
   <div class="kpi"><label>Estimated Pages</label><div class="val">~12 pg</div></div>
@@ -2536,7 +2542,7 @@ export function ReportsMIS() {
               </div>
               {selectedTemplate && (
                 <div className="flex items-center gap-3 mt-2 flex-wrap">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Period: Feb 2026</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Period: Apr 2026</span>
                   <span className="text-slate-200">|</span>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Frequency: {selectedTemplate.frequency}</span>
                   <span className="text-slate-200">|</span>
