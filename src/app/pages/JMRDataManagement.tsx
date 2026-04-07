@@ -68,7 +68,10 @@ import {
   UserCheck,
   MessageSquare,
   TrendingUp,
+  TrendingDown,
   ArrowRight,
+  ArrowUpRight,
+  ArrowDownRight,
   HelpCircle,
   Zap,
   Building2,
@@ -78,11 +81,23 @@ import {
   Copy,
   ExternalLink,
   RefreshCw,
+  BarChart2,
 } from "lucide-react";
 import { Separator } from "../components/ui/separator";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { toast } from "sonner";
 import { Checkbox } from "../components/ui/checkbox";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+  ReferenceLine,
+} from "recharts";
 import {
   Tooltip,
   TooltipContent,
@@ -694,6 +709,61 @@ export function JMRDataManagement() {
     };
   }, [jmrRecords, selectedFY, selectedMonth]);
 
+  // Generation Comparison state
+  const [cmpCurrentMonth, setCmpCurrentMonth] = useState("February");
+  const [cmpPrevMonth, setCmpPrevMonth] = useState("January");
+
+  const comparisonData = useMemo(() => {
+    const currentRecs = jmrRecords.filter(r => r.fy === selectedFY && r.month === cmpCurrentMonth);
+    const prevRecs = jmrRecords.filter(r => r.fy === selectedFY && r.month === cmpPrevMonth);
+
+    const sumBy = (recs: typeof jmrRecords, key: keyof typeof jmrRecords[0]) =>
+      recs.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
+
+    const currentGross = sumBy(currentRecs, "grossGeneration");
+    const prevGross = sumBy(prevRecs, "grossGeneration");
+    const currentExport = sumBy(currentRecs, "energyExportKWh") / 1000;
+    const prevExport = sumBy(prevRecs, "energyExportKWh") / 1000;
+    const currentRevenue = sumBy(currentRecs, "revenue");
+    const prevRevenue = sumBy(prevRecs, "revenue");
+
+    const delta = (curr: number, prev: number) =>
+      prev === 0 ? 0 : ((curr - prev) / prev) * 100;
+
+    const allPlants = [...new Set([...currentRecs.map(r => r.plant), ...prevRecs.map(r => r.plant)])];
+    const chartData = allPlants.map(plant => {
+      const cur = currentRecs.find(r => r.plant === plant);
+      const prv = prevRecs.find(r => r.plant === plant);
+      const shortName = plant.split(" ").slice(0, 2).join(" ");
+      return {
+        name: shortName,
+        fullName: plant,
+        current: cur ? Math.round(cur.grossGeneration) : 0,
+        previous: prv ? Math.round(prv.grossGeneration) : 0,
+        currentExport: cur ? Math.round(cur.energyExportKWh / 1000) : 0,
+        previousExport: prv ? Math.round(prv.energyExportKWh / 1000) : 0,
+        currentRevenue: cur ? cur.revenue : 0,
+        previousRevenue: prv ? prv.revenue : 0,
+      };
+    });
+
+    return {
+      currentRecs,
+      prevRecs,
+      currentGross,
+      prevGross,
+      currentExport,
+      prevExport,
+      currentRevenue,
+      prevRevenue,
+      deltaGross: delta(currentGross, prevGross),
+      deltaExport: delta(currentExport, prevExport),
+      deltaRevenue: delta(currentRevenue, prevRevenue),
+      deltaPlants: currentRecs.length - prevRecs.length,
+      chartData,
+    };
+  }, [jmrRecords, selectedFY, cmpCurrentMonth, cmpPrevMonth]);
+
   const updateRepositoryFromForm = (status: "approved" | "locked") => {
     const capacityKWp = (parseFloat(plantMetadata.capacity) || 0) * 1000;
     const grossGen = parseFloat(operationalData.grossGeneration) || 0;
@@ -934,6 +1004,13 @@ export function JMRDataManagement() {
                 >
                   <History className="w-4 h-4" />
                   Audit & Version History
+                </TabsTrigger>
+                <TabsTrigger
+                  value="generation-comparison"
+                  className="gap-2 data-[state=active]:bg-[#2955A0] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 rounded-lg"
+                >
+                  <BarChart2 className="w-4 h-4" />
+                  Generation Comparison
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -2675,6 +2752,376 @@ export function JMRDataManagement() {
                       )}
                     </CardContent>
                   </Card>
+
+                </div>
+              </TabsContent>
+
+              {/* TAB 5: GENERATION COMPARISON */}
+              <TabsContent value="generation-comparison" className="m-0 p-6">
+                <div className="max-w-7xl mx-auto space-y-6">
+
+                  {/* Header + Month Selectors */}
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <BarChart2 className="w-5 h-5 text-[#2955A0]" />
+                        Month-over-Month Generation Comparison
+                      </h2>
+                      <p className="text-sm text-slate-500 mt-0.5">
+                        Compare JMR generation metrics across two months to support data-driven decision making
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-sm">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Current Month</span>
+                        <Select value={cmpCurrentMonth} onValueChange={(v) => {
+                          setCmpCurrentMonth(v);
+                          const idx = months.indexOf(v);
+                          const prevIdx = idx === 0 ? months.length - 1 : idx - 1;
+                          setCmpPrevMonth(months[prevIdx]);
+                        }}>
+                          <SelectTrigger className="h-8 w-36 text-sm font-semibold border-[#2955A0] text-[#2955A0]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {months.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <GitCompare className="w-4 h-4 text-slate-400 mt-4" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Compare With</span>
+                        <Select value={cmpPrevMonth} onValueChange={setCmpPrevMonth}>
+                          <SelectTrigger className="h-8 w-36 text-sm font-semibold border-slate-300">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {months.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* KPI Delta Cards */}
+                  {(() => {
+                    const { currentGross, prevGross, currentExport, prevExport, currentRevenue, prevRevenue, deltaGross, deltaExport, deltaRevenue, currentRecs, prevRecs } = comparisonData;
+                    const fmt = (n: number, dec = 0) => n.toLocaleString("en-IN", { maximumFractionDigits: dec });
+                    const DeltaBadge = ({ delta }: { delta: number }) => {
+                      const isUp = delta >= 0;
+                      const Icon = isUp ? ArrowUpRight : ArrowDownRight;
+                      return (
+                        <span className={`inline-flex items-center gap-0.5 text-xs font-bold px-1.5 py-0.5 rounded-full ${isUp ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                          <Icon className="w-3 h-3" />
+                          {Math.abs(delta).toFixed(1)}%
+                        </span>
+                      );
+                    };
+                    const cards = [
+                      {
+                        label: "Gross Generation",
+                        unit: "MWh",
+                        current: currentGross,
+                        previous: prevGross,
+                        delta: deltaGross,
+                        icon: Zap,
+                        color: "blue",
+                        format: (v: number) => fmt(v),
+                      },
+                      {
+                        label: "Net Export Energy",
+                        unit: "MWh",
+                        current: currentExport,
+                        previous: prevExport,
+                        delta: deltaExport,
+                        icon: TrendingUp,
+                        color: "emerald",
+                        format: (v: number) => fmt(v, 1),
+                      },
+                      {
+                        label: "Revenue Realized",
+                        unit: "₹ Lakhs",
+                        current: currentRevenue,
+                        previous: prevRevenue,
+                        delta: deltaRevenue,
+                        icon: TrendingDown,
+                        color: "amber",
+                        format: (v: number) => fmt(v, 2),
+                      },
+                      {
+                        label: "Plant Records",
+                        unit: "plants",
+                        current: currentRecs.length,
+                        previous: prevRecs.length,
+                        delta: prevRecs.length === 0 ? 0 : ((currentRecs.length - prevRecs.length) / prevRecs.length) * 100,
+                        icon: Building2,
+                        color: "violet",
+                        format: (v: number) => String(v),
+                      },
+                    ];
+                    const colorMap: Record<string, { bg: string; border: string; icon: string; label: string }> = {
+                      blue:   { bg: "bg-blue-50",   border: "border-blue-200",   icon: "text-blue-600",   label: "text-blue-900" },
+                      emerald:{ bg: "bg-emerald-50", border: "border-emerald-200", icon: "text-emerald-600", label: "text-emerald-900" },
+                      amber:  { bg: "bg-amber-50",  border: "border-amber-200",  icon: "text-amber-600",  label: "text-amber-900" },
+                      violet: { bg: "bg-violet-50", border: "border-violet-200", icon: "text-violet-600", label: "text-violet-900" },
+                    };
+                    return (
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        {cards.map((card) => {
+                          const c = colorMap[card.color];
+                          const Icon = card.icon;
+                          return (
+                            <Card key={card.label} className={`border-2 ${c.border} ${c.bg}`}>
+                              <CardContent className="p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className={`p-2 rounded-lg bg-white/60 ${c.icon}`}>
+                                    <Icon className="w-4 h-4" />
+                                  </div>
+                                  <DeltaBadge delta={card.delta} />
+                                </div>
+                                <p className={`text-xs font-semibold ${c.label} mb-1`}>{card.label}</p>
+                                <div className="flex items-end justify-between">
+                                  <div>
+                                    <p className="text-2xl font-bold text-slate-900">{card.format(card.current)}</p>
+                                    <p className="text-xs text-slate-500">{card.unit} · {cmpCurrentMonth}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-sm font-semibold text-slate-500">{card.format(card.previous)}</p>
+                                    <p className="text-[10px] text-slate-400">{cmpPrevMonth}</p>
+                                  </div>
+                                </div>
+                                <div className="mt-3 h-1.5 bg-white/60 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${card.delta >= 0 ? "bg-emerald-500" : "bg-rose-400"}`}
+                                    style={{ width: `${Math.min(100, Math.abs(card.delta) * 3 + 40)}%` }}
+                                  />
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Bar Chart */}
+                  <Card className="border-2 border-slate-200">
+                    <CardHeader className="border-b border-slate-100 pb-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <BarChart2 className="w-4 h-4 text-[#2955A0]" />
+                            Plant-wise Gross Generation — {cmpCurrentMonth} vs {cmpPrevMonth}
+                          </CardTitle>
+                          <CardDescription>Side-by-side comparison of gross generation (MWh) per plant</CardDescription>
+                        </div>
+                        <div className="flex items-center gap-4 text-xs">
+                          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#2955A0] inline-block" /> {cmpCurrentMonth}</span>
+                          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-slate-300 inline-block" /> {cmpPrevMonth}</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      {comparisonData.chartData.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+                          <BarChart2 className="w-10 h-10 mb-2 opacity-40" />
+                          <p className="text-sm">No JMR data found for selected months</p>
+                          <p className="text-xs mt-1">Try selecting different months or fiscal year</p>
+                        </div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={comparisonData.chartData} margin={{ top: 8, right: 16, left: 0, bottom: 8 }} barCategoryGap="25%" barGap={4}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                            <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : String(v)} />
+                            <RechartsTooltip
+                              content={({ active, payload, label }) => {
+                                if (!active || !payload?.length) return null;
+                                const d = payload[0]?.payload;
+                                return (
+                                  <div className="bg-white border border-slate-200 rounded-lg shadow-lg p-3 text-xs">
+                                    <p className="font-bold text-slate-800 mb-2">{d?.fullName}</p>
+                                    {payload.map((p: { name: string; value: number; color: string }) => (
+                                      <div key={p.name} className="flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
+                                        <span className="text-slate-600">{p.name}:</span>
+                                        <span className="font-semibold">{Number(p.value).toLocaleString("en-IN")} MWh</span>
+                                      </div>
+                                    ))}
+                                    {payload[0] && payload[1] && (
+                                      <div className="mt-2 pt-2 border-t border-slate-100">
+                                        <span className="text-slate-500">Change: </span>
+                                        <span className={`font-bold ${payload[0].value >= payload[1].value ? "text-emerald-600" : "text-rose-600"}`}>
+                                          {payload[0].value >= payload[1].value ? "+" : ""}{(((payload[0].value - payload[1].value) / (payload[1].value || 1)) * 100).toFixed(1)}%
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }}
+                            />
+                            <Bar dataKey="current" name={cmpCurrentMonth} fill="#2955A0" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="previous" name={cmpPrevMonth} fill="#cbd5e1" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Plant-by-Plant Comparison Table */}
+                  <Card className="border-2 border-slate-200">
+                    <CardHeader className="border-b border-slate-100 pb-4">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Database className="w-4 h-4 text-[#2955A0]" />
+                        Detailed Plant-wise Comparison
+                      </CardTitle>
+                      <CardDescription>
+                        {cmpCurrentMonth} vs {cmpPrevMonth} · {selectedFY} — all JMR-submitted plants
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-slate-50 border-b border-slate-200">
+                              <th className="text-left px-4 py-3 font-semibold text-slate-700 text-xs">Plant</th>
+                              <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">
+                                <span className="text-[#2955A0]">{cmpCurrentMonth}</span> Generation (MWh)
+                              </th>
+                              <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">
+                                {cmpPrevMonth} Generation (MWh)
+                              </th>
+                              <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">MoM Change</th>
+                              <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">
+                                <span className="text-[#2955A0]">{cmpCurrentMonth}</span> Revenue (₹L)
+                              </th>
+                              <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">
+                                {cmpPrevMonth} Revenue (₹L)
+                              </th>
+                              <th className="text-center px-4 py-3 font-semibold text-slate-700 text-xs">Trend</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {comparisonData.chartData.length === 0 ? (
+                              <tr>
+                                <td colSpan={7} className="text-center py-10 text-slate-400 text-sm">
+                                  No data available for the selected months
+                                </td>
+                              </tr>
+                            ) : (
+                              comparisonData.chartData.map((row, idx) => {
+                                const momPct = row.previous === 0
+                                  ? null
+                                  : ((row.current - row.previous) / row.previous) * 100;
+                                const isUp = momPct !== null && momPct >= 0;
+                                return (
+                                  <tr key={row.fullName} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${idx % 2 === 0 ? "" : "bg-slate-50/50"}`}>
+                                    <td className="px-4 py-3">
+                                      <div className="font-semibold text-slate-800 text-xs">{row.fullName}</div>
+                                    </td>
+                                    <td className="px-4 py-3 text-right font-semibold text-[#2955A0]">
+                                      {row.current > 0 ? row.current.toLocaleString("en-IN") : <span className="text-slate-400">—</span>}
+                                    </td>
+                                    <td className="px-4 py-3 text-right text-slate-500">
+                                      {row.previous > 0 ? row.previous.toLocaleString("en-IN") : <span className="text-slate-400">—</span>}
+                                    </td>
+                                    <td className="px-4 py-3 text-right">
+                                      {momPct === null ? (
+                                        <span className="text-slate-400 text-xs">N/A</span>
+                                      ) : (
+                                        <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${isUp ? "text-emerald-700" : "text-rose-600"}`}>
+                                          {isUp ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                                          {Math.abs(momPct).toFixed(1)}%
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="px-4 py-3 text-right font-semibold text-[#2955A0]">
+                                      {row.currentRevenue > 0 ? `₹${row.currentRevenue.toFixed(2)}` : <span className="text-slate-400">—</span>}
+                                    </td>
+                                    <td className="px-4 py-3 text-right text-slate-500">
+                                      {row.previousRevenue > 0 ? `₹${row.previousRevenue.toFixed(2)}` : <span className="text-slate-400">—</span>}
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                      {momPct === null ? (
+                                        <span className="text-slate-300">—</span>
+                                      ) : isUp ? (
+                                        <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100">
+                                          <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+                                        </div>
+                                      ) : (
+                                        <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-rose-100">
+                                          <TrendingDown className="w-3.5 h-3.5 text-rose-600" />
+                                        </div>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            )}
+                          </tbody>
+                          {comparisonData.chartData.length > 0 && (
+                            <tfoot>
+                              <tr className="bg-[#2955A0]/5 border-t-2 border-[#2955A0]/20">
+                                <td className="px-4 py-3 font-bold text-slate-800 text-xs">Portfolio Total</td>
+                                <td className="px-4 py-3 text-right font-bold text-[#2955A0]">
+                                  {comparisonData.currentGross.toLocaleString("en-IN")}
+                                </td>
+                                <td className="px-4 py-3 text-right font-bold text-slate-600">
+                                  {comparisonData.prevGross.toLocaleString("en-IN")}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${comparisonData.deltaGross >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+                                    {comparisonData.deltaGross >= 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                                    {Math.abs(comparisonData.deltaGross).toFixed(1)}%
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-right font-bold text-[#2955A0]">
+                                  ₹{comparisonData.currentRevenue.toFixed(2)}
+                                </td>
+                                <td className="px-4 py-3 text-right font-bold text-slate-600">
+                                  ₹{comparisonData.prevRevenue.toFixed(2)}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <div className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${comparisonData.deltaGross >= 0 ? "bg-emerald-100" : "bg-rose-100"}`}>
+                                    {comparisonData.deltaGross >= 0
+                                      ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+                                      : <TrendingDown className="w-3.5 h-3.5 text-rose-600" />}
+                                  </div>
+                                </td>
+                              </tr>
+                            </tfoot>
+                          )}
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Insight Banner */}
+                  {comparisonData.chartData.length > 0 && (
+                    <Card className={`border-2 ${comparisonData.deltaGross >= 0 ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className={`p-2 rounded-lg ${comparisonData.deltaGross >= 0 ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"}`}>
+                            {comparisonData.deltaGross >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                          </div>
+                          <div>
+                            <p className={`font-bold text-sm ${comparisonData.deltaGross >= 0 ? "text-emerald-800" : "text-amber-800"}`}>
+                              Portfolio Insight · {cmpCurrentMonth} vs {cmpPrevMonth}
+                            </p>
+                            <p className={`text-sm mt-0.5 ${comparisonData.deltaGross >= 0 ? "text-emerald-700" : "text-amber-700"}`}>
+                              {comparisonData.deltaGross >= 0
+                                ? `Generation is up ${comparisonData.deltaGross.toFixed(1)}% MoM — portfolio is performing above the previous month benchmark.`
+                                : `Generation is down ${Math.abs(comparisonData.deltaGross).toFixed(1)}% MoM — review outage logs and plant availability for root-cause analysis.`}
+                              {" "}Revenue {comparisonData.deltaRevenue >= 0 ? "also improved" : "declined"} by {Math.abs(comparisonData.deltaRevenue).toFixed(1)}%
+                              {" "}({comparisonData.deltaRevenue >= 0 ? "+" : ""}₹{(comparisonData.currentRevenue - comparisonData.prevRevenue).toFixed(2)} Lakhs).
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
 
                 </div>
               </TabsContent>
