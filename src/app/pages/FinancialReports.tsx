@@ -115,10 +115,10 @@ const invoiceStatusData = [
 ];
 
 const quarterlyData = [
-  { quarter: "Q1 FY26", budgeted: 7.80, actual: 7.28, realized: 7.07, shortfall: 0.73, collection: 90.4 },
-  { quarter: "Q2 FY26", budgeted: 7.40, actual: 6.74, realized: 6.53, shortfall: 0.87, collection: 88.1 },
-  { quarter: "Q3 FY26", budgeted: 7.90, actual: 7.48, realized: 7.28, shortfall: 0.62, collection: 92.1 },
-  { quarter: "Q4 FY26", budgeted: 7.82, actual: 7.41, realized: 7.22, shortfall: 0.60, collection: 92.3 },
+  { quarter: "Q1 (Apr–Jun 25)", budgeted: 7.80, actual: 7.28, realized: 7.07, shortfall: 0.73, collection: 90.4 },
+  { quarter: "Q2 (Jul–Sep 25)", budgeted: 7.40, actual: 6.74, realized: 6.53, shortfall: 0.87, collection: 88.1 },
+  { quarter: "Q3 (Oct–Dec 25)", budgeted: 7.90, actual: 7.48, realized: 7.28, shortfall: 0.62, collection: 92.1 },
+  { quarter: "Q4 (Jan–Mar 26)", budgeted: 7.82, actual: 7.41, realized: 7.22, shortfall: 0.60, collection: 92.3 },
 ];
 
 export function FinancialReports() {
@@ -187,7 +187,6 @@ export function FinancialReports() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="FY 2025-26">FY 2025-26</SelectItem>
-                <SelectItem value="FY 2024-25">FY 2024-25</SelectItem>
               </SelectContent>
             </Select>
             <Badge className="bg-emerald-100 text-emerald-800 px-3 py-1">
