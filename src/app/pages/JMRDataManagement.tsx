@@ -1037,52 +1037,167 @@ export function JMRDataManagement() {
       )}
 
       {/* Missing JMR Alert Banner */}
-      {showMissingAlert && missingJmrAlerts.length > 0 && (
-        <div className="bg-rose-50 border-b-2 border-rose-200 px-6 py-3 shrink-0">
-          <div className="flex items-start gap-3">
-            <div className="p-1.5 bg-rose-100 rounded-lg shrink-0 mt-0.5">
-              <AlertTriangle className="w-4 h-4 text-rose-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1.5">
-                <p className="text-sm font-bold text-rose-800">
-                  Missing JMR Alert — {missingJmrAlerts.length} plant{missingJmrAlerts.length > 1 ? "s" : ""} with overdue submissions
-                </p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0 text-rose-400 hover:text-rose-600 hover:bg-rose-100 shrink-0"
-                  onClick={() => { setShowMissingAlert(false); setLastDismissedFY(selectedFY); }}
-                >
-                  <XIcon className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {missingJmrAlerts.map((alert) => (
-                  <div
-                    key={alert.plant}
-                    className="flex items-center gap-2 bg-white border border-rose-200 rounded-lg px-3 py-1.5 shadow-sm"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <Building2 className="w-3 h-3 text-rose-500" />
-                      <span className="text-xs font-semibold text-slate-800">{alert.plant}</span>
+      {showMissingAlert && missingJmrAlerts.length > 0 && (() => {
+        const criticalCount = missingJmrAlerts.filter(a => a.gapMonths >= 3).length;
+        const warningCount = missingJmrAlerts.filter(a => a.gapMonths === 2).length;
+        const totalMissing = missingJmrAlerts.reduce((sum, a) => sum + a.gapMonths, 0);
+        return (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="shrink-0 overflow-hidden"
+          >
+            <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-6 py-4 border-b border-slate-700">
+              {/* Top Row: Header + Stats + Dismiss */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
+                      <AlertTriangle className="w-4.5 h-4.5 text-white" />
                     </div>
-                    <Separator orientation="vertical" className="h-3.5" />
-                    <div className="flex items-center gap-1">
-                      <Badge className="bg-rose-600 text-white text-[10px] px-1.5 py-0 h-4">
-                        {alert.gapMonths} months overdue
-                      </Badge>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full flex items-center justify-center animate-pulse">
+                      <span className="text-[8px] font-bold text-white">{missingJmrAlerts.length}</span>
                     </div>
-                    <span className="text-[10px] text-slate-500">
-                      Last: {alert.lastMonth} · Missing: {alert.missingMonths.join(", ")}
-                    </span>
                   </div>
-                ))}
+                  <div>
+                    <h3 className="text-sm font-bold text-white tracking-tight">Missing JMR Submissions Detected</h3>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      {missingJmrAlerts.length} plant{missingJmrAlerts.length > 1 ? "s" : ""} require immediate attention · {totalMissing} total month-records overdue
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {/* Summary pills */}
+                  <div className="hidden md:flex items-center gap-2">
+                    {criticalCount > 0 && (
+                      <div className="flex items-center gap-1.5 bg-rose-500/15 border border-rose-500/30 rounded-lg px-2.5 py-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+                        <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider">{criticalCount} Critical</span>
+                      </div>
+                    )}
+                    {warningCount > 0 && (
+                      <div className="flex items-center gap-1.5 bg-amber-500/15 border border-amber-500/30 rounded-lg px-2.5 py-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">{warningCount} Warning</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 text-slate-500 hover:text-white hover:bg-slate-700 rounded-lg"
+                    onClick={() => { setShowMissingAlert(false); setLastDismissedFY(selectedFY); }}
+                  >
+                    <XIcon className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Plant Alert Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                {missingJmrAlerts.map((alert) => {
+                  const isCritical = alert.gapMonths >= 3;
+                  const accentColor = isCritical ? "rose" : "amber";
+                  const severityLabel = isCritical ? "CRITICAL" : "WARNING";
+                  return (
+                    <div
+                      key={alert.plant}
+                      className={`group relative bg-slate-800/80 backdrop-blur-sm border rounded-xl p-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${
+                        isCritical
+                          ? "border-rose-500/40 hover:border-rose-400/60 hover:shadow-rose-500/10"
+                          : "border-amber-500/40 hover:border-amber-400/60 hover:shadow-amber-500/10"
+                      }`}
+                    >
+                      {/* Severity indicator line */}
+                      <div className={`absolute top-0 left-3 right-3 h-[2px] rounded-b-full ${
+                        isCritical ? "bg-gradient-to-r from-transparent via-rose-500 to-transparent" : "bg-gradient-to-r from-transparent via-amber-500 to-transparent"
+                      }`} />
+
+                      {/* Row 1: Plant Name + Severity */}
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
+                            isCritical ? "bg-rose-500/20" : "bg-amber-500/20"
+                          }`}>
+                            <Building2 className={`w-3 h-3 ${isCritical ? "text-rose-400" : "text-amber-400"}`} />
+                          </div>
+                          <span className="text-xs font-semibold text-white truncate">{alert.plant}</span>
+                        </div>
+                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded tracking-widest shrink-0 ${
+                          isCritical ? "bg-rose-500/20 text-rose-400" : "bg-amber-500/20 text-amber-400"
+                        }`}>
+                          {severityLabel}
+                        </span>
+                      </div>
+
+                      {/* Row 2: Overdue badge */}
+                      <div className="flex items-center gap-2 mb-2.5">
+                        <div className={`text-lg font-black leading-none ${isCritical ? "text-rose-400" : "text-amber-400"}`}>
+                          {alert.gapMonths}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-semibold text-slate-300 leading-tight">months</span>
+                          <span className="text-[10px] text-slate-500 leading-tight">overdue</span>
+                        </div>
+                      </div>
+
+                      {/* Row 3: Month timeline dots */}
+                      <div className="flex items-center gap-1 mb-1.5">
+                        {months.map((m, i) => {
+                          const monthIdx = months.indexOf(alert.lastMonth);
+                          const fyRecordsMonths = jmrRecords.filter(r => r.fy === selectedFY).map(r => months.indexOf(r.month));
+                          const latestFYMonth = Math.max(...fyRecordsMonths.filter(idx => idx >= 0));
+                          const isLast = i === monthIdx;
+                          const isMissing = alert.missingMonths.includes(m);
+                          const isPast = i <= latestFYMonth && i > monthIdx;
+                          const isBeforeOrAtLast = i <= monthIdx;
+                          const isFuture = i > latestFYMonth;
+                          return (
+                            <TooltipProvider key={m}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className={`w-full h-1.5 rounded-full transition-all ${
+                                    isLast
+                                      ? "bg-emerald-400"
+                                      : isMissing
+                                      ? isCritical ? "bg-rose-500 animate-pulse" : "bg-amber-500"
+                                      : isBeforeOrAtLast
+                                      ? "bg-slate-600"
+                                      : isFuture
+                                      ? "bg-slate-700/50"
+                                      : "bg-slate-600"
+                                  }`} />
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="text-[10px] py-1 px-2">
+                                  {m}{isLast ? " (last submitted)" : isMissing ? " (missing)" : ""}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          );
+                        })}
+                      </div>
+
+                      {/* Row 4: Meta info */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-slate-500">
+                          Last: <span className="text-slate-400 font-medium">{alert.lastMonth}</span>
+                        </span>
+                        <span className="text-[10px] text-slate-500">
+                          Missing: <span className={`font-medium ${isCritical ? "text-rose-400" : "text-amber-400"}`}>{alert.missingMonths.join(", ")}</span>
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        );
+      })()}
 
       {/* MAIN CONTENT */}
       <div className="flex-1 flex overflow-hidden">
