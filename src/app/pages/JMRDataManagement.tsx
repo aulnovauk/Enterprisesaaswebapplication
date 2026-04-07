@@ -1049,39 +1049,38 @@ export function JMRDataManagement() {
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="shrink-0 overflow-hidden"
           >
-            <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-6 py-4 border-b border-slate-700">
+            <div className="bg-gradient-to-b from-rose-50 via-white to-slate-50 px-6 py-4 border-b-2 border-rose-200/60">
               {/* Top Row: Header + Stats + Dismiss */}
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-3.5">
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
-                      <AlertTriangle className="w-4.5 h-4.5 text-white" />
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-lg shadow-rose-300/40">
+                      <AlertTriangle className="w-5 h-5 text-white" />
                     </div>
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full flex items-center justify-center animate-pulse">
-                      <span className="text-[8px] font-bold text-white">{missingJmrAlerts.length}</span>
+                    <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center shadow-md shadow-rose-300/50 ring-2 ring-white animate-pulse">
+                      <span className="text-[9px] font-bold text-white">{missingJmrAlerts.length}</span>
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white tracking-tight">Missing JMR Submissions Detected</h3>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
+                    <h3 className="text-sm font-bold text-slate-900 tracking-tight">Missing JMR Submissions Detected</h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
                       {missingJmrAlerts.length} plant{missingJmrAlerts.length > 1 ? "s" : ""} require immediate attention · {totalMissing} total month-records overdue
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {/* Summary pills */}
                   <div className="hidden md:flex items-center gap-2">
                     {criticalCount > 0 && (
-                      <div className="flex items-center gap-1.5 bg-rose-500/15 border border-rose-500/30 rounded-lg px-2.5 py-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
-                        <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider">{criticalCount} Critical</span>
+                      <div className="flex items-center gap-1.5 bg-rose-100 border border-rose-200 rounded-lg px-2.5 py-1 shadow-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                        <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider">{criticalCount} Critical</span>
                       </div>
                     )}
                     {warningCount > 0 && (
-                      <div className="flex items-center gap-1.5 bg-amber-500/15 border border-amber-500/30 rounded-lg px-2.5 py-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">{warningCount} Warning</span>
+                      <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1 shadow-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">{warningCount} Warning</span>
                       </div>
                     )}
                   </div>
@@ -1089,7 +1088,7 @@ export function JMRDataManagement() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 w-7 p-0 text-slate-500 hover:text-white hover:bg-slate-700 rounded-lg"
+                    className="h-7 w-7 p-0 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg"
                     onClick={() => { setShowMissingAlert(false); setLastDismissedFY(selectedFY); }}
                   >
                     <XIcon className="w-4 h-4" />
@@ -1098,78 +1097,76 @@ export function JMRDataManagement() {
               </div>
 
               {/* Plant Alert Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {missingJmrAlerts.map((alert) => {
                   const isCritical = alert.gapMonths >= 3;
-                  const accentColor = isCritical ? "rose" : "amber";
                   const severityLabel = isCritical ? "CRITICAL" : "WARNING";
                   return (
                     <div
                       key={alert.plant}
-                      className={`group relative bg-slate-800/80 backdrop-blur-sm border rounded-xl p-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${
+                      className={`group relative bg-white border-2 rounded-xl p-3.5 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${
                         isCritical
-                          ? "border-rose-500/40 hover:border-rose-400/60 hover:shadow-rose-500/10"
-                          : "border-amber-500/40 hover:border-amber-400/60 hover:shadow-amber-500/10"
+                          ? "border-rose-200 hover:border-rose-300 shadow-sm shadow-rose-100 hover:shadow-rose-200/50"
+                          : "border-amber-200 hover:border-amber-300 shadow-sm shadow-amber-100 hover:shadow-amber-200/50"
                       }`}
                     >
                       {/* Severity indicator line */}
-                      <div className={`absolute top-0 left-3 right-3 h-[2px] rounded-b-full ${
-                        isCritical ? "bg-gradient-to-r from-transparent via-rose-500 to-transparent" : "bg-gradient-to-r from-transparent via-amber-500 to-transparent"
+                      <div className={`absolute top-0 left-4 right-4 h-[3px] rounded-b-full ${
+                        isCritical ? "bg-gradient-to-r from-transparent via-rose-500 to-transparent" : "bg-gradient-to-r from-transparent via-amber-400 to-transparent"
                       }`} />
 
                       {/* Row 1: Plant Name + Severity */}
-                      <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex items-start justify-between gap-2 mb-2.5 mt-0.5">
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
-                            isCritical ? "bg-rose-500/20" : "bg-amber-500/20"
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                            isCritical ? "bg-rose-100" : "bg-amber-100"
                           }`}>
-                            <Building2 className={`w-3 h-3 ${isCritical ? "text-rose-400" : "text-amber-400"}`} />
+                            <Building2 className={`w-3.5 h-3.5 ${isCritical ? "text-rose-600" : "text-amber-600"}`} />
                           </div>
-                          <span className="text-xs font-semibold text-white truncate">{alert.plant}</span>
+                          <span className="text-xs font-bold text-slate-800 truncate">{alert.plant}</span>
                         </div>
-                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded tracking-widest shrink-0 ${
-                          isCritical ? "bg-rose-500/20 text-rose-400" : "bg-amber-500/20 text-amber-400"
+                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-md tracking-widest shrink-0 ${
+                          isCritical ? "bg-rose-100 text-rose-600 ring-1 ring-rose-200" : "bg-amber-100 text-amber-600 ring-1 ring-amber-200"
                         }`}>
                           {severityLabel}
                         </span>
                       </div>
 
-                      {/* Row 2: Overdue badge */}
-                      <div className="flex items-center gap-2 mb-2.5">
-                        <div className={`text-lg font-black leading-none ${isCritical ? "text-rose-400" : "text-amber-400"}`}>
+                      {/* Row 2: Overdue count */}
+                      <div className="flex items-center gap-2.5 mb-3">
+                        <div className={`text-2xl font-black leading-none ${isCritical ? "text-rose-500" : "text-amber-500"}`}>
                           {alert.gapMonths}
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-semibold text-slate-300 leading-tight">months</span>
-                          <span className="text-[10px] text-slate-500 leading-tight">overdue</span>
+                          <span className="text-[10px] font-semibold text-slate-700 leading-tight">months</span>
+                          <span className="text-[10px] text-slate-400 leading-tight">overdue</span>
                         </div>
                       </div>
 
-                      {/* Row 3: Month timeline dots */}
-                      <div className="flex items-center gap-1 mb-1.5">
+                      {/* Row 3: Month timeline */}
+                      <div className="flex items-center gap-[3px] mb-2">
                         {months.map((m, i) => {
                           const monthIdx = months.indexOf(alert.lastMonth);
                           const fyRecordsMonths = jmrRecords.filter(r => r.fy === selectedFY).map(r => months.indexOf(r.month));
                           const latestFYMonth = Math.max(...fyRecordsMonths.filter(idx => idx >= 0));
                           const isLast = i === monthIdx;
                           const isMissing = alert.missingMonths.includes(m);
-                          const isPast = i <= latestFYMonth && i > monthIdx;
                           const isBeforeOrAtLast = i <= monthIdx;
                           const isFuture = i > latestFYMonth;
                           return (
                             <TooltipProvider key={m}>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className={`w-full h-1.5 rounded-full transition-all ${
+                                  <div className={`w-full h-2 rounded-full transition-all ${
                                     isLast
-                                      ? "bg-emerald-400"
+                                      ? "bg-emerald-500 shadow-sm shadow-emerald-200"
                                       : isMissing
-                                      ? isCritical ? "bg-rose-500 animate-pulse" : "bg-amber-500"
+                                      ? isCritical ? "bg-rose-400 animate-pulse shadow-sm shadow-rose-200" : "bg-amber-400 shadow-sm shadow-amber-200"
                                       : isBeforeOrAtLast
-                                      ? "bg-slate-600"
+                                      ? "bg-slate-200"
                                       : isFuture
-                                      ? "bg-slate-700/50"
-                                      : "bg-slate-600"
+                                      ? "bg-slate-100"
+                                      : "bg-slate-200"
                                   }`} />
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom" className="text-[10px] py-1 px-2">
@@ -1182,12 +1179,12 @@ export function JMRDataManagement() {
                       </div>
 
                       {/* Row 4: Meta info */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-slate-500">
-                          Last: <span className="text-slate-400 font-medium">{alert.lastMonth}</span>
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                        <span className="text-[10px] text-slate-400">
+                          Last: <span className="text-slate-600 font-semibold">{alert.lastMonth}</span>
                         </span>
-                        <span className="text-[10px] text-slate-500">
-                          Missing: <span className={`font-medium ${isCritical ? "text-rose-400" : "text-amber-400"}`}>{alert.missingMonths.join(", ")}</span>
+                        <span className="text-[10px] text-slate-400">
+                          Missing: <span className={`font-semibold ${isCritical ? "text-rose-600" : "text-amber-600"}`}>{alert.missingMonths.join(", ")}</span>
                         </span>
                       </div>
                     </div>
