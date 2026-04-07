@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { PageExportMenu } from "../components/PageExportMenu";
 import { motion, AnimatePresence } from "motion/react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
@@ -730,10 +730,26 @@ export function JMRDataManagement() {
     const delta = (curr: number, prev: number) =>
       prev === 0 ? 0 : ((curr - prev) / prev) * 100;
 
-    const allPlants = [...new Set([...currentRecs.map(r => r.plant), ...prevRecs.map(r => r.plant)])];
+    const aggregateByPlant = (recs: typeof jmrRecords) => {
+      const map = new Map<string, { grossGeneration: number; energyExportKWh: number; revenue: number; count: number }>();
+      for (const r of recs) {
+        const existing = map.get(r.plant) || { grossGeneration: 0, energyExportKWh: 0, revenue: 0, count: 0 };
+        existing.grossGeneration += r.grossGeneration;
+        existing.energyExportKWh += r.energyExportKWh;
+        existing.revenue += r.revenue;
+        existing.count += 1;
+        map.set(r.plant, existing);
+      }
+      return map;
+    };
+
+    const currentByPlant = aggregateByPlant(currentRecs);
+    const prevByPlant = aggregateByPlant(prevRecs);
+    const allPlants = [...new Set([...currentByPlant.keys(), ...prevByPlant.keys()])];
+
     const chartData = allPlants.map(plant => {
-      const cur = currentRecs.find(r => r.plant === plant);
-      const prv = prevRecs.find(r => r.plant === plant);
+      const cur = currentByPlant.get(plant);
+      const prv = prevByPlant.get(plant);
       const shortName = plant.split(" ").slice(0, 2).join(" ");
       return {
         name: shortName,
@@ -763,6 +779,57 @@ export function JMRDataManagement() {
       chartData,
     };
   }, [jmrRecords, selectedFY, cmpCurrentMonth, cmpPrevMonth]);
+
+  const [showMissingAlert, setShowMissingAlert] = useState(true);
+  const [lastDismissedFY, setLastDismissedFY] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (lastDismissedFY !== null && lastDismissedFY !== selectedFY) {
+      setShowMissingAlert(true);
+      setLastDismissedFY(null);
+    }
+  }, [selectedFY, lastDismissedFY]);
+
+  const missingJmrAlerts = useMemo(() => {
+    const fyRecords = jmrRecords.filter(r => r.fy === selectedFY);
+    if (fyRecords.length === 0) return [];
+
+    const validMonthIdxs = fyRecords.map(r => months.indexOf(r.month)).filter(idx => idx >= 0);
+    if (validMonthIdxs.length === 0) return [];
+
+    const latestMonthIdx = Math.max(...validMonthIdxs);
+    const plantMap = new Map<string, number[]>();
+
+    for (const r of fyRecords) {
+      const idx = months.indexOf(r.month);
+      if (idx < 0) continue;
+      const existing = plantMap.get(r.plant) || [];
+      existing.push(idx);
+      plantMap.set(r.plant, existing);
+    }
+
+    const alerts: { plant: string; lastMonth: string; gapMonths: number; missingMonths: string[] }[] = [];
+
+    for (const [plant, idxs] of plantMap.entries()) {
+      const latestPlantMonth = Math.max(...idxs);
+      const gap = latestMonthIdx - latestPlantMonth;
+
+      if (gap > 1) {
+        const missing: string[] = [];
+        for (let i = latestPlantMonth + 1; i <= latestMonthIdx; i++) {
+          missing.push(months[i]);
+        }
+        alerts.push({
+          plant,
+          lastMonth: months[latestPlantMonth],
+          gapMonths: gap,
+          missingMonths: missing,
+        });
+      }
+    }
+
+    return alerts.sort((a, b) => b.gapMonths - a.gapMonths);
+  }, [jmrRecords, selectedFY]);
 
   const updateRepositoryFromForm = (status: "approved" | "locked") => {
     const capacityKWp = (parseFloat(plantMetadata.capacity) || 0) * 1000;
@@ -966,6 +1033,54 @@ export function JMRDataManagement() {
           <Button variant="ghost" size="sm" className="h-5 text-[10px] text-blue-600 hover:bg-blue-100 ml-auto px-2" onClick={resetAllFilters}>
             Clear All
           </Button>
+        </div>
+      )}
+
+      {/* Missing JMR Alert Banner */}
+      {showMissingAlert && missingJmrAlerts.length > 0 && (
+        <div className="bg-rose-50 border-b-2 border-rose-200 px-6 py-3 shrink-0">
+          <div className="flex items-start gap-3">
+            <div className="p-1.5 bg-rose-100 rounded-lg shrink-0 mt-0.5">
+              <AlertTriangle className="w-4 h-4 text-rose-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-sm font-bold text-rose-800">
+                  Missing JMR Alert — {missingJmrAlerts.length} plant{missingJmrAlerts.length > 1 ? "s" : ""} with overdue submissions
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 text-rose-400 hover:text-rose-600 hover:bg-rose-100 shrink-0"
+                  onClick={() => { setShowMissingAlert(false); setLastDismissedFY(selectedFY); }}
+                >
+                  <XIcon className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {missingJmrAlerts.map((alert) => (
+                  <div
+                    key={alert.plant}
+                    className="flex items-center gap-2 bg-white border border-rose-200 rounded-lg px-3 py-1.5 shadow-sm"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Building2 className="w-3 h-3 text-rose-500" />
+                      <span className="text-xs font-semibold text-slate-800">{alert.plant}</span>
+                    </div>
+                    <Separator orientation="vertical" className="h-3.5" />
+                    <div className="flex items-center gap-1">
+                      <Badge className="bg-rose-600 text-white text-[10px] px-1.5 py-0 h-4">
+                        {alert.gapMonths} months overdue
+                      </Badge>
+                    </div>
+                    <span className="text-[10px] text-slate-500">
+                      Last: {alert.lastMonth} · Missing: {alert.missingMonths.join(", ")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

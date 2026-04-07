@@ -74,6 +74,23 @@ index.html            - HTML entry
 vite.config.ts        - Vite config (port 5000, host 0.0.0.0)
 ```
 
+## JMR Generation Comparison & Missing JMR Alerts
+
+- **Generation Comparison Tab** (`JMRDataManagement.tsx`): New "Generation Comparison" tab in JMR Data Management. Compares current month vs previous month JMR generation with:
+  - 4 KPI delta cards (Gross Generation, Net Export, Revenue, Plant Records) with MoM % change indicators
+  - Grouped bar chart (Recharts) showing plant-wise current vs previous month generation
+  - Detailed plant-by-plant comparison table with trend arrows and portfolio totals
+  - Auto-generated insight banner summarizing portfolio performance
+  - Month selector with auto-previous-month detection
+  - Plant-level data aggregation (handles multiple records per plant/month)
+
+- **Missing JMR Alert Banner** (`JMRDataManagement.tsx`): Persistent alert banner shown across all JMR tabs when any plant has JMR submissions missing for more than 1 month. Features:
+  - Automatic gap detection: compares each plant's latest JMR month against the FY's most recent month
+  - Per-plant badges showing overdue count and missing month names
+  - Dismissible per FY (auto-reopens when switching fiscal years)
+  - Sorted by severity (most overdue plants first)
+  - Hardened against invalid month values
+
 ## Client JMR Report Fields
 
 The platform now supports the client's JMR report format with these fields tracked per site per month:
