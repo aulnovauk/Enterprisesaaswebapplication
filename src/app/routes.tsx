@@ -21,6 +21,7 @@ const ReportStudio = lazy(() => import("./pages/ReportStudio").then(mod => ({ de
 const KPITransparencyConsole = lazy(() => import("./pages/KPITransparencyConsole").then(mod => ({ default: mod.KPITransparencyConsole })));
 const PortfolioComplianceHealth = lazy(() => import("./pages/PortfolioComplianceHealth").then(mod => ({ default: mod.PortfolioComplianceHealth })));
 const WaterfallLossAnalytics = lazy(() => import("./pages/WaterfallLossAnalytics").then(mod => ({ default: mod.WaterfallLossAnalytics })));
+const FinancialReports = lazy(() => import("./pages/FinancialReports").then(mod => ({ default: mod.FinancialReports })));
 
 // Loading fallback component
 const LoadingFallback = () => <div className="flex items-center justify-center h-screen">Loading...</div>;
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
       { path: "kpi-transparency", Component: () => <Suspense fallback={<LoadingFallback />}><KPITransparencyConsole /></Suspense> },
       { path: "portfolio-compliance", Component: () => <Suspense fallback={<LoadingFallback />}><PortfolioComplianceHealth /></Suspense> },
       { path: "waterfall-loss", Component: () => <Suspense fallback={<LoadingFallback />}><WaterfallLossAnalytics /></Suspense> },
+      { path: "financial-reports", Component: () => <Suspense fallback={<LoadingFallback />}><FinancialReports /></Suspense> },
     ],
   },
 ]);
