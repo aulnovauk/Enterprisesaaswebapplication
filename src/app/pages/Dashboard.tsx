@@ -555,6 +555,170 @@ function KpiCardWithPreview({
   );
 }
 
+function VendorCardWithPreview({ children, vendor }: { children: React.ReactNode; vendor: typeof vendorHealthData[0] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState<{ horizontal: "right" | "left"; vertical: "below" | "above" }>(
+    { horizontal: "right", vertical: "below" }
+  );
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoveringRef = useRef(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const plants = vendorPlantDetails[vendor.vendor] || [];
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
+  const cancelClose = () => {
+    if (closeTimerRef.current) { clearTimeout(closeTimerRef.current); closeTimerRef.current = null; }
+  };
+
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimerRef.current = setTimeout(() => { if (!hoveringRef.current) setIsOpen(false); }, 200);
+  };
+
+  const handleEnter = () => {
+    hoveringRef.current = true;
+    cancelClose();
+    timerRef.current = setTimeout(() => {
+      if (hoveringRef.current && cardRef.current) {
+        const rect = cardRef.current.getBoundingClientRect();
+        const spaceRight = window.innerWidth - rect.right;
+        const spaceLeft = rect.left;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        setPosition({
+          horizontal: spaceRight >= 420 ? "right" : spaceLeft >= 420 ? "left" : "right",
+          vertical: spaceBelow >= 380 ? "below" : spaceAbove >= 380 ? "above" : "below",
+        });
+        setIsOpen(true);
+      }
+    }, 2000);
+  };
+
+  const handleLeave = () => {
+    hoveringRef.current = false;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    scheduleClose();
+  };
+
+  const handlePreviewEnter = () => { hoveringRef.current = true; cancelClose(); };
+  const handlePreviewLeave = () => {
+    hoveringRef.current = false;
+    scheduleClose();
+  };
+
+  const posStyle: React.CSSProperties = {};
+  if (position.horizontal === "right") { posStyle.left = "100%"; posStyle.marginLeft = 10; }
+  else { posStyle.right = "100%"; posStyle.marginRight = 10; }
+  if (position.vertical === "below") { posStyle.top = 0; }
+  else { posStyle.bottom = 0; }
+
+  return (
+    <div ref={cardRef} className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      {children}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: position.vertical === "below" ? 6 : -6 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: position.vertical === "below" ? 6 : -6 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="absolute z-50"
+              style={posStyle}
+              onMouseEnter={handlePreviewEnter}
+              onMouseLeave={handlePreviewLeave}
+            >
+              <div className="w-[400px] max-h-[70vh] bg-white rounded-xl shadow-2xl border border-slate-200 ring-1 ring-black/5 flex flex-col overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-1.5 shrink-0" style={{ background: `linear-gradient(135deg, ${vendor.color}, ${vendor.color}cc)` }}>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" />
+                    <span className="text-[10px] font-semibold text-white/90 uppercase tracking-wider">Plant Revenue Details</span>
+                  </div>
+                  <button onClick={() => setIsOpen(false)} className="p-0.5 rounded hover:bg-white/10 transition-colors">
+                    <span className="text-white/60 text-xs">✕</span>
+                  </button>
+                </div>
+
+                <div className="px-3 pt-2.5 pb-2 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                  <h3 className="text-xs font-bold text-slate-800">{vendor.vendor}</h3>
+                  <p className="text-[9px] text-slate-400 mt-0.5">{vendor.plantCount} plants · {vendor.capacity} MW · Collection {vendor.collection}%</p>
+                </div>
+
+                <div className="flex-1 overflow-y-auto overscroll-contain" style={{ scrollbarWidth: "thin", scrollbarColor: "#cbd5e1 transparent" }}>
+                  <div className="p-3 space-y-2.5">
+                    {plants.map((p) => {
+                      const realPct = p.budgeted > 0 ? (p.realized / p.budgeted) * 100 : 0;
+                      return (
+                        <div key={p.name} className={`rounded-lg border p-2.5 ${p.status === "red" ? "border-rose-200 bg-rose-50/30" : p.status === "yellow" ? "border-amber-200 bg-amber-50/30" : "border-emerald-200 bg-emerald-50/30"}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: vendor.color }} />
+                              <span className="text-[11px] font-bold text-slate-800">{p.name}</span>
+                              <span className="text-[9px] text-slate-400">· {p.district}, MH</span>
+                            </div>
+                            <Badge className={`text-[8px] px-1.5 py-0 ${p.status === "green" ? "bg-emerald-100 text-emerald-700" : p.status === "yellow" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
+                              {p.capacity} MW
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-4 gap-2 mb-2">
+                            <div>
+                              <p className="text-[8px] text-slate-400 uppercase">Budgeted</p>
+                              <p className="text-[10px] font-semibold text-slate-600">₹{p.budgeted.toFixed(2)} Cr</p>
+                            </div>
+                            <div>
+                              <p className="text-[8px] text-slate-400 uppercase">Realized</p>
+                              <p className="text-[10px] font-bold" style={{ color: vendor.color }}>₹{p.realized.toFixed(2)} Cr</p>
+                            </div>
+                            <div>
+                              <p className="text-[8px] text-slate-400 uppercase">Shortfall</p>
+                              <p className={`text-[10px] font-bold ${p.shortfall > 0.3 ? "text-rose-600" : "text-amber-600"}`}>₹{p.shortfall.toFixed(2)} Cr</p>
+                            </div>
+                            <div>
+                              <p className="text-[8px] text-slate-400 uppercase">Collection</p>
+                              <p className={`text-[10px] font-bold ${p.collection >= 93 ? "text-emerald-600" : p.collection >= 88 ? "text-amber-600" : "text-rose-600"}`}>{p.collection}%</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                              <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(realPct, 100)}%`, backgroundColor: realPct >= 93 ? "#10b981" : realPct >= 88 ? "#f59e0b" : "#ef4444" }} />
+                            </div>
+                            <span className="text-[8px] font-bold text-slate-500">{realPct.toFixed(0)}%</span>
+                          </div>
+                          <div className="flex items-center gap-3 mt-1.5">
+                            <span className="text-[8px] text-slate-400">PR: <span className="font-semibold text-slate-600">{p.pr}%</span></span>
+                            <span className="text-[8px] text-slate-400">CUF: <span className="font-semibold text-slate-600">{p.cuf}%</span></span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="px-3 py-2 bg-slate-50 border-t border-slate-100 shrink-0">
+                  <div className="flex items-center justify-between text-[9px]">
+                    <span className="text-slate-400">Vendor Total: ₹{vendor.budgeted.toFixed(2)} Cr budgeted → ₹{vendor.realized.toFixed(2)} Cr realized</span>
+                    <span className={`font-bold ${vendor.collection >= 93 ? "text-emerald-600" : vendor.collection >= 88 ? "text-amber-600" : "text-rose-600"}`}>
+                      {((vendor.realized / vendor.budgeted) * 100).toFixed(1)}% realization
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ── Filter Engine: month seasonal generation factors (India solar profile) ────
 const MONTH_ORDER = [
   "April","May","June","July","August","September",
@@ -573,6 +737,31 @@ const BASE_SEASON = 0.85; // existing data is calibrated for February
 const BASE_KPI = {
   mtdGen: 42580, mtdTarget: 45000,
   plantsCap: plantMarkers.reduce((s, p) => s + p.capacity, 0), // 208 MW from sample
+};
+
+const vendorPlantDetails: Record<string, { name: string; district: string; capacity: number; budgeted: number; realized: number; shortfall: number; collection: number; pr: number; cuf: number; status: "green" | "yellow" | "red" }[]> = {
+  "SolarCo India": [
+    { name: "Sakri", district: "Dhule", capacity: 20.0, budgeted: 4.80, realized: 4.38, shortfall: 0.42, collection: 91.3, pr: 78.2, cuf: 22.1, status: "yellow" },
+    { name: "Ahmednagar", district: "Ahmednagar", capacity: 15.2, budgeted: 3.60, realized: 3.17, shortfall: 0.43, collection: 88.1, pr: 76.5, cuf: 21.4, status: "yellow" },
+  ],
+  "SunPower Tech": [
+    { name: "Sangli", district: "Sangli", capacity: 14.5, budgeted: 2.90, realized: 2.48, shortfall: 0.42, collection: 85.5, pr: 74.8, cuf: 20.2, status: "red" },
+    { name: "Wardha", district: "Wardha", capacity: 12.8, budgeted: 2.56, realized: 2.18, shortfall: 0.38, collection: 85.2, pr: 75.1, cuf: 20.5, status: "red" },
+    { name: "Buldhana", district: "Buldhana", capacity: 13.2, budgeted: 2.64, realized: 2.32, shortfall: 0.32, collection: 87.9, pr: 76.0, cuf: 21.0, status: "yellow" },
+    { name: "Chandrapur", district: "Chandrapur", capacity: 10.5, budgeted: 2.10, realized: 1.78, shortfall: 0.32, collection: 84.8, pr: 73.5, cuf: 19.8, status: "red" },
+    { name: "Amravati", district: "Amravati", capacity: 12.2, budgeted: 2.45, realized: 2.16, shortfall: 0.29, collection: 88.2, pr: 76.8, cuf: 21.2, status: "yellow" },
+  ],
+  "Mega Solar Inc": [
+    { name: "Beed", district: "Beed", capacity: 18.0, budgeted: 4.32, realized: 3.95, shortfall: 0.37, collection: 91.4, pr: 78.5, cuf: 22.3, status: "yellow" },
+    { name: "Devdaithan", district: "Jalgaon", capacity: 15.0, budgeted: 3.60, realized: 3.22, shortfall: 0.38, collection: 89.4, pr: 77.2, cuf: 21.6, status: "yellow" },
+    { name: "Bhandara", district: "Bhandara", capacity: 15.0, budgeted: 3.60, realized: 3.28, shortfall: 0.32, collection: 91.1, pr: 78.0, cuf: 22.0, status: "yellow" },
+  ],
+  "Green Energy Ltd": [
+    { name: "Osmanabad", district: "Osmanabad", capacity: 18.5, budgeted: 4.44, realized: 4.30, shortfall: 0.14, collection: 96.8, pr: 82.4, cuf: 24.1, status: "green" },
+  ],
+  "TechSolar Pvt": [
+    { name: "Latur", district: "Latur", capacity: 15.0, budgeted: 3.60, realized: 3.45, shortfall: 0.15, collection: 95.8, pr: 81.2, cuf: 23.5, status: "green" },
+  ],
 };
 
 const vendorHealthData = [
@@ -1202,56 +1391,58 @@ export function Dashboard() {
               const circumference = 2 * Math.PI * 36;
               const offset = circumference - (circumference * Math.min(pct, 100)) / 100;
               return (
-                <Card key={v.vendor} className={`border-2 ${v.status === "critical" ? "border-rose-200 bg-rose-50/30" : v.status === "warning" ? "border-amber-200 bg-amber-50/30" : "border-emerald-200 bg-emerald-50/30"} relative overflow-hidden`}>
-                  <CardContent className="p-4 flex flex-col items-center">
-                    <Badge className={`absolute top-2 right-2 text-[8px] ${v.status === "healthy" ? "bg-emerald-100 text-emerald-700" : v.status === "warning" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
-                      {v.status === "healthy" ? "Healthy" : v.status === "warning" ? "At Risk" : "Critical"}
-                    </Badge>
-                    <div className="relative w-20 h-20 mb-2">
-                      <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-                        <circle cx="40" cy="40" r="36" fill="none" stroke="#e2e8f0" strokeWidth="5" />
-                        <circle cx="40" cy="40" r="36" fill="none" stroke={v.color} strokeWidth="5" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-1000" />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-sm font-bold" style={{ color: v.color }}>{pct.toFixed(0)}%</span>
-                        <span className="text-[7px] text-slate-400">realized</span>
-                      </div>
-                    </div>
-                    <div className="text-xs font-bold text-slate-800 text-center leading-tight">{v.vendor}</div>
-                    <div className="text-[9px] text-slate-400 mt-0.5">{v.plantCount} plants · {v.capacity} MW</div>
-                    <div className="w-full mt-3 space-y-1">
-                      <div className="flex justify-between text-[9px]">
-                        <span className="text-slate-400">Budgeted</span>
-                        <span className="font-semibold text-slate-600">₹{v.budgeted.toFixed(2)} Cr</span>
-                      </div>
-                      <div className="flex justify-between text-[9px]">
-                        <span className="text-slate-400">Realized</span>
-                        <span className="font-bold" style={{ color: v.color }}>₹{v.realized.toFixed(2)} Cr</span>
-                      </div>
-                      <div className="flex justify-between text-[9px]">
-                        <span className="text-slate-400">Shortfall</span>
-                        <span className={`font-bold ${v.shortfall > 1 ? "text-rose-600" : "text-amber-600"}`}>₹{v.shortfall.toFixed(2)} Cr</span>
-                      </div>
-                      {v.ldExposure > 0 && (
-                        <div className="flex justify-between text-[9px]">
-                          <span className="text-slate-400">LD Exposure</span>
-                          <span className="font-bold text-orange-600">₹{v.ldExposure.toFixed(2)} Cr</span>
+                <VendorCardWithPreview key={v.vendor} vendor={v}>
+                  <Card className={`border-2 ${v.status === "critical" ? "border-rose-200 bg-rose-50/30" : v.status === "warning" ? "border-amber-200 bg-amber-50/30" : "border-emerald-200 bg-emerald-50/30"} relative overflow-hidden cursor-pointer`}>
+                    <CardContent className="p-4 flex flex-col items-center">
+                      <Badge className={`absolute top-2 right-2 text-[8px] ${v.status === "healthy" ? "bg-emerald-100 text-emerald-700" : v.status === "warning" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
+                        {v.status === "healthy" ? "Healthy" : v.status === "warning" ? "At Risk" : "Critical"}
+                      </Badge>
+                      <div className="relative w-20 h-20 mb-2">
+                        <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+                          <circle cx="40" cy="40" r="36" fill="none" stroke="#e2e8f0" strokeWidth="5" />
+                          <circle cx="40" cy="40" r="36" fill="none" stroke={v.color} strokeWidth="5" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-1000" />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-sm font-bold" style={{ color: v.color }}>{pct.toFixed(0)}%</span>
+                          <span className="text-[7px] text-slate-400">realized</span>
                         </div>
-                      )}
-                    </div>
-                    <div className="w-full mt-2 pt-2 border-t border-slate-200">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[8px] text-slate-400">Collection</span>
-                        <Badge className={`text-[8px] px-1.5 ${v.collection >= 93 ? "bg-emerald-100 text-emerald-700" : v.collection >= 88 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
-                          {v.collection}%
-                        </Badge>
                       </div>
-                      <div className="h-1.5 rounded-full bg-slate-200 mt-1 overflow-hidden">
-                        <div className="h-full rounded-full transition-all" style={{ width: `${v.collection}%`, backgroundColor: v.collection >= 93 ? "#10b981" : v.collection >= 88 ? "#f59e0b" : "#ef4444" }} />
+                      <div className="text-xs font-bold text-slate-800 text-center leading-tight">{v.vendor}</div>
+                      <div className="text-[9px] text-slate-400 mt-0.5">{v.plantCount} plants · {v.capacity} MW</div>
+                      <div className="w-full mt-3 space-y-1">
+                        <div className="flex justify-between text-[9px]">
+                          <span className="text-slate-400">Budgeted</span>
+                          <span className="font-semibold text-slate-600">₹{v.budgeted.toFixed(2)} Cr</span>
+                        </div>
+                        <div className="flex justify-between text-[9px]">
+                          <span className="text-slate-400">Realized</span>
+                          <span className="font-bold" style={{ color: v.color }}>₹{v.realized.toFixed(2)} Cr</span>
+                        </div>
+                        <div className="flex justify-between text-[9px]">
+                          <span className="text-slate-400">Shortfall</span>
+                          <span className={`font-bold ${v.shortfall > 1 ? "text-rose-600" : "text-amber-600"}`}>₹{v.shortfall.toFixed(2)} Cr</span>
+                        </div>
+                        {v.ldExposure > 0 && (
+                          <div className="flex justify-between text-[9px]">
+                            <span className="text-slate-400">LD Exposure</span>
+                            <span className="font-bold text-orange-600">₹{v.ldExposure.toFixed(2)} Cr</span>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <div className="w-full mt-2 pt-2 border-t border-slate-200">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[8px] text-slate-400">Collection</span>
+                          <Badge className={`text-[8px] px-1.5 ${v.collection >= 93 ? "bg-emerald-100 text-emerald-700" : v.collection >= 88 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
+                            {v.collection}%
+                          </Badge>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-slate-200 mt-1 overflow-hidden">
+                          <div className="h-full rounded-full transition-all" style={{ width: `${v.collection}%`, backgroundColor: v.collection >= 93 ? "#10b981" : v.collection >= 88 ? "#f59e0b" : "#ef4444" }} />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </VendorCardWithPreview>
               );
             })}
           </div>
