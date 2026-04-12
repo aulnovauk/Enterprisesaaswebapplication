@@ -1195,10 +1195,26 @@ export function JMRDataManagement() {
       { key: "soilingDegradation", label: "Soiling & Degradation", color: "#84cc16", icon: "droplets", pctRange: [0.05, 0.15] },
     ];
 
+    const computeMonthLosses = (gen: number, seed: number) => {
+      const pseudoRandom = (i: number) => ((seed * 31 + i * 17) % 100) / 100;
+      const lossFactors = [0.06, 0.05, 0.08, 0.04, 0.03];
+      return varianceReasons.map((r, i) => {
+        const basePct = lossFactors[i] + (r.pctRange[1] - r.pctRange[0]) * pseudoRandom(i) * 0.3;
+        const lossMWh = Math.round(gen * basePct);
+        return { ...r, lossMWh, lossPct: gen > 0 ? (lossMWh / gen) * 100 : 0 };
+      });
+    };
+
     const plantVarianceData = chartData.map((row) => {
       const diff = row.current - row.previous;
       const absDiff = Math.abs(diff);
-      if (absDiff === 0) return { ...row, diff, absDiff, reasons: [], primaryReason: "No Change" };
+      if (absDiff === 0) return { ...row, diff, absDiff, reasons: [], prevMonthLosses: [], currMonthLosses: [], primaryReason: "No Change" };
+
+      const prevSeed = row.fullName.length + row.previous * 3 + 7;
+      const currSeed = row.fullName.length + row.current * 3 + 13;
+
+      const prevMonthLosses = computeMonthLosses(row.previous, prevSeed);
+      const currMonthLosses = computeMonthLosses(row.current, currSeed);
 
       const seed = row.fullName.length + row.current + row.previous;
       const pseudoRandom = (i: number) => ((seed * 31 + i * 17) % 100) / 100;
@@ -1230,6 +1246,8 @@ export function JMRDataManagement() {
         diff,
         absDiff,
         reasons,
+        prevMonthLosses,
+        currMonthLosses,
         primaryReason: reasons[0].label,
       };
     });
@@ -3935,94 +3953,153 @@ export function JMRDataManagement() {
                             Plant-wise Variance Breakdown
                           </CardTitle>
                           <CardDescription>
-                            Attributed reasons for generation {comparisonData.portfolioDiff >= 0 ? "increase" : "decrease"} at each plant — {cmpCurrentMonth} vs {cmpPrevMonth}
+                            Month-over-month loss factor comparison at each plant — {cmpCurrentMonth} vs {cmpPrevMonth}
                           </CardDescription>
+                          <div className="flex items-center gap-4 mt-2">
+                            <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                              <span className="w-3 h-2 rounded-sm bg-slate-300 inline-block" /> {cmpPrevMonth}
+                            </span>
+                            <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                              <span className="w-3 h-2 rounded-sm bg-[#2955A0] inline-block" /> {cmpCurrentMonth}
+                            </span>
+                            <span className="flex items-center gap-1.5 text-[10px] text-emerald-600">
+                              <ArrowDownRight className="w-3 h-3" /> Improved (loss reduced)
+                            </span>
+                            <span className="flex items-center gap-1.5 text-[10px] text-rose-600">
+                              <ArrowUpRight className="w-3 h-3" /> Worsened (loss increased)
+                            </span>
+                          </div>
                         </CardHeader>
-                        <CardContent className="p-0">
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                              <thead>
-                                <tr className="bg-slate-50 border-b border-slate-200">
-                                  <th className="text-left px-4 py-3 font-semibold text-slate-700 text-xs">Plant</th>
-                                  <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Δ Generation (MWh)</th>
-                                  <th className="text-left px-4 py-3 font-semibold text-slate-700 text-xs">Primary Factor</th>
-                                  <th className="text-left px-4 py-3 font-semibold text-slate-700 text-xs min-w-[320px]">Variance Attribution</th>
-                                  <th className="text-center px-4 py-3 font-semibold text-slate-700 text-xs">Impact</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {comparisonData.plantVarianceData.map((plant, idx) => {
-                                  const isGain = plant.diff >= 0;
-                                  return (
-                                    <tr key={plant.fullName} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${idx % 2 === 0 ? "" : "bg-slate-50/50"}`}>
-                                      <td className="px-4 py-3">
-                                        <div className="font-semibold text-slate-800 text-xs">{plant.fullName}</div>
-                                        <div className="text-[10px] text-slate-400 mt-0.5">
-                                          {plant.current.toLocaleString("en-IN")} ← {plant.previous.toLocaleString("en-IN")} MWh
-                                        </div>
-                                      </td>
-                                      <td className="px-4 py-3 text-right">
-                                        {plant.diff === 0 ? (
-                                          <span className="text-slate-400 text-xs">0</span>
-                                        ) : (
-                                          <span className={`inline-flex items-center gap-0.5 font-bold text-xs ${isGain ? "text-emerald-700" : "text-rose-600"}`}>
-                                            {isGain ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                                            {isGain ? "+" : ""}{plant.diff.toLocaleString("en-IN")}
-                                          </span>
-                                        )}
-                                      </td>
-                                      <td className="px-4 py-3">
-                                        {plant.reasons.length > 0 ? (
-                                          <Badge className="text-[10px] px-2 py-0.5" style={{ backgroundColor: plant.reasons[0].color + "20", color: plant.reasons[0].color }}>
-                                            {plant.primaryReason}
-                                          </Badge>
-                                        ) : (
-                                          <span className="text-slate-400 text-xs">—</span>
-                                        )}
-                                      </td>
-                                      <td className="px-4 py-3">
-                                        {plant.reasons.length > 0 ? (
-                                          <div className="space-y-1.5">
-                                            <div className="flex h-2 rounded-full overflow-hidden bg-slate-100">
-                                              {plant.reasons.map((r: { key: string; color: string; pctOfDiff: number }) => (
-                                                <div
-                                                  key={r.key}
-                                                  className="h-full transition-all"
-                                                  style={{ width: `${r.pctOfDiff}%`, backgroundColor: r.color }}
-                                                  title={`${r.key}: ${r.pctOfDiff.toFixed(1)}%`}
-                                                />
-                                              ))}
+                        <CardContent className="p-0 divide-y divide-slate-100">
+                          {comparisonData.plantVarianceData.map((plant, idx) => {
+                            const isGain = plant.diff >= 0;
+                            const prevLosses = plant.prevMonthLosses || [];
+                            const currLosses = plant.currMonthLosses || [];
+                            const maxLoss = Math.max(
+                              ...prevLosses.map((l: { lossMWh: number }) => l.lossMWh),
+                              ...currLosses.map((l: { lossMWh: number }) => l.lossMWh),
+                              1
+                            );
+                            const improved = currLosses.filter((c: { key: string; lossMWh: number }, i: number) => c.lossMWh < (prevLosses[i]?.lossMWh || 0)).length;
+                            const worsened = currLosses.filter((c: { key: string; lossMWh: number }, i: number) => c.lossMWh > (prevLosses[i]?.lossMWh || 0)).length;
+
+                            return (
+                              <div key={plant.fullName} className={`px-5 py-4 ${idx % 2 === 0 ? "" : "bg-slate-50/40"}`}>
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex items-center gap-3">
+                                    <div>
+                                      <div className="font-semibold text-slate-800 text-sm">{plant.fullName}</div>
+                                      <div className="text-[10px] text-slate-400 mt-0.5">
+                                        {cmpPrevMonth}: {plant.previous.toLocaleString("en-IN")} MWh → {cmpCurrentMonth}: {plant.current.toLocaleString("en-IN")} MWh
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    {plant.diff !== 0 && (
+                                      <span className={`inline-flex items-center gap-0.5 font-bold text-sm ${isGain ? "text-emerald-700" : "text-rose-600"}`}>
+                                        {isGain ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                                        {isGain ? "+" : ""}{plant.diff.toLocaleString("en-IN")} MWh
+                                      </span>
+                                    )}
+                                    {plant.absDiff === 0 ? (
+                                      <Badge className="bg-slate-100 text-slate-500 text-[10px]">No Change</Badge>
+                                    ) : plant.absDiff > 200 ? (
+                                      <Badge className="bg-rose-100 text-rose-700 text-[10px]">High Impact</Badge>
+                                    ) : plant.absDiff > 80 ? (
+                                      <Badge className="bg-amber-100 text-amber-700 text-[10px]">Medium</Badge>
+                                    ) : (
+                                      <Badge className="bg-emerald-100 text-emerald-700 text-[10px]">Low</Badge>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {plant.reasons.length > 0 && (
+                                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4">
+                                    <div className="space-y-2">
+                                      {currLosses.map((curr: { key: string; label: string; color: string; lossMWh: number; lossPct: number }, i: number) => {
+                                        const prev = prevLosses[i] || { lossMWh: 0, lossPct: 0 };
+                                        const delta = curr.lossMWh - prev.lossMWh;
+                                        const deltaPct = prev.lossMWh > 0 ? ((delta / prev.lossMWh) * 100) : 0;
+                                        const isImproved = delta < 0;
+                                        const isWorsened = delta > 0;
+
+                                        return (
+                                          <div key={curr.key} className="flex items-center gap-2">
+                                            <div className="w-[130px] flex-shrink-0">
+                                              <div className="flex items-center gap-1.5">
+                                                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: curr.color }} />
+                                                <span className="text-[10px] text-slate-600 font-medium truncate">{curr.label}</span>
+                                              </div>
                                             </div>
-                                            <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-                                              {plant.reasons.map((r: { key: string; label: string; color: string; absMwhImpact: number; pctOfDiff: number }) => (
-                                                <span key={r.key} className="text-[9px] text-slate-500 flex items-center gap-1">
-                                                  <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: r.color }} />
-                                                  {r.label}: {r.absMwhImpact} MWh ({r.pctOfDiff.toFixed(0)}%)
+                                            <div className="flex-1 flex items-center gap-1">
+                                              <div className="flex-1 relative h-5">
+                                                <div
+                                                  className="absolute top-0 h-2 rounded-sm bg-slate-300 transition-all"
+                                                  style={{ width: `${maxLoss > 0 ? (prev.lossMWh / maxLoss) * 100 : 0}%` }}
+                                                  title={`${cmpPrevMonth}: ${prev.lossMWh} MWh`}
+                                                />
+                                                <div
+                                                  className="absolute top-[10px] h-2 rounded-sm transition-all"
+                                                  style={{
+                                                    width: `${maxLoss > 0 ? (curr.lossMWh / maxLoss) * 100 : 0}%`,
+                                                    backgroundColor: curr.color,
+                                                  }}
+                                                  title={`${cmpCurrentMonth}: ${curr.lossMWh} MWh`}
+                                                />
+                                              </div>
+                                            </div>
+                                            <div className="w-[70px] text-right flex-shrink-0">
+                                              <div className="text-[9px] text-slate-400">{prev.lossMWh}→{curr.lossMWh}</div>
+                                            </div>
+                                            <div className="w-[65px] text-right flex-shrink-0">
+                                              {delta === 0 ? (
+                                                <span className="text-[9px] text-slate-400">—</span>
+                                              ) : (
+                                                <span className={`text-[10px] font-semibold inline-flex items-center gap-0.5 ${isImproved ? "text-emerald-600" : "text-rose-600"}`}>
+                                                  {isImproved ? "▼" : "▲"} {Math.abs(delta)} MWh
                                                 </span>
-                                              ))}
+                                              )}
                                             </div>
                                           </div>
-                                        ) : (
-                                          <span className="text-slate-400 text-xs">No variance detected</span>
+                                        );
+                                      })}
+                                    </div>
+
+                                    <div className="flex flex-col justify-center items-center px-3 py-2 bg-slate-50 rounded-lg min-w-[120px]">
+                                      <div className="text-[9px] text-slate-400 uppercase tracking-wider mb-1">Factor Summary</div>
+                                      <div className="flex items-center gap-3">
+                                        {improved > 0 && (
+                                          <div className="text-center">
+                                            <div className="text-lg font-bold text-emerald-600">{improved}</div>
+                                            <div className="text-[9px] text-emerald-600">Improved</div>
+                                          </div>
                                         )}
-                                      </td>
-                                      <td className="px-4 py-3 text-center">
-                                        {plant.absDiff === 0 ? (
-                                          <span className="text-slate-300">—</span>
-                                        ) : plant.absDiff > 200 ? (
-                                          <Badge className="bg-rose-100 text-rose-700 text-[10px]">High</Badge>
-                                        ) : plant.absDiff > 80 ? (
-                                          <Badge className="bg-amber-100 text-amber-700 text-[10px]">Medium</Badge>
-                                        ) : (
-                                          <Badge className="bg-emerald-100 text-emerald-700 text-[10px]">Low</Badge>
+                                        {worsened > 0 && (
+                                          <div className="text-center">
+                                            <div className="text-lg font-bold text-rose-600">{worsened}</div>
+                                            <div className="text-[9px] text-rose-600">Worsened</div>
+                                          </div>
                                         )}
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
+                                        {improved === 0 && worsened === 0 && (
+                                          <div className="text-center">
+                                            <div className="text-sm font-bold text-slate-400">—</div>
+                                            <div className="text-[9px] text-slate-400">No change</div>
+                                          </div>
+                                        )}
+                                      </div>
+                                      <Badge className="mt-2 text-[9px] px-2 py-0.5" style={{ backgroundColor: plant.reasons[0]?.color + "20", color: plant.reasons[0]?.color }}>
+                                        Top: {plant.primaryReason}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {plant.reasons.length === 0 && (
+                                  <div className="text-slate-400 text-xs">No variance detected</div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </CardContent>
                       </Card>
 
