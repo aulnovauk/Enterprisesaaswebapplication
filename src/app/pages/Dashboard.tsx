@@ -575,8 +575,16 @@ const BASE_KPI = {
   plantsCap: plantMarkers.reduce((s, p) => s + p.capacity, 0), // 208 MW from sample
 };
 
+const vendorHealthData = [
+  { vendor: "SolarCo India", plantCount: 2, capacity: 35.2, budgeted: 8.40, realized: 7.55, shortfall: 0.85, collection: 89.9, ldExposure: 0.42, status: "warning", color: "#2955A0" },
+  { vendor: "SunPower Tech", plantCount: 5, capacity: 63.2, budgeted: 12.65, realized: 10.92, shortfall: 1.73, collection: 86.3, ldExposure: 0.54, status: "critical", color: "#ef4444" },
+  { vendor: "Mega Solar Inc", plantCount: 3, capacity: 48.0, budgeted: 11.52, realized: 10.45, shortfall: 1.07, collection: 90.7, ldExposure: 0.55, status: "warning", color: "#f59e0b" },
+  { vendor: "Green Energy Ltd", plantCount: 1, capacity: 18.5, budgeted: 4.44, realized: 4.30, shortfall: 0.14, collection: 96.8, ldExposure: 0.00, status: "healthy", color: "#10b981" },
+  { vendor: "TechSolar Pvt", plantCount: 1, capacity: 15.0, budgeted: 3.60, realized: 3.45, shortfall: 0.15, collection: 95.8, ldExposure: 0.00, status: "healthy", color: "#8b5cf6" },
+];
+
 const WIDGET_ORDER_KEY = "dashboard-widget-order";
-const DEFAULT_WIDGET_ORDER = ["kpi-cards", "geo-risk", "generation", "commercial", "benchmarking", "advanced"];
+const DEFAULT_WIDGET_ORDER = ["kpi-cards", "vendor-health", "geo-risk", "generation", "commercial", "benchmarking", "advanced"];
 const WIDGET_TYPE = "DASHBOARD_WIDGET";
 
 function DraggableWidget({
@@ -1164,6 +1172,90 @@ export function Dashboard() {
               );
             })}
           </div>
+      ),
+    },
+    "vendor-health": {
+      title: "Vendor Health",
+      render: () => (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-[#2955A0]" />
+                Vendor Revenue Health
+              </h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">YTD realization performance by vendor — FY 2025-26</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {[
+                { label: "Critical", count: vendorHealthData.filter(v => v.status === "critical").length, cls: "bg-rose-100 text-rose-700" },
+                { label: "At Risk", count: vendorHealthData.filter(v => v.status === "warning").length, cls: "bg-amber-100 text-amber-700" },
+                { label: "Healthy", count: vendorHealthData.filter(v => v.status === "healthy").length, cls: "bg-emerald-100 text-emerald-700" },
+              ].filter(s => s.count > 0).map(s => (
+                <Badge key={s.label} className={`text-[9px] ${s.cls}`}>{s.count} {s.label}</Badge>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {vendorHealthData.map((v) => {
+              const pct = (v.realized / v.budgeted) * 100;
+              const circumference = 2 * Math.PI * 36;
+              const offset = circumference - (circumference * Math.min(pct, 100)) / 100;
+              return (
+                <Card key={v.vendor} className={`border-2 ${v.status === "critical" ? "border-rose-200 bg-rose-50/30" : v.status === "warning" ? "border-amber-200 bg-amber-50/30" : "border-emerald-200 bg-emerald-50/30"} relative overflow-hidden`}>
+                  <CardContent className="p-4 flex flex-col items-center">
+                    <Badge className={`absolute top-2 right-2 text-[8px] ${v.status === "healthy" ? "bg-emerald-100 text-emerald-700" : v.status === "warning" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
+                      {v.status === "healthy" ? "Healthy" : v.status === "warning" ? "At Risk" : "Critical"}
+                    </Badge>
+                    <div className="relative w-20 h-20 mb-2">
+                      <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+                        <circle cx="40" cy="40" r="36" fill="none" stroke="#e2e8f0" strokeWidth="5" />
+                        <circle cx="40" cy="40" r="36" fill="none" stroke={v.color} strokeWidth="5" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-1000" />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-sm font-bold" style={{ color: v.color }}>{pct.toFixed(0)}%</span>
+                        <span className="text-[7px] text-slate-400">realized</span>
+                      </div>
+                    </div>
+                    <div className="text-xs font-bold text-slate-800 text-center leading-tight">{v.vendor}</div>
+                    <div className="text-[9px] text-slate-400 mt-0.5">{v.plantCount} plants · {v.capacity} MW</div>
+                    <div className="w-full mt-3 space-y-1">
+                      <div className="flex justify-between text-[9px]">
+                        <span className="text-slate-400">Budgeted</span>
+                        <span className="font-semibold text-slate-600">₹{v.budgeted.toFixed(2)} Cr</span>
+                      </div>
+                      <div className="flex justify-between text-[9px]">
+                        <span className="text-slate-400">Realized</span>
+                        <span className="font-bold" style={{ color: v.color }}>₹{v.realized.toFixed(2)} Cr</span>
+                      </div>
+                      <div className="flex justify-between text-[9px]">
+                        <span className="text-slate-400">Shortfall</span>
+                        <span className={`font-bold ${v.shortfall > 1 ? "text-rose-600" : "text-amber-600"}`}>₹{v.shortfall.toFixed(2)} Cr</span>
+                      </div>
+                      {v.ldExposure > 0 && (
+                        <div className="flex justify-between text-[9px]">
+                          <span className="text-slate-400">LD Exposure</span>
+                          <span className="font-bold text-orange-600">₹{v.ldExposure.toFixed(2)} Cr</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="w-full mt-2 pt-2 border-t border-slate-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[8px] text-slate-400">Collection</span>
+                        <Badge className={`text-[8px] px-1.5 ${v.collection >= 93 ? "bg-emerald-100 text-emerald-700" : v.collection >= 88 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
+                          {v.collection}%
+                        </Badge>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-slate-200 mt-1 overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${v.collection}%`, backgroundColor: v.collection >= 93 ? "#10b981" : v.collection >= 88 ? "#f59e0b" : "#ef4444" }} />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
       ),
     },
     "geo-risk": {

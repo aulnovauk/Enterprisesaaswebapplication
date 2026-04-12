@@ -641,67 +641,6 @@ export function FinancialReports() {
 
               return (
                 <>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                    {vendorRevenueData.map((v) => {
-                      const pct = (v.realized / v.budgeted) * 100;
-                      const circumference = 2 * Math.PI * 36;
-                      const offset = circumference - (circumference * Math.min(pct, 100)) / 100;
-                      const color = vendorColors[v.vendor] || "#94a3b8";
-                      return (
-                        <Card key={v.vendor} className={`border-2 ${v.status === "critical" ? "border-rose-200 bg-rose-50/30" : v.status === "warning" ? "border-amber-200 bg-amber-50/30" : "border-emerald-200 bg-emerald-50/30"} relative overflow-hidden`}>
-                          <CardContent className="p-4 flex flex-col items-center">
-                            <Badge className={`absolute top-2 right-2 text-[8px] ${v.status === "healthy" ? "bg-emerald-100 text-emerald-700" : v.status === "warning" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
-                              {v.status === "healthy" ? "Healthy" : v.status === "warning" ? "At Risk" : "Critical"}
-                            </Badge>
-                            <div className="relative w-20 h-20 mb-2">
-                              <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-                                <circle cx="40" cy="40" r="36" fill="none" stroke="#e2e8f0" strokeWidth="5" />
-                                <circle cx="40" cy="40" r="36" fill="none" stroke={color} strokeWidth="5" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-1000" />
-                              </svg>
-                              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-sm font-bold" style={{ color }}>{pct.toFixed(0)}%</span>
-                                <span className="text-[7px] text-slate-400">realized</span>
-                              </div>
-                            </div>
-                            <div className="text-xs font-bold text-slate-800 text-center leading-tight">{v.vendor}</div>
-                            <div className="text-[9px] text-slate-400 mt-0.5">{v.plantCount} plants · {v.capacity} MW</div>
-                            <div className="w-full mt-3 space-y-1">
-                              <div className="flex justify-between text-[9px]">
-                                <span className="text-slate-400">Budgeted</span>
-                                <span className="font-semibold text-slate-600">₹{v.budgeted.toFixed(2)} Cr</span>
-                              </div>
-                              <div className="flex justify-between text-[9px]">
-                                <span className="text-slate-400">Realized</span>
-                                <span className="font-bold" style={{ color }}>₹{v.realized.toFixed(2)} Cr</span>
-                              </div>
-                              <div className="flex justify-between text-[9px]">
-                                <span className="text-slate-400">Shortfall</span>
-                                <span className={`font-bold ${v.shortfall > 1 ? "text-rose-600" : "text-amber-600"}`}>₹{v.shortfall.toFixed(2)} Cr</span>
-                              </div>
-                              {v.ldExposure > 0 && (
-                                <div className="flex justify-between text-[9px]">
-                                  <span className="text-slate-400">LD Exposure</span>
-                                  <span className="font-bold text-orange-600">₹{v.ldExposure.toFixed(2)} Cr</span>
-                                </div>
-                              )}
-                            </div>
-                            <div className="w-full mt-2 pt-2 border-t border-slate-200">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[8px] text-slate-400">Collection</span>
-                                <Badge className={`text-[8px] px-1.5 ${v.collection >= 93 ? "bg-emerald-100 text-emerald-700" : v.collection >= 88 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
-                                  {v.collection}%
-                                </Badge>
-                              </div>
-                              <div className="h-1.5 rounded-full bg-slate-200 mt-1 overflow-hidden">
-                                <div className="h-full rounded-full transition-all" style={{ width: `${v.collection}%`, backgroundColor: v.collection >= 93 ? "#10b981" : v.collection >= 88 ? "#f59e0b" : "#ef4444" }} />
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-
                   <div className="grid grid-cols-12 gap-6">
                     <Card className="col-span-7 border-2 border-slate-200">
                       <CardHeader className="border-b border-slate-100 pb-3">
