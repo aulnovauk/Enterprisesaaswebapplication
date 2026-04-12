@@ -1,80 +1,119 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
-import { Building2, MapPin, Zap, Calendar, Edit, Eye } from "lucide-react";
+import { Building2, MapPin, Zap, Calendar, Edit, Eye, Target, CircleDollarSign, BarChart2, Activity } from "lucide-react";
+import {
+  ResponsiveContainer,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ScatterChart,
+  Scatter,
+  XAxis,
+  YAxis,
+  ZAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ReferenceLine,
+  Cell,
+  Legend,
+} from "recharts";
+
+const vendorColors: Record<string, string> = {
+  "SolarCo India": "#2955A0",
+  "SunPower Tech": "#ef4444",
+  "Mega Solar Inc": "#f59e0b",
+  "Green Energy Ltd": "#10b981",
+  "TechSolar Pvt": "#8b5cf6",
+};
+
+const vendorRevenueData = [
+  { vendor: "SolarCo India", plants: "Sakri, Ahmednagar", plantCount: 2, capacity: 35.2, budgeted: 8.40, actual: 7.82, realized: 7.55, collection: 89.9, ldExposure: 0.42, shortfall: 0.85, status: "warning" },
+  { vendor: "SunPower Tech", plants: "Sangli, Wardha, Buldhana, Chandrapur, Amravati", plantCount: 5, capacity: 63.2, budgeted: 12.65, actual: 11.45, realized: 10.92, collection: 86.3, ldExposure: 0.54, shortfall: 1.73, status: "critical" },
+  { vendor: "Mega Solar Inc", plants: "Beed, Devdaithan, Bhandara", plantCount: 3, capacity: 48.0, budgeted: 11.52, actual: 10.88, realized: 10.45, collection: 90.7, ldExposure: 0.55, shortfall: 1.07, status: "warning" },
+  { vendor: "Green Energy Ltd", plants: "Osmanabad", plantCount: 1, capacity: 18.5, budgeted: 4.44, actual: 4.38, realized: 4.30, collection: 96.8, ldExposure: 0.00, shortfall: 0.14, status: "healthy" },
+  { vendor: "TechSolar Pvt", plants: "Latur", plantCount: 1, capacity: 15.0, budgeted: 3.60, actual: 3.52, realized: 3.45, collection: 95.8, ldExposure: 0.00, shortfall: 0.15, status: "healthy" },
+];
+
+const plantRevenueData = [
+  { plant: "Sakri Solar Park", district: "Dhule", vendor: "SolarCo India", capacity: 25.5, tariff: 2.00, budgetedGen: 5520, actualGen: 5180, revenue: 1.04, budgetedRev: 1.10, shortfall: 0.06, collectionPct: 94.2, invoiced: 1.10, collected: 1.04, pending: 0.06, overdue: 0.02, pr: 78.2, cuf: 22.1 },
+  { plant: "Sangli Solar Farm", district: "Sangli", vendor: "SunPower Tech", capacity: 7.9, tariff: 2.00, budgetedGen: 1710, actualGen: 1520, revenue: 0.30, budgetedRev: 0.34, shortfall: 0.04, collectionPct: 88.5, invoiced: 0.34, collected: 0.30, pending: 0.04, overdue: 0.01, pr: 74.8, cuf: 20.8 },
+  { plant: "Osmanabad Solar Plant", district: "Osmanabad", vendor: "Green Energy Ltd", capacity: 18.5, tariff: 2.00, budgetedGen: 4010, actualGen: 3920, revenue: 0.78, budgetedRev: 0.80, shortfall: 0.02, collectionPct: 97.5, invoiced: 0.80, collected: 0.78, pending: 0.02, overdue: 0.00, pr: 82.5, cuf: 24.1 },
+  { plant: "Latur Solar Station", district: "Latur", vendor: "TechSolar Pvt", capacity: 15.0, tariff: 2.00, budgetedGen: 3250, actualGen: 3180, revenue: 0.64, budgetedRev: 0.65, shortfall: 0.01, collectionPct: 98.0, invoiced: 0.65, collected: 0.64, pending: 0.01, overdue: 0.00, pr: 83.1, cuf: 23.8 },
+  { plant: "Beed Solar Park", district: "Beed", vendor: "Mega Solar Inc", capacity: 20.0, tariff: 2.00, budgetedGen: 4340, actualGen: 4120, revenue: 0.82, budgetedRev: 0.87, shortfall: 0.05, collectionPct: 94.8, invoiced: 0.87, collected: 0.82, pending: 0.05, overdue: 0.01, pr: 80.2, cuf: 23.7 },
+  { plant: "Wardha Solar Plant", district: "Wardha", vendor: "SunPower Tech", capacity: 12.0, tariff: 2.00, budgetedGen: 2600, actualGen: 2380, revenue: 0.48, budgetedRev: 0.52, shortfall: 0.04, collectionPct: 91.5, invoiced: 0.52, collected: 0.48, pending: 0.04, overdue: 0.01, pr: 76.5, cuf: 21.5 },
+  { plant: "Devdaithan Solar Park", district: "Jalna", vendor: "Mega Solar Inc", capacity: 16.0, tariff: 2.00, budgetedGen: 3470, actualGen: 3280, revenue: 0.66, budgetedRev: 0.69, shortfall: 0.03, collectionPct: 95.0, invoiced: 0.69, collected: 0.66, pending: 0.03, overdue: 0.01, pr: 79.8, cuf: 22.3 },
+  { plant: "Ahmednagar Solar Farm", district: "Ahmednagar", vendor: "SolarCo India", capacity: 9.7, tariff: 2.00, budgetedGen: 2100, actualGen: 1980, revenue: 0.40, budgetedRev: 0.42, shortfall: 0.02, collectionPct: 94.0, invoiced: 0.42, collected: 0.40, pending: 0.02, overdue: 0.01, pr: 79.0, cuf: 22.2 },
+  { plant: "Buldhana Solar Farm", district: "Buldhana", vendor: "SunPower Tech", capacity: 14.5, tariff: 2.00, budgetedGen: 3140, actualGen: 2880, revenue: 0.58, budgetedRev: 0.63, shortfall: 0.05, collectionPct: 91.8, invoiced: 0.63, collected: 0.58, pending: 0.05, overdue: 0.02, pr: 77.0, cuf: 21.6 },
+  { plant: "Chandrapur Solar Plant", district: "Chandrapur", vendor: "SunPower Tech", capacity: 18.4, tariff: 2.00, budgetedGen: 3990, actualGen: 3650, revenue: 0.73, budgetedRev: 0.80, shortfall: 0.07, collectionPct: 91.5, invoiced: 0.80, collected: 0.73, pending: 0.07, overdue: 0.02, pr: 77.2, cuf: 21.6 },
+  { plant: "Bhandara Solar Farm", district: "Bhandara", vendor: "Mega Solar Inc", capacity: 12.0, tariff: 2.00, budgetedGen: 2600, actualGen: 2450, revenue: 0.49, budgetedRev: 0.52, shortfall: 0.03, collectionPct: 94.2, invoiced: 0.52, collected: 0.49, pending: 0.03, overdue: 0.01, pr: 79.5, cuf: 22.2 },
+  { plant: "Amravati Solar Station", district: "Amravati", vendor: "SunPower Tech", capacity: 10.5, tariff: 2.00, budgetedGen: 2275, actualGen: 2050, revenue: 0.41, budgetedRev: 0.46, shortfall: 0.05, collectionPct: 89.8, invoiced: 0.46, collected: 0.41, pending: 0.05, overdue: 0.02, pr: 75.8, cuf: 21.2 },
+];
 
 const portfolioStats = {
-  totalPlants: 5,
-  totalCapacity: 130,
+  totalPlants: 12,
+  totalCapacity: 179.9,
   activeAssets: 1245,
-  locations: 3,
+  locations: 10,
 };
 
 const plants = [
-  {
-    id: "PLT-001",
-    name: "Plant A",
-    location: "Dhule, Maharashtra",
-    capacity: "10 MW",
-    commissionDate: "2020-04-15",
-    technology: "Mono-crystalline",
-    inverters: 4,
-    modules: 28800,
-    status: "operational",
-    contractor: "Solar Corp Ltd",
-  },
-  {
-    id: "PLT-002",
-    name: "Plant B",
-    location: "Buldhana, Maharashtra",
-    capacity: "25 MW",
-    commissionDate: "2019-11-20",
-    technology: "Poly-crystalline",
-    inverters: 10,
-    modules: 72000,
-    status: "operational",
-    contractor: "Green Energy Pvt Ltd",
-  },
-  {
-    id: "PLT-003",
-    name: "Plant C",
-    location: "Latur, Maharashtra",
-    capacity: "50 MW",
-    commissionDate: "2021-06-10",
-    technology: "Mono-crystalline",
-    inverters: 20,
-    modules: 144000,
-    status: "operational",
-    contractor: "Solar Corp Ltd",
-  },
-  {
-    id: "PLT-004",
-    name: "Plant D",
-    location: "Sangli, Maharashtra",
-    capacity: "30 MW",
-    commissionDate: "2020-09-05",
-    technology: "Bifacial",
-    inverters: 12,
-    modules: 86400,
-    status: "maintenance",
-    contractor: "Renewable Solutions Inc",
-  },
-  {
-    id: "PLT-005",
-    name: "Plant E",
-    location: "Osmanabad, Maharashtra",
-    capacity: "15 MW",
-    commissionDate: "2022-01-18",
-    technology: "Mono-crystalline",
-    inverters: 6,
-    modules: 43200,
-    status: "operational",
-    contractor: "Green Energy Pvt Ltd",
-  },
+  { id: "PLT-001", name: "Sakri Solar Park", location: "Dhule, Maharashtra", capacity: "25.5 MW", commissionDate: "2020-04-15", technology: "Mono-crystalline", inverters: 10, modules: 73440, status: "operational", contractor: "SolarCo India" },
+  { id: "PLT-002", name: "Sangli Solar Farm", location: "Sangli, Maharashtra", capacity: "7.9 MW", commissionDate: "2019-11-20", technology: "Poly-crystalline", inverters: 3, modules: 22752, status: "operational", contractor: "SunPower Tech" },
+  { id: "PLT-003", name: "Osmanabad Solar Plant", location: "Osmanabad, Maharashtra", capacity: "18.5 MW", commissionDate: "2021-06-10", technology: "Mono-crystalline", inverters: 8, modules: 53280, status: "operational", contractor: "Green Energy Ltd" },
+  { id: "PLT-004", name: "Latur Solar Station", location: "Latur, Maharashtra", capacity: "15.0 MW", commissionDate: "2020-09-05", technology: "Bifacial", inverters: 6, modules: 43200, status: "operational", contractor: "TechSolar Pvt" },
+  { id: "PLT-005", name: "Beed Solar Park", location: "Beed, Maharashtra", capacity: "20.0 MW", commissionDate: "2020-03-12", technology: "Mono-crystalline", inverters: 8, modules: 57600, status: "operational", contractor: "Mega Solar Inc" },
+  { id: "PLT-006", name: "Wardha Solar Plant", location: "Wardha, Maharashtra", capacity: "12.0 MW", commissionDate: "2021-01-18", technology: "Poly-crystalline", inverters: 5, modules: 34560, status: "maintenance", contractor: "SunPower Tech" },
+  { id: "PLT-007", name: "Devdaithan Solar Park", location: "Jalna, Maharashtra", capacity: "16.0 MW", commissionDate: "2020-08-22", technology: "Mono-crystalline", inverters: 6, modules: 46080, status: "operational", contractor: "Mega Solar Inc" },
+  { id: "PLT-008", name: "Ahmednagar Solar Farm", location: "Ahmednagar, Maharashtra", capacity: "9.7 MW", commissionDate: "2021-04-10", technology: "Mono-crystalline", inverters: 4, modules: 27936, status: "operational", contractor: "SolarCo India" },
+  { id: "PLT-009", name: "Buldhana Solar Farm", location: "Buldhana, Maharashtra", capacity: "14.5 MW", commissionDate: "2019-12-05", technology: "Poly-crystalline", inverters: 6, modules: 41760, status: "operational", contractor: "SunPower Tech" },
+  { id: "PLT-010", name: "Chandrapur Solar Plant", location: "Chandrapur, Maharashtra", capacity: "18.4 MW", commissionDate: "2020-06-15", technology: "Mono-crystalline", inverters: 8, modules: 52992, status: "operational", contractor: "SunPower Tech" },
+  { id: "PLT-011", name: "Bhandara Solar Farm", location: "Bhandara, Maharashtra", capacity: "12.0 MW", commissionDate: "2021-02-28", technology: "Bifacial", inverters: 5, modules: 34560, status: "operational", contractor: "Mega Solar Inc" },
+  { id: "PLT-012", name: "Amravati Solar Station", location: "Amravati, Maharashtra", capacity: "10.5 MW", commissionDate: "2020-11-10", technology: "Poly-crystalline", inverters: 4, modules: 30240, status: "maintenance", contractor: "SunPower Tech" },
 ];
 
+const radarData = [
+  { metric: "Collection %", fullMetric: "Collection Rate" },
+  { metric: "Realization", fullMetric: "Revenue Realization %" },
+  { metric: "LD Score", fullMetric: "LD Compliance (inverse)" },
+  { metric: "Capacity Util.", fullMetric: "Capacity Utilization" },
+  { metric: "Plant Health", fullMetric: "Portfolio Health Score" },
+].map(m => {
+  const entry: Record<string, string | number> = { metric: m.metric, fullMetric: m.fullMetric };
+  vendorRevenueData.forEach(v => {
+    const key = v.vendor;
+    if (m.metric === "Collection %") entry[key] = v.collection;
+    else if (m.metric === "Realization") entry[key] = (v.realized / v.budgeted) * 100;
+    else if (m.metric === "LD Score") entry[key] = Math.max(0, 100 - (v.ldExposure / v.budgeted) * 500);
+    else if (m.metric === "Capacity Util.") entry[key] = (v.realized / v.capacity) * 30 + 60;
+    else entry[key] = v.status === "healthy" ? 95 : v.status === "warning" ? 75 : 55;
+  });
+  return entry;
+});
+
+const plantScatterData = plantRevenueData.map(p => ({
+  x: p.pr,
+  y: p.cuf,
+  z: p.revenue * 100,
+  name: p.plant.split(" ").slice(0, 2).join(" "),
+  fullName: p.plant,
+  vendor: p.vendor,
+  revenue: p.revenue,
+  collectionPct: p.collectionPct,
+  capacity: p.capacity,
+  fill: vendorColors[p.vendor] || "#94a3b8",
+}));
+
+const sortedPlants = [...plantRevenueData].sort((a, b) => b.revenue - a.revenue);
+
 export function SitePortfolioManagement() {
+  const [activeTab, setActiveTab] = useState("inventory");
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
@@ -86,7 +125,7 @@ export function SitePortfolioManagement() {
               </div>
               <div>
                 <h1 className="text-base font-bold text-slate-900 leading-none">Site & Portfolio Management</h1>
-                <p className="text-xs text-slate-600 mt-0.5">Manage plant details, assets, and portfolio configuration</p>
+                <p className="text-xs text-slate-600 mt-0.5">Manage plant details, assets, and performance analytics</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -100,190 +139,342 @@ export function SitePortfolioManagement() {
       </div>
 
       <div className="flex-1 overflow-auto p-6">
-      {/* Portfolio Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Plants</p>
-                <p className="text-2xl font-semibold text-gray-900">{portfolioStats.totalPlants}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg" style={{ backgroundColor: "#E8A80020" }}>
-                <Zap className="w-6 h-6 mt-3 ml-3" style={{ color: "#E8A800" }} />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Capacity</p>
-                <p className="text-2xl font-semibold text-gray-900">{portfolioStats.totalCapacity} MW</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <Zap className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Active Assets</p>
-                <p className="text-2xl font-semibold text-gray-900">{portfolioStats.activeAssets.toLocaleString()}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Locations</p>
-                <p className="text-2xl font-semibold text-gray-900">{portfolioStats.locations}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Plant Inventory */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Plant Inventory</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Plant ID</TableHead>
-                <TableHead>Plant Name</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Capacity</TableHead>
-                <TableHead>Technology</TableHead>
-                <TableHead>Commission Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {plants.map((plant) => (
-                <TableRow key={plant.id}>
-                  <TableCell className="font-medium">{plant.id}</TableCell>
-                  <TableCell>{plant.name}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-gray-400" />
-                      {plant.location}
-                    </div>
-                  </TableCell>
-                  <TableCell>{plant.capacity}</TableCell>
-                  <TableCell>{plant.technology}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-gray-400" />
-                      {plant.commissionDate}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={plant.status === "operational" ? "default" : "secondary"}
-                      className={
-                        plant.status === "operational"
-                          ? "bg-green-100 text-green-800 hover:bg-green-100"
-                          : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-                      }
-                    >
-                      {plant.status === "operational" ? "Operational" : "Maintenance"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Plant Details Cards */}
-      <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {plants.slice(0, 2).map((plant) => (
-          <Card key={plant.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold">{plant.name} - Technical Details</CardTitle>
-                <Badge
-                  variant={plant.status === "operational" ? "default" : "secondary"}
-                  className={
-                    plant.status === "operational"
-                      ? "bg-green-100 text-green-800 hover:bg-green-100"
-                      : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-                  }
-                >
-                  {plant.status === "operational" ? "Operational" : "Maintenance"}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Plant ID</p>
-                  <p className="text-sm font-medium text-gray-900">{plant.id}</p>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card className="border-2 border-slate-200">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-[#2955A0]" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Capacity</p>
-                  <p className="text-sm font-medium text-gray-900">{plant.capacity}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Location</p>
-                  <p className="text-sm font-medium text-gray-900">{plant.location}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Commission Date</p>
-                  <p className="text-sm font-medium text-gray-900">{plant.commissionDate}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Technology</p>
-                  <p className="text-sm font-medium text-gray-900">{plant.technology}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Inverters</p>
-                  <p className="text-sm font-medium text-gray-900">{plant.inverters} units</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Solar Modules</p>
-                  <p className="text-sm font-medium text-gray-900">{plant.modules.toLocaleString()} units</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">O&M Contractor</p>
-                  <p className="text-sm font-medium text-gray-900">{plant.contractor}</p>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wide">Total Plants</p>
+                  <p className="text-xl font-bold text-slate-900">{portfolioStats.totalPlants}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
+          <Card className="border-2 border-slate-200">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#E8A80020" }}>
+                  <Zap className="w-5 h-5" style={{ color: "#E8A800" }} />
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wide">Total Capacity</p>
+                  <p className="text-xl font-bold text-slate-900">{portfolioStats.totalCapacity} MW</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-2 border-slate-200">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                  <Activity className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wide">Active Assets</p>
+                  <p className="text-xl font-bold text-slate-900">{portfolioStats.activeAssets.toLocaleString()}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-2 border-slate-200">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <MapPin className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wide">Locations</p>
+                  <p className="text-xl font-bold text-slate-900">{portfolioStats.locations}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="bg-white border border-slate-200 mb-4">
+            <TabsTrigger value="inventory" className="data-[state=active]:bg-[#2955A0] data-[state=active]:text-white text-xs gap-1.5">
+              <Building2 className="w-3.5 h-3.5" /> Plant Inventory
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="data-[state=active]:bg-[#2955A0] data-[state=active]:text-white text-xs gap-1.5">
+              <BarChart2 className="w-3.5 h-3.5" /> Performance Analytics
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="inventory" className="mt-0 space-y-6">
+            <Card className="border-2 border-slate-200">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <CardTitle className="text-base font-semibold">Plant Inventory</CardTitle>
+                <CardDescription>All solar plants across Maharashtra — {plants.length} plants</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Plant ID</TableHead>
+                      <TableHead className="text-xs">Plant Name</TableHead>
+                      <TableHead className="text-xs">Location</TableHead>
+                      <TableHead className="text-xs">Capacity</TableHead>
+                      <TableHead className="text-xs">Technology</TableHead>
+                      <TableHead className="text-xs">Commission Date</TableHead>
+                      <TableHead className="text-xs">Vendor</TableHead>
+                      <TableHead className="text-xs">Status</TableHead>
+                      <TableHead className="text-xs">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {plants.map((plant) => (
+                      <TableRow key={plant.id}>
+                        <TableCell className="font-medium text-xs">{plant.id}</TableCell>
+                        <TableCell className="text-xs font-semibold">{plant.name}</TableCell>
+                        <TableCell className="text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <MapPin className="w-3 h-3 text-slate-400" />
+                            {plant.location}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs">{plant.capacity}</TableCell>
+                        <TableCell className="text-xs">{plant.technology}</TableCell>
+                        <TableCell className="text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="w-3 h-3 text-slate-400" />
+                            {plant.commissionDate}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: vendorColors[plant.contractor] || "#94a3b8" }} />
+                            {plant.contractor}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={plant.status === "operational" ? "default" : "secondary"}
+                            className={`text-[10px] ${
+                              plant.status === "operational"
+                                ? "bg-green-100 text-green-800 hover:bg-green-100"
+                                : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+                            }`}
+                          >
+                            {plant.status === "operational" ? "Operational" : "Maintenance"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                              <Edit className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="performance" className="mt-0 space-y-6">
+            <div className="grid grid-cols-12 gap-6">
+              <Card className="col-span-5 border-2 border-slate-200">
+                <CardHeader className="border-b border-slate-100 pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Target className="w-4 h-4 text-[#2955A0]" />
+                    Vendor Performance Radar
+                  </CardTitle>
+                  <CardDescription>Multi-dimensional vendor health comparison — FY 2025-26</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  <ResponsiveContainer width="100%" height={320}>
+                    <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
+                      <PolarGrid stroke="#e2e8f0" />
+                      <PolarAngleAxis dataKey="metric" tick={{ fontSize: 9, fill: "#64748b" }} />
+                      <PolarRadiusAxis angle={90} domain={[50, 100]} tick={{ fontSize: 8 }} axisLine={false} />
+                      {vendorRevenueData.map((v) => (
+                        <Radar
+                          key={v.vendor}
+                          name={v.vendor}
+                          dataKey={v.vendor}
+                          stroke={vendorColors[v.vendor]}
+                          fill={vendorColors[v.vendor]}
+                          fillOpacity={0.08}
+                          strokeWidth={2}
+                        />
+                      ))}
+                      <Legend wrapperStyle={{ fontSize: "10px" }} />
+                      <RechartsTooltip content={({ active, payload, label }) => {
+                        if (!active || !payload?.length) return null;
+                        return (
+                          <div className="bg-white border border-slate-200 rounded-lg shadow-lg p-2.5 text-xs">
+                            <p className="font-bold text-slate-800 mb-1">{label}</p>
+                            {payload.map((p: { name?: string; value?: number; color?: string }) => (
+                              <p key={p.name} className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+                                <span className="text-slate-600">{p.name}: <span className="font-bold">{typeof p.value === "number" ? p.value.toFixed(1) : p.value}</span></span>
+                              </p>
+                            ))}
+                          </div>
+                        );
+                      }} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card className="col-span-7 border-2 border-slate-200">
+                <CardHeader className="border-b border-slate-100 pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <CircleDollarSign className="w-4 h-4 text-[#2955A0]" />
+                    Plant Performance Quadrant — PR% vs CUF%
+                  </CardTitle>
+                  <CardDescription>Bubble size = revenue (₹Cr), color = vendor — identify top and underperforming plants</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <ResponsiveContainer width="100%" height={320}>
+                    <ScatterChart margin={{ top: 16, right: 24, left: 8, bottom: 24 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis type="number" dataKey="x" name="PR%" domain={[72, 86]} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} label={{ value: "Performance Ratio (%)", position: "bottom", offset: 8, fontSize: 11, fill: "#94a3b8" }} />
+                      <YAxis type="number" dataKey="y" name="CUF%" domain={[19, 26]} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} label={{ value: "CUF (%)", angle: -90, position: "insideLeft", offset: 8, fontSize: 11, fill: "#94a3b8" }} />
+                      <ZAxis type="number" dataKey="z" range={[120, 600]} />
+                      <ReferenceLine x={78} stroke="#f59e0b" strokeDasharray="5 5" label={{ value: "PR Threshold", position: "top", fontSize: 9, fill: "#f59e0b" }} />
+                      <ReferenceLine y={22} stroke="#f59e0b" strokeDasharray="5 5" label={{ value: "CUF Target", position: "right", fontSize: 9, fill: "#f59e0b" }} />
+                      <RechartsTooltip content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const d = payload[0]?.payload;
+                        return (
+                          <div className="bg-white border border-slate-200 rounded-lg shadow-xl p-3 text-xs">
+                            <p className="font-bold text-slate-800">{d?.fullName}</p>
+                            <p className="text-slate-500 mb-1">{d?.vendor} · {d?.capacity} MW</p>
+                            <div className="space-y-0.5">
+                              <p>PR: <span className="font-bold">{d?.x}%</span></p>
+                              <p>CUF: <span className="font-bold">{d?.y}%</span></p>
+                              <p>Revenue: <span className="font-bold text-[#2955A0]">₹{d?.revenue?.toFixed(2)} Cr</span></p>
+                              <p>Collection: <span className="font-bold">{d?.collectionPct}%</span></p>
+                            </div>
+                          </div>
+                        );
+                      }} />
+                      <Scatter data={plantScatterData}>
+                        {plantScatterData.map((entry, index) => (
+                          <Cell key={`scatter-${index}`} fill={entry.fill} fillOpacity={0.7} stroke={entry.fill} strokeWidth={1.5} />
+                        ))}
+                      </Scatter>
+                    </ScatterChart>
+                  </ResponsiveContainer>
+                  <div className="flex flex-wrap items-center justify-center gap-4 mt-2 pb-1">
+                    {Object.entries(vendorColors).map(([vendor, color]) => (
+                      <span key={vendor} className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color, opacity: 0.7 }} />
+                        {vendor}
+                      </span>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="border-2 border-slate-200">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-[#2955A0]" />
+                  Plant Performance Ranking
+                </CardTitle>
+                <CardDescription>All 12 plants ranked by realized revenue with budget baseline and collection breakdown</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {sortedPlants.map((p, idx) => {
+                    const maxRev = Math.max(...plantRevenueData.map(pp => pp.budgetedRev));
+                    const budgetWidth = (p.budgetedRev / maxRev) * 100;
+                    const revenueWidth = (p.revenue / maxRev) * 100;
+                    const realizePct = (p.revenue / p.budgetedRev * 100);
+                    const color = vendorColors[p.vendor] || "#94a3b8";
+                    const collTotal = p.collected + (p.pending - p.overdue) + p.overdue;
+                    const collPct = collTotal > 0 ? (p.collected / collTotal) * 100 : 0;
+                    const pendPct = collTotal > 0 ? ((p.pending - p.overdue) / collTotal) * 100 : 0;
+                    const overdPct = collTotal > 0 ? (p.overdue / collTotal) * 100 : 0;
+                    return (
+                      <div key={p.plant} className="group">
+                        <div className="flex items-center gap-3">
+                          <div className="w-5 text-right">
+                            <span className="text-[10px] font-bold text-slate-400">#{idx + 1}</span>
+                          </div>
+                          <div className="w-[180px] flex-shrink-0">
+                            <div className="text-xs font-semibold text-slate-800 leading-tight">{p.plant}</div>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+                              <span className="text-[9px] text-slate-400">{p.vendor} · {p.capacity} MW</span>
+                            </div>
+                          </div>
+                          <div className="flex-1 relative">
+                            <div className="relative h-6">
+                              <div className="absolute top-0 h-2.5 rounded-sm bg-slate-200 transition-all" style={{ width: `${budgetWidth}%` }} />
+                              <div className="absolute top-[14px] h-2.5 rounded-sm transition-all" style={{ width: `${revenueWidth}%`, backgroundColor: color }} />
+                              <div
+                                className="absolute top-0 h-full border-r-2 border-dashed"
+                                style={{ left: `${budgetWidth}%`, borderColor: "#94a3b8" }}
+                              />
+                            </div>
+                          </div>
+                          <div className="w-[60px] text-right flex-shrink-0">
+                            <div className="text-xs font-bold text-[#2955A0]">₹{p.revenue.toFixed(2)}</div>
+                            <div className="text-[9px] text-slate-400">/ ₹{p.budgetedRev.toFixed(2)}</div>
+                          </div>
+                          <div className="w-[50px] text-right flex-shrink-0">
+                            <span className={`text-[10px] font-bold ${realizePct >= 95 ? "text-emerald-600" : realizePct >= 88 ? "text-amber-600" : "text-rose-600"}`}>
+                              {realizePct.toFixed(0)}%
+                            </span>
+                          </div>
+                          <div className="w-[100px] flex-shrink-0">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1">
+                                <div className="flex">
+                                  <div className="h-3 rounded-l-sm bg-emerald-400 transition-all" style={{ width: `${collPct}%` }} title={`Collected: ₹${p.collected}`} />
+                                  <div className="h-3 bg-amber-400 transition-all" style={{ width: `${Math.max(pendPct, 0)}%` }} title={`Pending: ₹${(p.pending - p.overdue).toFixed(2)}`} />
+                                  <div className="h-3 rounded-r-sm bg-rose-400 transition-all" style={{ width: `${overdPct}%` }} title={`Overdue: ₹${p.overdue}`} />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-[8px] text-slate-400 mt-0.5 text-center">
+                              {p.collectionPct}% collected
+                            </div>
+                          </div>
+                          <div className="w-[60px] flex-shrink-0 text-right">
+                            <div className="text-[9px] text-slate-500">PR {p.pr}%</div>
+                            <div className="text-[9px] text-slate-500">CUF {p.cuf}%</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-center gap-6 mt-4 pt-3 border-t border-slate-100">
+                  <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                    <span className="w-4 h-2 rounded-sm bg-slate-200" /> Budgeted
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                    <span className="w-4 h-2 rounded-sm bg-[#2955A0]" /> Realized
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                    <span className="w-4 h-2 rounded-sm bg-emerald-400" /> Collected
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                    <span className="w-4 h-2 rounded-sm bg-amber-400" /> Pending
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                    <span className="w-4 h-2 rounded-sm bg-rose-400" /> Overdue
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
