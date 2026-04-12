@@ -34,6 +34,8 @@ import {
   Scale,
   ShieldAlert,
   CircleDollarSign,
+  BarChart3,
+  Table2,
 } from "lucide-react";
 import {
   BarChart,
@@ -95,6 +97,7 @@ export function FinancialReports() {
   const pageRef = useRef<HTMLDivElement>(null);
   const [selectedFY, setSelectedFY] = useState("FY 2025-26");
   const [activeTab, setActiveTab] = useState("revenue-impact");
+  const [revenueView, setRevenueView] = useState<"table" | "chart">("chart");
 
   const ytdTotals = useMemo(() => {
     const data = monthlyRevenueData;
@@ -298,84 +301,249 @@ export function FinancialReports() {
 
             <Card className="border-2 border-slate-200">
               <CardHeader className="border-b border-slate-100 pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <IndianRupee className="w-4 h-4 text-[#2955A0]" />
-                  Month-wise Revenue Detail Table
-                </CardTitle>
-                <CardDescription>Complete financial breakdown for each month — {selectedFY}</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <IndianRupee className="w-4 h-4 text-[#2955A0]" />
+                      Month-wise Revenue Detail
+                    </CardTitle>
+                    <CardDescription>Complete financial breakdown for each month — {selectedFY}</CardDescription>
+                  </div>
+                  <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+                    <button
+                      onClick={() => setRevenueView("chart")}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${revenueView === "chart" ? "bg-[#2955A0] text-white shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                    >
+                      <BarChart3 className="w-3.5 h-3.5" /> Chart
+                    </button>
+                    <button
+                      onClick={() => setRevenueView("table")}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${revenueView === "table" ? "bg-[#2955A0] text-white shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                    >
+                      <Table2 className="w-3.5 h-3.5" /> Table
+                    </button>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200">
-                        <th className="text-left px-4 py-3 font-semibold text-slate-700 text-xs">Month</th>
-                        <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Gen (MWh)</th>
-                        <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Budgeted (₹Cr)</th>
-                        <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Expected (₹Cr)</th>
-                        <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Actual (₹Cr)</th>
-                        <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Realized (₹Cr)</th>
-                        <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Shortfall</th>
-                        <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Collection %</th>
-                        <th className="text-center px-4 py-3 font-semibold text-slate-700 text-xs">MoM Trend</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {monthlyRevenueData.map((m, idx) => {
+              <CardContent className={revenueView === "table" ? "p-0" : "pt-4"}>
+                {revenueView === "chart" ? (
+                  <div className="space-y-6">
+                    <div>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-3">Revenue Pipeline — Budget → Expected → Actual → Realized (₹Cr)</p>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <ComposedChart data={monthlyRevenueData.map((m, idx) => {
+                          const prev = idx > 0 ? monthlyRevenueData[idx - 1].realized : m.realized;
+                          return { ...m, shortfall: +(m.budgeted - m.realized).toFixed(2), momChange: +((m.realized - prev) / prev * 100).toFixed(1), shortfallPct: +((m.budgeted - m.realized) / m.budgeted * 100).toFixed(1) };
+                        })} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                          <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                          <YAxis yAxisId="revenue" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v}`} domain={[1.5, 3.2]} />
+                          <YAxis yAxisId="pct" orientation="right" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} domain={[75, 100]} />
+                          <RechartsTooltip content={({ active, payload, label }) => {
+                            if (!active || !payload?.length) return null;
+                            const d = payload[0]?.payload;
+                            return (
+                              <div className="bg-white border border-slate-200 rounded-xl shadow-xl p-3 text-xs min-w-[200px]">
+                                <p className="font-bold text-slate-800 mb-2 pb-1.5 border-b border-slate-100">{label}</p>
+                                <div className="space-y-1">
+                                  <div className="flex justify-between"><span className="text-slate-400">Generation</span><span className="font-semibold">{d?.genMWh?.toLocaleString("en-IN")} MWh</span></div>
+                                  <div className="flex justify-between"><span className="text-slate-400">Budgeted</span><span className="font-semibold text-slate-600">₹{d?.budgeted?.toFixed(2)} Cr</span></div>
+                                  <div className="flex justify-between"><span className="text-slate-400">Expected</span><span className="font-semibold text-violet-600">₹{d?.expected?.toFixed(2)} Cr</span></div>
+                                  <div className="flex justify-between"><span className="text-slate-400">Actual</span><span className="font-bold text-[#E8A800]">₹{d?.actual?.toFixed(2)} Cr</span></div>
+                                  <div className="flex justify-between"><span className="text-slate-400">Realized</span><span className="font-bold text-[#2955A0]">₹{d?.realized?.toFixed(2)} Cr</span></div>
+                                  <div className="flex justify-between pt-1 border-t border-slate-100"><span className="text-slate-400">Shortfall</span><span className="font-bold text-rose-600">₹{d?.shortfall?.toFixed(2)} Cr ({d?.shortfallPct}%)</span></div>
+                                  <div className="flex justify-between"><span className="text-slate-400">Collection</span><span className={`font-bold ${d?.collection >= 93 ? "text-emerald-600" : d?.collection >= 88 ? "text-amber-600" : "text-rose-600"}`}>{d?.collection?.toFixed(1)}%</span></div>
+                                  {d?.momChange !== undefined && (
+                                    <div className="flex justify-between"><span className="text-slate-400">MoM Change</span><span className={`font-bold ${d.momChange >= 0 ? "text-emerald-600" : "text-rose-600"}`}>{d.momChange >= 0 ? "+" : ""}{d.momChange}%</span></div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          }} />
+                          <Bar yAxisId="revenue" dataKey="budgeted" name="Budgeted" fill="#cbd5e1" radius={[3, 3, 0, 0]} barSize={14} />
+                          <Bar yAxisId="revenue" dataKey="expected" name="Expected" fill="#c4b5fd" radius={[3, 3, 0, 0]} barSize={14} />
+                          <Bar yAxisId="revenue" dataKey="actual" name="Actual" fill="#E8A800" radius={[3, 3, 0, 0]} barSize={14} opacity={0.8} />
+                          <Bar yAxisId="revenue" dataKey="realized" name="Realized" fill="#2955A0" radius={[3, 3, 0, 0]} barSize={14} />
+                          <Line yAxisId="pct" type="monotone" dataKey="collection" name="Collection %" stroke="#10b981" strokeWidth={2.5} dot={{ r: 4, fill: "#10b981", stroke: "#fff", strokeWidth: 2 }} />
+                          <Legend wrapperStyle={{ fontSize: "10px" }} />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-3">Shortfall Trend (₹Cr) & Shortfall % of Budget</p>
+                        <ResponsiveContainer width="100%" height={200}>
+                          <ComposedChart data={monthlyRevenueData.map(m => ({
+                            month: m.month,
+                            shortfall: +(m.budgeted - m.realized).toFixed(2),
+                            shortfallPct: +((m.budgeted - m.realized) / m.budgeted * 100).toFixed(1),
+                          }))} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                            <XAxis dataKey="month" tick={{ fontSize: 9, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                            <YAxis yAxisId="val" tick={{ fontSize: 9, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v}`} />
+                            <YAxis yAxisId="pct" orientation="right" tick={{ fontSize: 9, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
+                            <RechartsTooltip content={({ active, payload, label }) => {
+                              if (!active || !payload?.length) return null;
+                              const d = payload[0]?.payload;
+                              return (
+                                <div className="bg-white border border-slate-200 rounded-lg shadow-lg p-2.5 text-xs">
+                                  <p className="font-bold text-slate-800 mb-1">{label}</p>
+                                  <p className="text-slate-500">Shortfall: <span className="font-bold text-rose-600">₹{d?.shortfall} Cr</span></p>
+                                  <p className="text-slate-500">% of Budget: <span className="font-bold text-orange-600">{d?.shortfallPct}%</span></p>
+                                </div>
+                              );
+                            }} />
+                            <Bar yAxisId="val" dataKey="shortfall" name="Shortfall (₹Cr)" radius={[3, 3, 0, 0]} barSize={20}>
+                              {monthlyRevenueData.map((m, i) => {
+                                const pct = (m.budgeted - m.realized) / m.budgeted * 100;
+                                return <Cell key={i} fill={pct > 12 ? "#ef4444" : pct > 8 ? "#f59e0b" : "#10b981"} opacity={0.75} />;
+                              })}
+                            </Bar>
+                            <Line yAxisId="pct" type="monotone" dataKey="shortfallPct" name="Shortfall %" stroke="#ef4444" strokeWidth={2} strokeDasharray="5 3" dot={{ r: 3, fill: "#ef4444", stroke: "#fff", strokeWidth: 1.5 }} />
+                            <Legend wrapperStyle={{ fontSize: "10px" }} />
+                          </ComposedChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      <div>
+                        <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-3">Generation (MWh) & MoM Realized Change (%)</p>
+                        <ResponsiveContainer width="100%" height={200}>
+                          <ComposedChart data={monthlyRevenueData.map((m, idx) => {
+                            const prev = idx > 0 ? monthlyRevenueData[idx - 1].realized : m.realized;
+                            return { month: m.month, genMWh: m.genMWh, momChange: idx === 0 ? 0 : +((m.realized - prev) / prev * 100).toFixed(1) };
+                          })} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                            <XAxis dataKey="month" tick={{ fontSize: 9, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                            <YAxis yAxisId="gen" tick={{ fontSize: 9, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
+                            <YAxis yAxisId="mom" orientation="right" tick={{ fontSize: 9, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
+                            <RechartsTooltip content={({ active, payload, label }) => {
+                              if (!active || !payload?.length) return null;
+                              const d = payload[0]?.payload;
+                              return (
+                                <div className="bg-white border border-slate-200 rounded-lg shadow-lg p-2.5 text-xs">
+                                  <p className="font-bold text-slate-800 mb-1">{label}</p>
+                                  <p className="text-slate-500">Generation: <span className="font-bold text-[#2955A0]">{d?.genMWh?.toLocaleString("en-IN")} MWh</span></p>
+                                  <p className="text-slate-500">MoM Change: <span className={`font-bold ${d?.momChange >= 0 ? "text-emerald-600" : "text-rose-600"}`}>{d?.momChange >= 0 ? "+" : ""}{d?.momChange}%</span></p>
+                                </div>
+                              );
+                            }} />
+                            <Area yAxisId="gen" type="monotone" dataKey="genMWh" name="Generation (MWh)" fill="#2955A0" fillOpacity={0.1} stroke="#2955A0" strokeWidth={2} />
+                            <Bar yAxisId="mom" dataKey="momChange" name="MoM Change %" radius={[3, 3, 0, 0]} barSize={16}>
+                              {monthlyRevenueData.map((_, i) => {
+                                const prev = i > 0 ? monthlyRevenueData[i - 1].realized : monthlyRevenueData[i].realized;
+                                const ch = i === 0 ? 0 : (monthlyRevenueData[i].realized - prev) / prev * 100;
+                                return <Cell key={i} fill={ch >= 0 ? "#10b981" : "#ef4444"} opacity={0.6} />;
+                              })}
+                            </Bar>
+                            <Legend wrapperStyle={{ fontSize: "10px" }} />
+                          </ComposedChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-12 gap-1 px-1">
+                      {monthlyRevenueData.map((m) => {
                         const shortfall = m.budgeted - m.realized;
                         const shortfallPct = (shortfall / m.budgeted) * 100;
-                        const prevRealized = idx > 0 ? monthlyRevenueData[idx - 1].realized : m.realized;
-                        const momChange = ((m.realized - prevRealized) / prevRealized) * 100;
                         return (
-                          <tr key={m.month} className={`border-b border-slate-100 hover:bg-slate-50 ${idx % 2 === 0 ? "" : "bg-slate-50/50"}`}>
-                            <td className="px-4 py-2.5 font-semibold text-slate-800 text-xs">{m.month}</td>
-                            <td className="px-4 py-2.5 text-right text-xs text-slate-600">{m.genMWh.toLocaleString("en-IN")}</td>
-                            <td className="px-4 py-2.5 text-right text-xs text-slate-500">₹{m.budgeted.toFixed(2)}</td>
-                            <td className="px-4 py-2.5 text-right text-xs text-slate-500">₹{m.expected.toFixed(2)}</td>
-                            <td className="px-4 py-2.5 text-right text-xs font-semibold text-[#E8A800]">₹{m.actual.toFixed(2)}</td>
-                            <td className="px-4 py-2.5 text-right text-xs font-bold text-[#2955A0]">₹{m.realized.toFixed(2)}</td>
-                            <td className="px-4 py-2.5 text-right">
-                              <span className={`text-xs font-bold ${shortfallPct > 8 ? "text-rose-600" : shortfallPct > 5 ? "text-amber-600" : "text-emerald-600"}`}>
-                                ₹{shortfall.toFixed(2)} ({shortfallPct.toFixed(1)}%)
-                              </span>
-                            </td>
-                            <td className="px-4 py-2.5 text-right">
-                              <Badge className={`text-[10px] ${m.collection >= 93 ? "bg-emerald-100 text-emerald-700" : m.collection >= 88 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
-                                {m.collection.toFixed(1)}%
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-2.5 text-center">
-                              {idx === 0 ? (
-                                <span className="text-slate-300 text-xs">—</span>
-                              ) : momChange >= 0 ? (
-                                <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600">
-                                  <ArrowUpRight className="w-3 h-3" />+{momChange.toFixed(1)}%
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-rose-600">
-                                  <ArrowDownRight className="w-3 h-3" />{momChange.toFixed(1)}%
-                                </span>
-                              )}
-                            </td>
-                          </tr>
+                          <div key={m.month} className="text-center p-2 rounded-lg bg-slate-50 border border-slate-100">
+                            <p className="text-[9px] font-bold text-slate-700 mb-1">{m.month.split(" ")[0]}</p>
+                            <p className="text-[8px] text-slate-400">{(m.genMWh / 1000).toFixed(1)}k MWh</p>
+                            <div className="mt-1.5 space-y-0.5">
+                              <div className="h-1 rounded-full bg-slate-200 overflow-hidden">
+                                <div className="h-full rounded-full bg-[#2955A0]" style={{ width: `${(m.realized / m.budgeted) * 100}%` }} />
+                              </div>
+                            </div>
+                            <p className={`text-[8px] font-bold mt-1 ${shortfallPct > 10 ? "text-rose-600" : shortfallPct > 6 ? "text-amber-600" : "text-emerald-600"}`}>{(m.realized / m.budgeted * 100).toFixed(0)}%</p>
+                          </div>
                         );
                       })}
-                    </tbody>
-                    <tfoot>
-                      <tr className="bg-[#2955A0]/5 border-t-2 border-[#2955A0]/20 font-bold">
-                        <td className="px-4 py-3 text-xs text-slate-800">YTD Total</td>
-                        <td className="px-4 py-3 text-right text-xs text-slate-800">{ytdTotals.totalGen.toLocaleString("en-IN")}</td>
-                        <td className="px-4 py-3 text-right text-xs text-slate-700">₹{ytdTotals.budgeted.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right text-xs text-slate-700">₹{ytdTotals.expected.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right text-xs text-[#E8A800]">₹{ytdTotals.actual.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right text-xs text-[#2955A0]">₹{ytdTotals.realized.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right text-xs text-rose-600">₹{totalShortfall.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right text-xs">{ytdTotals.avgCollection.toFixed(1)}%</td>
-                        <td className="px-4 py-3 text-center text-xs text-slate-400">—</td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-[#2955A0]/5 rounded-lg p-3 border border-[#2955A0]/10">
+                      <div className="flex items-center gap-6">
+                        <div><p className="text-[9px] text-slate-400 uppercase">YTD Generation</p><p className="text-sm font-bold text-slate-800">{ytdTotals.totalGen.toLocaleString("en-IN")} MWh</p></div>
+                        <div><p className="text-[9px] text-slate-400 uppercase">YTD Budgeted</p><p className="text-sm font-bold text-slate-600">₹{ytdTotals.budgeted.toFixed(2)} Cr</p></div>
+                        <div><p className="text-[9px] text-slate-400 uppercase">YTD Realized</p><p className="text-sm font-bold text-[#2955A0]">₹{ytdTotals.realized.toFixed(2)} Cr</p></div>
+                        <div><p className="text-[9px] text-slate-400 uppercase">YTD Shortfall</p><p className="text-sm font-bold text-rose-600">₹{totalShortfall.toFixed(2)} Cr</p></div>
+                        <div><p className="text-[9px] text-slate-400 uppercase">Avg Collection</p><p className="text-sm font-bold text-emerald-600">{ytdTotals.avgCollection.toFixed(1)}%</p></div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          <th className="text-left px-4 py-3 font-semibold text-slate-700 text-xs">Month</th>
+                          <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Gen (MWh)</th>
+                          <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Budgeted (₹Cr)</th>
+                          <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Expected (₹Cr)</th>
+                          <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Actual (₹Cr)</th>
+                          <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Realized (₹Cr)</th>
+                          <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Shortfall</th>
+                          <th className="text-right px-4 py-3 font-semibold text-slate-700 text-xs">Collection %</th>
+                          <th className="text-center px-4 py-3 font-semibold text-slate-700 text-xs">MoM Trend</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {monthlyRevenueData.map((m, idx) => {
+                          const shortfall = m.budgeted - m.realized;
+                          const shortfallPct = (shortfall / m.budgeted) * 100;
+                          const prevRealized = idx > 0 ? monthlyRevenueData[idx - 1].realized : m.realized;
+                          const momChange = ((m.realized - prevRealized) / prevRealized) * 100;
+                          return (
+                            <tr key={m.month} className={`border-b border-slate-100 hover:bg-slate-50 ${idx % 2 === 0 ? "" : "bg-slate-50/50"}`}>
+                              <td className="px-4 py-2.5 font-semibold text-slate-800 text-xs">{m.month}</td>
+                              <td className="px-4 py-2.5 text-right text-xs text-slate-600">{m.genMWh.toLocaleString("en-IN")}</td>
+                              <td className="px-4 py-2.5 text-right text-xs text-slate-500">₹{m.budgeted.toFixed(2)}</td>
+                              <td className="px-4 py-2.5 text-right text-xs text-slate-500">₹{m.expected.toFixed(2)}</td>
+                              <td className="px-4 py-2.5 text-right text-xs font-semibold text-[#E8A800]">₹{m.actual.toFixed(2)}</td>
+                              <td className="px-4 py-2.5 text-right text-xs font-bold text-[#2955A0]">₹{m.realized.toFixed(2)}</td>
+                              <td className="px-4 py-2.5 text-right">
+                                <span className={`text-xs font-bold ${shortfallPct > 8 ? "text-rose-600" : shortfallPct > 5 ? "text-amber-600" : "text-emerald-600"}`}>
+                                  ₹{shortfall.toFixed(2)} ({shortfallPct.toFixed(1)}%)
+                                </span>
+                              </td>
+                              <td className="px-4 py-2.5 text-right">
+                                <Badge className={`text-[10px] ${m.collection >= 93 ? "bg-emerald-100 text-emerald-700" : m.collection >= 88 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
+                                  {m.collection.toFixed(1)}%
+                                </Badge>
+                              </td>
+                              <td className="px-4 py-2.5 text-center">
+                                {idx === 0 ? (
+                                  <span className="text-slate-300 text-xs">—</span>
+                                ) : momChange >= 0 ? (
+                                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600">
+                                    <ArrowUpRight className="w-3 h-3" />+{momChange.toFixed(1)}%
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-rose-600">
+                                    <ArrowDownRight className="w-3 h-3" />{momChange.toFixed(1)}%
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-[#2955A0]/5 border-t-2 border-[#2955A0]/20 font-bold">
+                          <td className="px-4 py-3 text-xs text-slate-800">YTD Total</td>
+                          <td className="px-4 py-3 text-right text-xs text-slate-800">{ytdTotals.totalGen.toLocaleString("en-IN")}</td>
+                          <td className="px-4 py-3 text-right text-xs text-slate-700">₹{ytdTotals.budgeted.toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right text-xs text-slate-700">₹{ytdTotals.expected.toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right text-xs text-[#E8A800]">₹{ytdTotals.actual.toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right text-xs text-[#2955A0]">₹{ytdTotals.realized.toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right text-xs text-rose-600">₹{totalShortfall.toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right text-xs">{ytdTotals.avgCollection.toFixed(1)}%</td>
+                          <td className="px-4 py-3 text-center text-xs text-slate-400">—</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
