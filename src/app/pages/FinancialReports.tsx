@@ -36,6 +36,10 @@ import {
   CircleDollarSign,
   BarChart3,
   Table2,
+  ChevronDown,
+  ChevronRight,
+  MapPin,
+  Factory,
 } from "lucide-react";
 import {
   BarChart,
@@ -78,13 +82,47 @@ const vendorRevenueData = [
   { vendor: "TechSolar Pvt", plants: "Latur", plantCount: 1, capacity: 15.0, budgeted: 3.60, actual: 3.52, realized: 3.45, collection: 95.8, ldExposure: 0.00, shortfall: 0.15, status: "healthy" },
 ];
 
-const invoiceStatusData = [
-  { status: "Paid", count: 28, amount: 6.82, color: "#10b981" },
-  { status: "Partially Paid", count: 8, amount: 1.45, color: "#f59e0b" },
-  { status: "Pending", count: 12, amount: 2.38, color: "#6366f1" },
-  { status: "Overdue", count: 4, amount: 0.68, color: "#ef4444" },
-  { status: "Disputed", count: 2, amount: 0.22, color: "#8b5cf6" },
+const vendorInvoiceData = [
+  {
+    vendor: "SolarCo India", color: "#2955A0",
+    plants: [
+      { name: "Sakri", district: "Dhule", capacity: 20.0, invoices: 5, paid: 3, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 1.62, collected: 1.38 },
+      { name: "Ahmednagar", district: "Ahmednagar", capacity: 15.2, invoices: 4, paid: 2, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 1.24, collected: 1.02 },
+    ],
+  },
+  {
+    vendor: "SunPower Tech", color: "#ef4444",
+    plants: [
+      { name: "Sangli", district: "Sangli", capacity: 14.5, invoices: 5, paid: 2, partiallyPaid: 1, pending: 1, overdue: 1, disputed: 0, amount: 1.52, collected: 1.08 },
+      { name: "Wardha", district: "Wardha", capacity: 12.8, invoices: 4, paid: 2, partiallyPaid: 0, pending: 1, overdue: 1, disputed: 0, amount: 1.18, collected: 0.82 },
+      { name: "Buldhana", district: "Buldhana", capacity: 13.2, invoices: 4, paid: 2, partiallyPaid: 1, pending: 0, overdue: 0, disputed: 1, amount: 1.15, collected: 0.88 },
+      { name: "Chandrapur", district: "Chandrapur", capacity: 10.5, invoices: 4, paid: 2, partiallyPaid: 0, pending: 1, overdue: 1, disputed: 0, amount: 0.98, collected: 0.68 },
+      { name: "Amravati", district: "Amravati", capacity: 12.2, invoices: 3, paid: 1, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 0.88, collected: 0.58 },
+    ],
+  },
+  {
+    vendor: "Mega Solar Inc", color: "#f59e0b",
+    plants: [
+      { name: "Beed", district: "Beed", capacity: 18.0, invoices: 5, paid: 3, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 1.72, collected: 1.45 },
+      { name: "Devdaithan", district: "Jalgaon", capacity: 15.0, invoices: 5, paid: 3, partiallyPaid: 0, pending: 1, overdue: 1, disputed: 0, amount: 1.48, collected: 1.18 },
+      { name: "Bhandara", district: "Bhandara", capacity: 15.0, invoices: 4, paid: 2, partiallyPaid: 1, pending: 0, overdue: 0, disputed: 1, amount: 1.25, collected: 0.92 },
+    ],
+  },
+  {
+    vendor: "Green Energy Ltd", color: "#10b981",
+    plants: [
+      { name: "Osmanabad", district: "Osmanabad", capacity: 18.5, invoices: 5, paid: 4, partiallyPaid: 0, pending: 1, overdue: 0, disputed: 0, amount: 1.55, collected: 1.42 },
+    ],
+  },
+  {
+    vendor: "TechSolar Pvt", color: "#8b5cf6",
+    plants: [
+      { name: "Latur", district: "Latur", capacity: 15.0, invoices: 6, paid: 4, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 1.78, collected: 1.58 },
+    ],
+  },
 ];
+
+const invoiceStatusColors = { paid: "#10b981", partiallyPaid: "#f59e0b", pending: "#6366f1", overdue: "#ef4444", disputed: "#8b5cf6" };
 
 const quarterlyData = [
   { quarter: "Q1 (Apr–Jun 25)", budgeted: 7.80, actual: 7.28, realized: 7.07, shortfall: 0.73, collection: 90.4 },
@@ -98,6 +136,55 @@ export function FinancialReports() {
   const [selectedFY, setSelectedFY] = useState("FY 2025-26");
   const [activeTab, setActiveTab] = useState("revenue-impact");
   const [revenueView, setRevenueView] = useState<"table" | "chart">("chart");
+  const [expandedVendors, setExpandedVendors] = useState<string[]>([]);
+
+  const toggleVendor = (vendor: string) => {
+    setExpandedVendors(prev => prev.includes(vendor) ? prev.filter(v => v !== vendor) : [...prev, vendor]);
+  };
+
+  const invoiceAggregates = useMemo(() => {
+    const allPlants = vendorInvoiceData.flatMap(v => v.plants);
+    const totals = {
+      invoices: allPlants.reduce((s, p) => s + p.invoices, 0),
+      paid: allPlants.reduce((s, p) => s + p.paid, 0),
+      partiallyPaid: allPlants.reduce((s, p) => s + p.partiallyPaid, 0),
+      pending: allPlants.reduce((s, p) => s + p.pending, 0),
+      overdue: allPlants.reduce((s, p) => s + p.overdue, 0),
+      disputed: allPlants.reduce((s, p) => s + p.disputed, 0),
+      amount: allPlants.reduce((s, p) => s + p.amount, 0),
+      collected: allPlants.reduce((s, p) => s + p.collected, 0),
+    };
+    const paidAmt = +(totals.collected).toFixed(2);
+    const totalUnpaid = +(totals.amount - totals.collected).toFixed(2);
+    const partialAmt = +(totalUnpaid * (totals.partiallyPaid / Math.max(1, totals.partiallyPaid + totals.pending + totals.overdue + totals.disputed)) * 0.6).toFixed(2);
+    const pendingAmt = +(totalUnpaid * (totals.pending / Math.max(1, totals.partiallyPaid + totals.pending + totals.overdue + totals.disputed))).toFixed(2);
+    const overdueAmt = +(totalUnpaid * (totals.overdue / Math.max(1, totals.partiallyPaid + totals.pending + totals.overdue + totals.disputed))).toFixed(2);
+    const disputedAmt = +(totalUnpaid - partialAmt - pendingAmt - overdueAmt).toFixed(2);
+    const statusBreakdown = [
+      { status: "Paid", count: totals.paid, amount: paidAmt, color: invoiceStatusColors.paid },
+      { status: "Partially Paid", count: totals.partiallyPaid, amount: partialAmt, color: invoiceStatusColors.partiallyPaid },
+      { status: "Pending", count: totals.pending, amount: pendingAmt, color: invoiceStatusColors.pending },
+      { status: "Overdue", count: totals.overdue, amount: overdueAmt, color: invoiceStatusColors.overdue },
+      { status: "Disputed", count: totals.disputed, amount: disputedAmt, color: invoiceStatusColors.disputed },
+    ];
+    return { ...totals, statusBreakdown };
+  }, []);
+
+  const vendorSummaries = useMemo(() => {
+    return vendorInvoiceData.map(v => {
+      const totals = v.plants.reduce((acc, p) => ({
+        invoices: acc.invoices + p.invoices,
+        paid: acc.paid + p.paid,
+        partiallyPaid: acc.partiallyPaid + p.partiallyPaid,
+        pending: acc.pending + p.pending,
+        overdue: acc.overdue + p.overdue,
+        disputed: acc.disputed + p.disputed,
+        amount: acc.amount + p.amount,
+        collected: acc.collected + p.collected,
+      }), { invoices: 0, paid: 0, partiallyPaid: 0, pending: 0, overdue: 0, disputed: 0, amount: 0, collected: 0 });
+      return { ...v, ...totals, collectionPct: totals.amount > 0 ? (totals.collected / totals.amount) * 100 : 0 };
+    });
+  }, []);
 
   const ytdTotals = useMemo(() => {
     const data = monthlyRevenueData;
@@ -137,7 +224,7 @@ export function FinancialReports() {
     { name: "Realized", value: ytdTotals.realized, fill: "#2955A0", type: "total" },
   ];
 
-  const invoiceTotal = invoiceStatusData.reduce((s, d) => s + d.amount, 0);
+  const invoiceTotal = invoiceAggregates.amount;
 
   return (
     <div ref={pageRef} className="flex-1 overflow-auto bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
@@ -837,31 +924,71 @@ export function FinancialReports() {
           </TabsContent>
 
           <TabsContent value="invoicing" className="mt-4 space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              <Card className="border-2 border-slate-200">
+                <CardContent className="p-4 text-center">
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Total Invoices</p>
+                  <p className="text-2xl font-bold text-slate-800 mt-1">{invoiceAggregates.invoices}</p>
+                  <p className="text-[10px] text-slate-500">₹{invoiceAggregates.amount.toFixed(2)} Cr raised</p>
+                </CardContent>
+              </Card>
+              <Card className="border-2 border-emerald-200 bg-emerald-50/30">
+                <CardContent className="p-4 text-center">
+                  <p className="text-[10px] text-emerald-600 uppercase tracking-wider font-semibold">Paid Invoices</p>
+                  <p className="text-2xl font-bold text-emerald-700 mt-1">{invoiceAggregates.paid}</p>
+                  <p className="text-[10px] text-emerald-500">of {invoiceAggregates.invoices} total invoices</p>
+                </CardContent>
+              </Card>
+              <Card className="border-2 border-amber-200 bg-amber-50/30">
+                <CardContent className="p-4 text-center">
+                  <p className="text-[10px] text-amber-600 uppercase tracking-wider font-semibold">Partial + Pending</p>
+                  <p className="text-2xl font-bold text-amber-700 mt-1">{invoiceAggregates.partiallyPaid + invoiceAggregates.pending}</p>
+                  <p className="text-[10px] text-amber-500">{invoiceAggregates.partiallyPaid} partial, {invoiceAggregates.pending} pending</p>
+                </CardContent>
+              </Card>
+              <Card className="border-2 border-rose-200 bg-rose-50/30">
+                <CardContent className="p-4 text-center">
+                  <p className="text-[10px] text-rose-600 uppercase tracking-wider font-semibold">Overdue + Disputed</p>
+                  <p className="text-2xl font-bold text-rose-700 mt-1">{invoiceAggregates.overdue + invoiceAggregates.disputed}</p>
+                  <p className="text-[10px] text-rose-500">{invoiceAggregates.overdue} overdue, {invoiceAggregates.disputed} disputed</p>
+                </CardContent>
+              </Card>
+              <Card className="border-2 border-blue-200 bg-blue-50/30">
+                <CardContent className="p-4 text-center">
+                  <p className="text-[10px] text-blue-600 uppercase tracking-wider font-semibold">Invoice Collection</p>
+                  <p className={`text-2xl font-bold mt-1 ${(invoiceAggregates.collected / invoiceAggregates.amount * 100) >= 92 ? "text-emerald-700" : "text-amber-700"}`}>
+                    {(invoiceAggregates.collected / invoiceAggregates.amount * 100).toFixed(1)}%
+                  </p>
+                  <p className="text-[10px] text-blue-500">₹{invoiceAggregates.collected.toFixed(2)} / ₹{invoiceAggregates.amount.toFixed(2)} Cr</p>
+                </CardContent>
+              </Card>
+            </div>
+
             <div className="grid grid-cols-12 gap-6">
               <Card className="col-span-5 border-2 border-slate-200">
                 <CardHeader className="border-b border-slate-100 pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Receipt className="w-4 h-4 text-[#2955A0]" />
-                    Invoice Status Distribution
+                    YTD Invoice Status
                   </CardTitle>
-                  <CardDescription>YTD invoice lifecycle — {invoiceStatusData.reduce((s, d) => s + d.count, 0)} invoices totaling ₹{invoiceTotal.toFixed(2)} Cr</CardDescription>
+                  <CardDescription>{invoiceAggregates.invoices} invoices · ₹{invoiceAggregates.amount.toFixed(2)} Cr total</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <ResponsiveContainer width="100%" height={240}>
+                  <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
                       <Pie
-                        data={invoiceStatusData}
-                        dataKey="amount"
+                        data={invoiceAggregates.statusBreakdown}
+                        dataKey="count"
                         nameKey="status"
                         cx="50%"
                         cy="50%"
-                        outerRadius={90}
-                        innerRadius={55}
+                        outerRadius={80}
+                        innerRadius={50}
                         paddingAngle={3}
                         label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                         labelLine={false}
                       >
-                        {invoiceStatusData.map((entry, index) => (
+                        {invoiceAggregates.statusBreakdown.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
@@ -872,92 +999,308 @@ export function FinancialReports() {
                           return (
                             <div className="bg-white border border-slate-200 rounded-lg shadow-lg p-3 text-xs">
                               <p className="font-bold text-slate-800">{d?.status}</p>
-                              <p className="text-slate-600">{d?.count} invoices · ₹{d?.amount.toFixed(2)} Cr</p>
+                              <p className="text-slate-600">{d?.count} invoices · ₹{d?.amount?.toFixed(2)} Cr</p>
                             </div>
                           );
                         }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div className="space-y-2 mt-2">
-                    {invoiceStatusData.map((item) => (
+                  <div className="space-y-1.5 mt-1">
+                    {invoiceAggregates.statusBreakdown.map((item) => (
                       <div key={item.status} className="flex items-center justify-between text-xs">
                         <span className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                          <span className="text-slate-700">{item.status}</span>
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                          <span className="text-slate-600">{item.status}</span>
                         </span>
-                        <span className="font-semibold text-slate-800">{item.count} invoices · ₹{item.amount.toFixed(2)} Cr</span>
+                        <span className="font-semibold text-slate-700">{item.count}</span>
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
 
-              <div className="col-span-7 space-y-6">
-                <Card className="border-2 border-slate-200">
-                  <CardHeader className="border-b border-slate-100 pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Wallet className="w-4 h-4 text-[#2955A0]" />
-                      Collection Efficiency Trend
-                    </CardTitle>
-                    <CardDescription>Month-wise collection rate tracking against 92% target</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-4">
-                    <ResponsiveContainer width="100%" height={240}>
-                      <AreaChart data={monthlyRevenueData} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                        <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
-                        <YAxis domain={[78, 100]} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
-                        <RechartsTooltip
-                          content={({ active, payload, label }) => {
-                            if (!active || !payload?.length) return null;
-                            return (
-                              <div className="bg-white border border-slate-200 rounded-lg shadow-lg p-3 text-xs">
-                                <p className="font-bold text-slate-800 mb-1">{label}</p>
-                                <p className="text-[#2955A0] font-semibold">Collection: {Number(payload[0]?.value).toFixed(1)}%</p>
-                              </div>
-                            );
-                          }}
-                        />
-                        <defs>
-                          <linearGradient id="collGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#2955A0" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#2955A0" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <Area type="monotone" dataKey="collection" stroke="#2955A0" strokeWidth={2} fill="url(#collGrad)" dot={{ r: 3, fill: "#2955A0" }} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
+              <Card className="col-span-7 border-2 border-slate-200">
+                <CardHeader className="border-b border-slate-100 pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <BarChart2 className="w-4 h-4 text-[#2955A0]" />
+                    Vendor Invoice Comparison
+                  </CardTitle>
+                  <CardDescription>Stacked invoice status by vendor — click vendor below for plant details</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={vendorSummaries.map(v => ({
+                      name: v.vendor.split(" ")[0],
+                      vendor: v.vendor,
+                      Paid: v.paid,
+                      "Partial": v.partiallyPaid,
+                      Pending: v.pending,
+                      Overdue: v.overdue,
+                      Disputed: v.disputed,
+                      total: v.invoices,
+                      collPct: v.collectionPct,
+                    }))} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                      <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                      <RechartsTooltip content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const d = payload[0]?.payload;
+                        return (
+                          <div className="bg-white border border-slate-200 rounded-xl shadow-xl p-3 text-xs min-w-[180px]">
+                            <p className="font-bold text-slate-800 mb-2 pb-1.5 border-b border-slate-100">{d?.vendor}</p>
+                            <div className="space-y-1">
+                              <div className="flex justify-between"><span className="text-slate-400">Total</span><span className="font-bold">{d?.total} invoices</span></div>
+                              <div className="flex justify-between"><span style={{ color: invoiceStatusColors.paid }}>Paid</span><span className="font-semibold">{d?.Paid}</span></div>
+                              <div className="flex justify-between"><span style={{ color: invoiceStatusColors.partiallyPaid }}>Partial</span><span className="font-semibold">{d?.Partial}</span></div>
+                              <div className="flex justify-between"><span style={{ color: invoiceStatusColors.pending }}>Pending</span><span className="font-semibold">{d?.Pending}</span></div>
+                              <div className="flex justify-between"><span style={{ color: invoiceStatusColors.overdue }}>Overdue</span><span className="font-semibold">{d?.Overdue}</span></div>
+                              <div className="flex justify-between"><span style={{ color: invoiceStatusColors.disputed }}>Disputed</span><span className="font-semibold">{d?.Disputed}</span></div>
+                              <div className="flex justify-between pt-1 border-t border-slate-100"><span className="text-slate-400">Collection</span><span className={`font-bold ${d?.collPct >= 92 ? "text-emerald-600" : d?.collPct >= 85 ? "text-amber-600" : "text-rose-600"}`}>{d?.collPct?.toFixed(1)}%</span></div>
+                            </div>
+                          </div>
+                        );
+                      }} />
+                      <Bar dataKey="Paid" stackId="inv" fill={invoiceStatusColors.paid} radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Partial" stackId="inv" fill={invoiceStatusColors.partiallyPaid} />
+                      <Bar dataKey="Pending" stackId="inv" fill={invoiceStatusColors.pending} />
+                      <Bar dataKey="Overdue" stackId="inv" fill={invoiceStatusColors.overdue} />
+                      <Bar dataKey="Disputed" stackId="inv" fill={invoiceStatusColors.disputed} radius={[3, 3, 0, 0]} />
+                      <Legend wrapperStyle={{ fontSize: "10px" }} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <Card className="border-2 border-emerald-200 bg-emerald-50/50">
-                    <CardContent className="p-4 text-center">
-                      <CheckCircle2 className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
-                      <p className="text-2xl font-bold text-emerald-800">₹{invoiceStatusData[0].amount.toFixed(2)} Cr</p>
-                      <p className="text-xs text-emerald-600 mt-1">Fully Collected</p>
-                      <p className="text-[10px] text-emerald-500">{invoiceStatusData[0].count} invoices cleared</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-2 border-amber-200 bg-amber-50/50">
-                    <CardContent className="p-4 text-center">
-                      <Clock className="w-6 h-6 text-amber-600 mx-auto mb-2" />
-                      <p className="text-2xl font-bold text-amber-800">₹{(invoiceStatusData[1].amount + invoiceStatusData[2].amount).toFixed(2)} Cr</p>
-                      <p className="text-xs text-amber-600 mt-1">Pending Collection</p>
-                      <p className="text-[10px] text-amber-500">{invoiceStatusData[1].count + invoiceStatusData[2].count} invoices in pipeline</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-2 border-rose-200 bg-rose-50/50">
-                    <CardContent className="p-4 text-center">
-                      <AlertTriangle className="w-6 h-6 text-rose-600 mx-auto mb-2" />
-                      <p className="text-2xl font-bold text-rose-800">₹{(invoiceStatusData[3].amount + invoiceStatusData[4].amount).toFixed(2)} Cr</p>
-                      <p className="text-xs text-rose-600 mt-1">Overdue & Disputed</p>
-                      <p className="text-[10px] text-rose-500">{invoiceStatusData[3].count + invoiceStatusData[4].count} invoices require action</p>
-                    </CardContent>
-                  </Card>
+            <Card className="border-2 border-slate-200">
+              <CardHeader className="border-b border-slate-100 pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Factory className="w-4 h-4 text-[#2955A0]" />
+                      Vendor & Plant-wise Invoice Tracker
+                    </CardTitle>
+                    <CardDescription>Expand each vendor to view plant-level invoice breakdown with district details</CardDescription>
+                  </div>
+                  <button
+                    onClick={() => setExpandedVendors(expandedVendors.length === vendorInvoiceData.length ? [] : vendorInvoiceData.map(v => v.vendor))}
+                    className="text-xs text-[#2955A0] hover:underline font-medium"
+                  >
+                    {expandedVendors.length === vendorInvoiceData.length ? "Collapse All" : "Expand All"}
+                  </button>
                 </div>
-              </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                {vendorSummaries.map((v, vIdx) => {
+                  const isExpanded = expandedVendors.includes(v.vendor);
+                  const hasIssues = v.overdue > 0 || v.disputed > 0;
+                  return (
+                    <div key={v.vendor} className={vIdx < vendorSummaries.length - 1 ? "border-b border-slate-100" : ""}>
+                      <button
+                        onClick={() => toggleVendor(v.vendor)}
+                        className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 transition-colors text-left"
+                      >
+                        <div className="w-1 h-10 rounded-full" style={{ backgroundColor: v.color }} />
+                        {isExpanded ? <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" /> : <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm text-slate-800">{v.vendor}</span>
+                            {hasIssues && <Badge className="bg-rose-100 text-rose-700 text-[9px] px-1.5 py-0">{v.overdue + v.disputed} action needed</Badge>}
+                          </div>
+                          <div className="flex items-center gap-4 mt-1">
+                            <span className="text-[10px] text-slate-400">{v.plants.length} {v.plants.length === 1 ? "plant" : "plants"}</span>
+                            <span className="text-[10px] text-slate-400">{v.invoices} invoices</span>
+                            <span className="text-[10px] text-slate-400">₹{v.amount.toFixed(2)} Cr</span>
+                          </div>
+                        </div>
+                        <div className="w-48 shrink-0">
+                          <div className="flex h-2.5 rounded-full overflow-hidden bg-slate-100">
+                            {v.paid > 0 && <div style={{ width: `${(v.paid / v.invoices) * 100}%`, backgroundColor: invoiceStatusColors.paid }} />}
+                            {v.partiallyPaid > 0 && <div style={{ width: `${(v.partiallyPaid / v.invoices) * 100}%`, backgroundColor: invoiceStatusColors.partiallyPaid }} />}
+                            {v.pending > 0 && <div style={{ width: `${(v.pending / v.invoices) * 100}%`, backgroundColor: invoiceStatusColors.pending }} />}
+                            {v.overdue > 0 && <div style={{ width: `${(v.overdue / v.invoices) * 100}%`, backgroundColor: invoiceStatusColors.overdue }} />}
+                            {v.disputed > 0 && <div style={{ width: `${(v.disputed / v.invoices) * 100}%`, backgroundColor: invoiceStatusColors.disputed }} />}
+                          </div>
+                          <div className="flex justify-between mt-0.5">
+                            <span className="text-[9px] text-emerald-600 font-medium">{v.paid} paid</span>
+                            <span className="text-[9px] text-slate-400">{v.pending + v.partiallyPaid} in progress</span>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0 w-20">
+                          <p className={`text-sm font-bold ${v.collectionPct >= 92 ? "text-emerald-600" : v.collectionPct >= 85 ? "text-amber-600" : "text-rose-600"}`}>
+                            {v.collectionPct.toFixed(1)}%
+                          </p>
+                          <p className="text-[9px] text-slate-400">collected</p>
+                        </div>
+                      </button>
+                      {isExpanded && (
+                        <div className="px-5 pb-4 ml-6">
+                          <div className="overflow-x-auto rounded-lg border border-slate-200">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="bg-slate-50 border-b border-slate-200">
+                                  <th className="text-left px-3 py-2.5 font-semibold text-slate-600">Plant</th>
+                                  <th className="text-left px-3 py-2.5 font-semibold text-slate-600">District</th>
+                                  <th className="text-left px-3 py-2.5 font-semibold text-slate-600">State</th>
+                                  <th className="text-right px-3 py-2.5 font-semibold text-slate-600">Cap (MW)</th>
+                                  <th className="text-right px-3 py-2.5 font-semibold text-slate-600"># Inv</th>
+                                  <th className="text-center px-3 py-2.5 font-semibold text-emerald-600">Paid</th>
+                                  <th className="text-center px-3 py-2.5 font-semibold text-amber-600">Partial</th>
+                                  <th className="text-center px-3 py-2.5 font-semibold text-indigo-600">Pending</th>
+                                  <th className="text-center px-3 py-2.5 font-semibold text-rose-600">Overdue</th>
+                                  <th className="text-center px-3 py-2.5 font-semibold text-purple-600">Disputed</th>
+                                  <th className="text-right px-3 py-2.5 font-semibold text-slate-600">Amt (₹Cr)</th>
+                                  <th className="text-right px-3 py-2.5 font-semibold text-slate-600">Collected</th>
+                                  <th className="text-right px-3 py-2.5 font-semibold text-slate-600">Coll %</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {v.plants.map((p, pIdx) => {
+                                  const collPct = p.amount > 0 ? (p.collected / p.amount) * 100 : 0;
+                                  return (
+                                    <tr key={p.name} className={`border-b border-slate-50 hover:bg-slate-50/80 ${pIdx % 2 === 0 ? "" : "bg-slate-50/30"}`}>
+                                      <td className="px-3 py-2 font-semibold text-slate-800 flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: v.color }} />
+                                        {p.name}
+                                      </td>
+                                      <td className="px-3 py-2 text-slate-500">
+                                        <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3 text-slate-300" />{p.district}</span>
+                                      </td>
+                                      <td className="px-3 py-2 text-slate-500">Maharashtra</td>
+                                      <td className="px-3 py-2 text-right text-slate-500">{p.capacity.toFixed(1)}</td>
+                                      <td className="px-3 py-2 text-right font-semibold text-slate-700">{p.invoices}</td>
+                                      <td className="px-3 py-2 text-center">
+                                        {p.paid > 0 ? <Badge className="bg-emerald-100 text-emerald-700 text-[10px] px-1.5">{p.paid}</Badge> : <span className="text-slate-300">—</span>}
+                                      </td>
+                                      <td className="px-3 py-2 text-center">
+                                        {p.partiallyPaid > 0 ? <Badge className="bg-amber-100 text-amber-700 text-[10px] px-1.5">{p.partiallyPaid}</Badge> : <span className="text-slate-300">—</span>}
+                                      </td>
+                                      <td className="px-3 py-2 text-center">
+                                        {p.pending > 0 ? <Badge className="bg-indigo-100 text-indigo-700 text-[10px] px-1.5">{p.pending}</Badge> : <span className="text-slate-300">—</span>}
+                                      </td>
+                                      <td className="px-3 py-2 text-center">
+                                        {p.overdue > 0 ? <Badge className="bg-rose-100 text-rose-700 text-[10px] px-1.5">{p.overdue}</Badge> : <span className="text-slate-300">—</span>}
+                                      </td>
+                                      <td className="px-3 py-2 text-center">
+                                        {p.disputed > 0 ? <Badge className="bg-purple-100 text-purple-700 text-[10px] px-1.5">{p.disputed}</Badge> : <span className="text-slate-300">—</span>}
+                                      </td>
+                                      <td className="px-3 py-2 text-right text-slate-600">₹{p.amount.toFixed(2)}</td>
+                                      <td className="px-3 py-2 text-right font-semibold text-[#2955A0]">₹{p.collected.toFixed(2)}</td>
+                                      <td className="px-3 py-2 text-right">
+                                        <Badge className={`text-[10px] ${collPct >= 92 ? "bg-emerald-100 text-emerald-700" : collPct >= 85 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
+                                          {collPct.toFixed(1)}%
+                                        </Badge>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                              <tfoot>
+                                <tr className="bg-slate-50/80 font-semibold border-t border-slate-200">
+                                  <td className="px-3 py-2 text-slate-700" colSpan={3}>Vendor Total</td>
+                                  <td className="px-3 py-2 text-right text-slate-500">{v.plants.reduce((s, p) => s + p.capacity, 0).toFixed(1)}</td>
+                                  <td className="px-3 py-2 text-right text-slate-700">{v.invoices}</td>
+                                  <td className="px-3 py-2 text-center text-emerald-700">{v.paid}</td>
+                                  <td className="px-3 py-2 text-center text-amber-700">{v.partiallyPaid}</td>
+                                  <td className="px-3 py-2 text-center text-indigo-700">{v.pending}</td>
+                                  <td className="px-3 py-2 text-center text-rose-700">{v.overdue}</td>
+                                  <td className="px-3 py-2 text-center text-purple-700">{v.disputed}</td>
+                                  <td className="px-3 py-2 text-right text-slate-600">₹{v.amount.toFixed(2)}</td>
+                                  <td className="px-3 py-2 text-right text-[#2955A0]">₹{v.collected.toFixed(2)}</td>
+                                  <td className="px-3 py-2 text-right">
+                                    <Badge className={`text-[10px] ${v.collectionPct >= 92 ? "bg-emerald-100 text-emerald-700" : v.collectionPct >= 85 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
+                                      {v.collectionPct.toFixed(1)}%
+                                    </Badge>
+                                  </td>
+                                </tr>
+                              </tfoot>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-12 gap-6">
+              <Card className="col-span-7 border-2 border-slate-200">
+                <CardHeader className="border-b border-slate-100 pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-[#2955A0]" />
+                    Collection Efficiency Trend
+                  </CardTitle>
+                  <CardDescription>Monthly revenue collection % (realized ÷ budgeted) vs 92% target</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <ResponsiveContainer width="100%" height={220}>
+                    <AreaChart data={monthlyRevenueData} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                      <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                      <YAxis domain={[78, 100]} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
+                      <RechartsTooltip
+                        content={({ active, payload, label }) => {
+                          if (!active || !payload?.length) return null;
+                          return (
+                            <div className="bg-white border border-slate-200 rounded-lg shadow-lg p-3 text-xs">
+                              <p className="font-bold text-slate-800 mb-1">{label}</p>
+                              <p className="text-[#2955A0] font-semibold">Collection: {Number(payload[0]?.value).toFixed(1)}%</p>
+                              <p className="text-slate-400 text-[10px]">Target: 92%</p>
+                            </div>
+                          );
+                        }}
+                      />
+                      <defs>
+                        <linearGradient id="collGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#2955A0" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#2955A0" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <Area type="monotone" dataKey="collection" stroke="#2955A0" strokeWidth={2.5} fill="url(#collGrad)" dot={{ r: 3, fill: "#2955A0", stroke: "#fff", strokeWidth: 2 }} />
+                      <Line type="monotone" dataKey={() => 92} stroke="#ef4444" strokeWidth={1.5} strokeDasharray="6 3" dot={false} name="Target 92%" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card className="col-span-5 border-2 border-slate-200">
+                <CardHeader className="border-b border-slate-100 pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Target className="w-4 h-4 text-[#2955A0]" />
+                    Vendor Collection Scorecard
+                  </CardTitle>
+                  <CardDescription>Collection % vs 92% target by vendor</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-3">
+                  {vendorSummaries.map((v) => (
+                    <div key={v.vendor} className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: v.color }} />
+                          <span className="text-xs font-medium text-slate-700">{v.vendor}</span>
+                        </div>
+                        <span className={`text-xs font-bold ${v.collectionPct >= 92 ? "text-emerald-600" : v.collectionPct >= 85 ? "text-amber-600" : "text-rose-600"}`}>
+                          {v.collectionPct.toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="relative h-2 rounded-full bg-slate-100 overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{
+                          width: `${Math.min(v.collectionPct, 100)}%`,
+                          backgroundColor: v.collectionPct >= 92 ? "#10b981" : v.collectionPct >= 85 ? "#f59e0b" : "#ef4444",
+                        }} />
+                        <div className="absolute top-0 bottom-0 w-px bg-rose-400" style={{ left: "92%" }} title="92% target" />
+                      </div>
+                      <div className="flex justify-between text-[9px] text-slate-400">
+                        <span>₹{v.collected.toFixed(2)} / ₹{v.amount.toFixed(2)} Cr</span>
+                        <span>{v.invoices} inv · {v.plants.length} {v.plants.length === 1 ? "plant" : "plants"}</span>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
             </div>
 
             <Card className="border-2 border-blue-100 bg-blue-50/50">

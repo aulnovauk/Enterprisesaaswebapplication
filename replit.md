@@ -9,7 +9,7 @@ A React + TypeScript + Vite frontend application for Indian government EESL (Ene
 - KPI Engine / Transparency Console
 - Outage & Loss Analytics / Waterfall Loss
 - Contract & LD Analytics
-- Financial Reports (Revenue Impact MoM, Loss Attribution, Vendor Revenue, Invoicing & Collection)
+- Financial Reports (Revenue Impact MoM with Chart/Table toggle, Loss Attribution, Vendor Revenue, Invoicing & Collection with vendor-wise plant-level breakdown)
 - Reports & MIS / Report Studio
 - AI & Trend Analytics / AI Insight Summary
 - Site & Portfolio Management (Plant Inventory + Performance Analytics: Vendor Radar, Plant PR%/CUF% Quadrant, Plant Ranking)
