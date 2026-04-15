@@ -406,6 +406,11 @@ export function ContractLDAnalytics() {
   const [selectedFY, setSelectedFY] = useState("FY 2025-26");
   const [selectedVendor, setSelectedVendor] = useState("all");
   const [selectedPlant, setSelectedPlant] = useState("all");
+  const [durationToggle, setDurationToggle] = useState("MTD");
+
+  const currentFYMonth = 12;
+  const periodMultiplier = durationToggle === "MTD" ? 1 : durationToggle === "YTD" ? currentFYMonth : 12;
+  const periodLabel = durationToggle === "MTD" ? "Current Month" : durationToggle === "YTD" ? "Year-to-Date" : "Annual (Full FY)";
 
   // ── Filtered site data — recomputes whenever filters change ────────
   const filteredSites = useMemo(() => {
@@ -419,14 +424,15 @@ export function ContractLDAnalytics() {
   const filteredPortfolioSummary = useMemo(() => {
     const sites = filteredSites;
     const totalCapacity = sites.reduce((s, p) => s + p.capacity, 0);
-    const totalLDExposure = parseFloat(sites.reduce((s, p) => s + p.ldAmount, 0).toFixed(1));
+    const monthlyLD = sites.reduce((s, p) => s + p.ldAmount, 0);
+    const totalLDExposure = parseFloat((monthlyLD * periodMultiplier).toFixed(1));
     const compliant = sites.filter(p => p.complianceStatus === "green").length;
     const nonCompliant = sites.filter(p => p.complianceStatus === "red").length;
     const criticalEscalations = escalationAlerts.filter(e =>
       sites.some(s => s.siteName === e.site) && (e.severity === "critical" || e.severity === "high")
     ).length;
     const complianceRate = sites.length > 0 ? Math.round((compliant / sites.length) * 100) : 0;
-    const ytdLDExposure = parseFloat((totalLDExposure * 5.8).toFixed(1));
+    const ytdLDExposure = parseFloat((monthlyLD * currentFYMonth).toFixed(1));
     return {
       totalCapacity,
       totalSites: sites.length,
@@ -437,13 +443,13 @@ export function ContractLDAnalytics() {
       criticalEscalations,
       complianceRate,
     };
-  }, [filteredSites]);
+  }, [filteredSites, periodMultiplier]);
 
   const filteredGuaranteedVsActual = useMemo(() => {
     const sites = filteredSites;
     if (sites.length === 0) return [];
-    const totalContracted = sites.reduce((s, p) => s + p.contractedGen, 0);
-    const totalActual = sites.reduce((s, p) => s + p.actualGen, 0);
+    const totalContracted = sites.reduce((s, p) => s + p.contractedGen, 0) * periodMultiplier;
+    const totalActual = sites.reduce((s, p) => s + p.actualGen, 0) * periodMultiplier;
     const totalCap = sites.reduce((s, p) => s + p.capacity, 0);
     const wAvail = totalCap > 0 ? sites.reduce((s, p) => s + p.availability * p.capacity, 0) / totalCap : 0;
     const wTargetAvail = totalCap > 0 ? sites.reduce((s, p) => s + p.targetAvailability * p.capacity, 0) / totalCap : 0;
@@ -474,7 +480,7 @@ export function ContractLDAnalytics() {
         return { parameter: "Response Time (hrs)", guaranteed: parseFloat(wTargetResp.toFixed(1)), actual: parseFloat(wResp.toFixed(1)), variance: parseFloat(respVar.toFixed(1)), variancePct: parseFloat(respVarPct.toFixed(2)), status: respVar <= 0 ? "green" as const : "red" as const };
       })(),
     ];
-  }, [filteredSites]);
+  }, [filteredSites, periodMultiplier]);
 
   const filteredVendorLD = useMemo(() => {
     const sites = filteredSites;
@@ -485,7 +491,8 @@ export function ContractLDAnalytics() {
     }
     return Object.entries(vendorMap).map(([vendor, plants]) => {
       const totalCap = plants.reduce((s, p) => s + p.capacity, 0);
-      const totalLD = parseFloat(plants.reduce((s, p) => s + p.ldAmount, 0).toFixed(2));
+      const monthlyLD = plants.reduce((s, p) => s + p.ldAmount, 0);
+      const totalLD = parseFloat((monthlyLD * periodMultiplier).toFixed(2));
       const compliant = plants.filter(p => p.complianceStatus === "green").length;
       const avgAvail = totalCap > 0 ? parseFloat((plants.reduce((s, p) => s + p.availability * p.capacity, 0) / totalCap).toFixed(2)) : 0;
       return {
@@ -498,7 +505,7 @@ export function ContractLDAnalytics() {
         status: totalLD > 5 ? "critical" : totalLD > 1 ? "warning" : "healthy",
       };
     });
-  }, [filteredSites]);
+  }, [filteredSites, periodMultiplier]);
 
   const filteredEscalations = useMemo(() => {
     return escalationAlerts.filter(e =>
@@ -653,6 +660,21 @@ export function ContractLDAnalytics() {
                 ✕ Reset
               </button>
             )}
+            <div className="ml-auto flex bg-slate-100 rounded-lg p-0.5 border border-slate-200">
+              {["MTD", "YTD", "Annual"].map((duration) => (
+                <button
+                  key={duration}
+                  onClick={() => setDurationToggle(duration)}
+                  className={`px-4 py-1 text-xs font-semibold rounded transition-all ${
+                    durationToggle === duration
+                      ? "bg-[#2955A0] text-white shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  {duration}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -666,15 +688,22 @@ export function ContractLDAnalytics() {
               <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center">
                 <DollarSign className="w-4 h-4 text-red-600" />
               </div>
-              <Badge variant="destructive" className="text-[10px] font-semibold px-1.5 py-0.5">Current Month</Badge>
+              <Badge variant="destructive" className="text-[10px] font-semibold px-1.5 py-0.5">{periodLabel}</Badge>
             </div>
             <h3 className="text-[11px] font-medium text-gray-600 mb-1">Total LD Exposure</h3>
             <div className="flex items-baseline gap-1">
               <span className="text-2xl font-bold text-red-600">₹{filteredPortfolioSummary.totalLDExposure}L</span>
             </div>
-            <p className="text-[11px] text-gray-600 mt-1">
-              YTD: <span className="font-semibold text-gray-900">₹{filteredPortfolioSummary.ytdLDExposure}L</span>
-            </p>
+            {durationToggle === "MTD" && (
+              <p className="text-[11px] text-gray-600 mt-1">
+                YTD: <span className="font-semibold text-gray-900">₹{filteredPortfolioSummary.ytdLDExposure}L</span>
+              </p>
+            )}
+            {durationToggle !== "MTD" && (
+              <p className="text-[11px] text-gray-600 mt-1">
+                Monthly avg: <span className="font-semibold text-gray-900">₹{(filteredPortfolioSummary.totalLDExposure / periodMultiplier).toFixed(1)}L</span>
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -740,7 +769,7 @@ export function ContractLDAnalytics() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-sm font-semibold">Guaranteed vs Actual Performance Comparison</CardTitle>
-              <p className="text-[11px] text-gray-600 mt-0.5">{filterScopeLabel}</p>
+              <p className="text-[11px] text-gray-600 mt-0.5">{filterScopeLabel} — {periodLabel}</p>
             </div>
             <Badge className={`text-[10px] ${filteredGuaranteedVsActual.filter(g => g.status === "red").length > 0 ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}>
               {filteredGuaranteedVsActual.filter(g => g.status === "red").length} of {filteredGuaranteedVsActual.length} parameters non-compliant
@@ -1031,7 +1060,7 @@ export function ContractLDAnalytics() {
       {/* Site-wise LD Exposure Table */}
       <Card className="mb-6">
         <CardHeader className="border-b bg-gray-50 py-3">
-          <CardTitle className="text-sm font-semibold">Site-wise LD Exposure & Compliance Status</CardTitle>
+          <CardTitle className="text-sm font-semibold">Site-wise LD Exposure & Compliance Status — {periodLabel}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -1062,17 +1091,17 @@ export function ContractLDAnalytics() {
                       <TableCell className="font-semibold text-gray-900">{site.siteName}</TableCell>
                       <TableCell className="text-gray-700">{site.vendor}</TableCell>
                       <TableCell className="text-right font-mono">{site.capacity}</TableCell>
-                      <TableCell className="text-right font-mono text-gray-700">{site.contractedGen}</TableCell>
-                      <TableCell className="text-right font-mono font-semibold">{site.actualGen}</TableCell>
+                      <TableCell className="text-right font-mono text-gray-700">{(site.contractedGen * periodMultiplier).toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono font-semibold">{(site.actualGen * periodMultiplier).toLocaleString()}</TableCell>
                       <TableCell className="text-right font-mono">
                         <span className={site.shortfall > 0 ? "text-red-600 font-bold" : "text-green-600 font-bold"}>
-                          {site.shortfall > 0 ? "-" : "+"}{Math.abs(site.shortfall)}
+                          {site.shortfall > 0 ? "-" : "+"}{Math.abs(site.shortfall * periodMultiplier).toLocaleString()}
                         </span>
                       </TableCell>
                       <TableCell className="text-right font-mono text-gray-700">{site.ldRate.toFixed(3)}</TableCell>
                       <TableCell className="text-right font-mono">
-                        <span className={site.ldAmount > 0 ? "text-red-600 font-bold text-base" : "text-green-600 font-semibold"}>
-                          {site.ldAmount > 0 ? `₹${site.ldAmount.toFixed(2)}` : "₹0.00"}
+                        <span className={(site.ldAmount * periodMultiplier) > 0 ? "text-red-600 font-bold text-base" : "text-green-600 font-semibold"}>
+                          {(site.ldAmount * periodMultiplier) > 0 ? `₹${(site.ldAmount * periodMultiplier).toFixed(2)}` : "₹0.00"}
                         </span>
                       </TableCell>
                       <TableCell className="text-center">
@@ -1107,7 +1136,7 @@ export function ContractLDAnalytics() {
         <CardHeader className="border-b bg-gray-50 py-3">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-gray-700" />
-            <CardTitle className="text-sm font-semibold">Vendor-wise LD Dashboard</CardTitle>
+            <CardTitle className="text-sm font-semibold">Vendor-wise LD Dashboard — {periodLabel}</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="p-4">
@@ -1176,7 +1205,7 @@ export function ContractLDAnalytics() {
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-white" />
             <div>
-              <CardTitle className="text-sm font-semibold text-white">Client / Procurer-wise LD Dashboard</CardTitle>
+              <CardTitle className="text-sm font-semibold text-white">Client / Procurer-wise LD Dashboard — {periodLabel}</CardTitle>
               <p className="text-[11px] text-blue-100 mt-0.5">LD exposure grouped by energy procurer — Central PSUs & State Utilities</p>
             </div>
           </div>
@@ -1217,16 +1246,16 @@ export function ContractLDAnalytics() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Contracted:</span>
-                        <span className="font-mono font-semibold text-slate-900">{client.totalContractedMWh.toLocaleString()} MWh</span>
+                        <span className="font-mono font-semibold text-slate-900">{(client.totalContractedMWh * periodMultiplier).toLocaleString()} MWh</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Actual:</span>
-                        <span className="font-mono font-semibold text-slate-900">{client.totalActualMWh.toLocaleString()} MWh</span>
+                        <span className="font-mono font-semibold text-slate-900">{(client.totalActualMWh * periodMultiplier).toLocaleString()} MWh</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Shortfall:</span>
                         <span className={`font-mono font-bold ${client.totalShortfall > 0 ? "text-red-600" : "text-emerald-600"}`}>
-                          {client.totalShortfall > 0 ? `-${client.totalShortfall}` : `+${Math.abs(client.totalShortfall)}`} MWh
+                          {client.totalShortfall > 0 ? `-${(client.totalShortfall * periodMultiplier).toLocaleString()}` : `+${(Math.abs(client.totalShortfall) * periodMultiplier).toLocaleString()}`} MWh
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -1237,7 +1266,7 @@ export function ContractLDAnalytics() {
                       <div className="flex justify-between items-center">
                         <span className="font-semibold text-slate-700">LD Exposure:</span>
                         <span className={`font-bold text-base ${client.ldExposure > 0 ? "text-red-600" : "text-emerald-600"}`}>
-                          {client.ldExposure > 0 ? `₹${client.ldExposure.toFixed(2)}L` : "₹0"}
+                          {(client.ldExposure * periodMultiplier) > 0 ? `₹${(client.ldExposure * periodMultiplier).toFixed(2)}L` : "₹0"}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
@@ -1266,7 +1295,7 @@ export function ContractLDAnalytics() {
           <div>
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">LD Exposure vs Shortfall by Client</h4>
             <ResponsiveContainer width="100%" height={220}>
-              <ComposedChart data={clientwiseLD} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+              <ComposedChart data={clientwiseLD.map(c => ({ ...c, totalShortfall: c.totalShortfall * periodMultiplier, ldExposure: c.ldExposure * periodMultiplier }))} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis dataKey="clientName" tick={{ fontSize: 10 }} stroke="#6B7280" />
                 <YAxis yAxisId="left" tick={{ fontSize: 10 }} stroke="#6B7280" label={{ value: 'Shortfall (MWh)', angle: -90, position: 'insideLeft', style: { fontSize: 9 } }} />
@@ -1310,16 +1339,16 @@ export function ContractLDAnalytics() {
                       <Badge variant="outline" className="text-[10px]">{client.clientType}</Badge>
                     </TableCell>
                     <TableCell className="text-right font-mono">{client.sites}</TableCell>
-                    <TableCell className="text-right font-mono text-slate-600">{client.totalContractedMWh.toLocaleString()}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold">{client.totalActualMWh.toLocaleString()}</TableCell>
+                    <TableCell className="text-right font-mono text-slate-600">{(client.totalContractedMWh * periodMultiplier).toLocaleString()}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold">{(client.totalActualMWh * periodMultiplier).toLocaleString()}</TableCell>
                     <TableCell className="text-right font-mono">
                       <span className={`font-bold ${client.totalShortfall > 0 ? "text-red-600" : "text-emerald-600"}`}>
-                        {client.totalShortfall > 0 ? `-${client.totalShortfall}` : `+${Math.abs(client.totalShortfall)}`}
+                        {client.totalShortfall > 0 ? `-${(client.totalShortfall * periodMultiplier).toLocaleString()}` : `+${(Math.abs(client.totalShortfall) * periodMultiplier).toLocaleString()}`}
                       </span>
                     </TableCell>
                     <TableCell className="text-right font-mono">
                       <span className={`font-bold ${client.ldExposure > 0 ? "text-red-600 text-base" : "text-emerald-600"}`}>
-                        {client.ldExposure > 0 ? `₹${client.ldExposure.toFixed(2)}L` : "—"}
+                        {(client.ldExposure * periodMultiplier) > 0 ? `₹${(client.ldExposure * periodMultiplier).toFixed(2)}L` : "—"}
                       </span>
                     </TableCell>
                     <TableCell className="text-right text-slate-600 font-semibold">{client.contractValue}</TableCell>
@@ -1343,10 +1372,10 @@ export function ContractLDAnalytics() {
                 {/* Totals — computed dynamically */}
                 {(() => {
                   const totSites = clientwiseLD.reduce((s, c) => s + c.sites, 0);
-                  const totContracted = clientwiseLD.reduce((s, c) => s + c.totalContractedMWh, 0);
-                  const totActual = clientwiseLD.reduce((s, c) => s + c.totalActualMWh, 0);
-                  const totShortfall = clientwiseLD.reduce((s, c) => s + c.totalShortfall, 0);
-                  const totLD = clientwiseLD.reduce((s, c) => s + c.ldExposure, 0);
+                  const totContracted = clientwiseLD.reduce((s, c) => s + c.totalContractedMWh, 0) * periodMultiplier;
+                  const totActual = clientwiseLD.reduce((s, c) => s + c.totalActualMWh, 0) * periodMultiplier;
+                  const totShortfall = clientwiseLD.reduce((s, c) => s + c.totalShortfall, 0) * periodMultiplier;
+                  const totLD = clientwiseLD.reduce((s, c) => s + c.ldExposure, 0) * periodMultiplier;
                   const avgCompliance = clientwiseLD.length > 0 ? Math.round(clientwiseLD.reduce((s, c) => s + c.complianceRate, 0) / clientwiseLD.length) : 0;
                   return (
                     <TableRow className="bg-slate-100 border-t-2 border-slate-300 font-bold">
@@ -1355,7 +1384,7 @@ export function ContractLDAnalytics() {
                       <TableCell className="text-right font-mono font-bold">{totSites}</TableCell>
                       <TableCell className="text-right font-mono font-bold">{totContracted.toLocaleString()}</TableCell>
                       <TableCell className="text-right font-mono font-bold">{totActual.toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono font-bold text-red-600">{totShortfall > 0 ? `-${totShortfall}` : `+${Math.abs(totShortfall)}`}</TableCell>
+                      <TableCell className="text-right font-mono font-bold text-red-600">{totShortfall > 0 ? `-${totShortfall.toLocaleString()}` : `+${Math.abs(totShortfall).toLocaleString()}`}</TableCell>
                       <TableCell className="text-right font-mono font-bold text-red-600 text-base">₹{totLD.toFixed(2)}L</TableCell>
                       <TableCell className="text-right font-semibold text-slate-700">—</TableCell>
                       <TableCell className="text-center">
@@ -1377,7 +1406,7 @@ export function ContractLDAnalytics() {
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-red-600" />
               <div>
-                <CardTitle className="text-sm font-semibold">Escalation Trigger Alerts</CardTitle>
+                <CardTitle className="text-sm font-semibold">Escalation Trigger Alerts — {periodLabel}</CardTitle>
                 <p className="text-[11px] text-gray-600 mt-0.5">Critical compliance issues requiring immediate action</p>
               </div>
             </div>
@@ -1412,7 +1441,7 @@ export function ContractLDAnalytics() {
                     <TableCell className="font-semibold text-gray-900">{alert.site}</TableCell>
                     <TableCell className="text-gray-700">{alert.vendor}</TableCell>
                     <TableCell className="text-sm max-w-xs">{alert.issue}</TableCell>
-                    <TableCell className="text-right font-mono font-bold text-red-600">₹{alert.ldExposure.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono font-bold text-red-600">₹{(alert.ldExposure * periodMultiplier).toFixed(2)}</TableCell>
                     <TableCell className="text-center">
                       <Badge 
                         className={
