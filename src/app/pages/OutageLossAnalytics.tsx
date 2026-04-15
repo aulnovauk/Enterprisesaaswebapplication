@@ -48,6 +48,7 @@ import {
 } from "recharts";
 import { CustomChartTooltip } from "../components/ChartTooltip";
 import { initialJmrRecords } from "./JMRDataManagement";
+import { PLANTS, VENDORS, TOTAL_CAPACITY } from "../data/plants";
 
 // Downtime categorization data
 const downtimeCategories = [
@@ -293,72 +294,74 @@ const CATEGORY_WATERFALL_MAP: Record<string, string> = {
   "force-majeure": "Force Majeure",
 };
 
-const PLANT_SCALE: Record<string, { factor: number; label: string }> = {
-  "all":     { factor: 1.0,   label: "All Plants" },
-  "plant-1": { factor: 0.114, label: "Sakri Solar Park - 25MW" },
-  "plant-2": { factor: 0.068, label: "Sangli Solar Farm - 15MW" },
-  "plant-3": { factor: 0.136, label: "Osmanabad Solar Plant - 30MW" },
-  "plant-4": { factor: 0.091, label: "Latur Solar Station - 20MW" },
-  "plant-5": { factor: 0.136, label: "Beed Solar Park - 30MW" },
-  "plant-6": { factor: 0.055, label: "Ahmednagar Solar Plant - 12MW" },
-  "plant-7": { factor: 0.082, label: "Devdaithan Solar Plant - 18MW" },
-  "plant-8": { factor: 0.064, label: "Amravati Solar Unit - 14MW" },
-  "plant-9": { factor: 0.073, label: "Wardha Solar Park - 16MW" },
-  "plant-10": { factor: 0.045, label: "Buldhana Solar Farm - 10MW" },
-  "plant-11": { factor: 0.100, label: "Chandrapur Solar Project - 22MW" },
-  "plant-12": { factor: 0.036, label: "Bhandara Solar Station - 8MW" },
-};
-
-const PLANT_GANTT_MAP: Record<string, string> = {
-  "plant-1": "Sakri Solar Park",
-  "plant-2": "Sangli Solar Farm",
-  "plant-3": "Osmanabad Solar Plant",
-  "plant-4": "Latur Solar Station",
-  "plant-5": "Beed Solar Park",
-  "plant-6": "Ahmednagar Solar Plant",
-  "plant-7": "Devdaithan Solar Plant",
-  "plant-8": "Amravati Solar Unit",
-  "plant-9": "Wardha Solar Park",
-  "plant-10": "Buldhana Solar Farm",
-  "plant-11": "Chandrapur Solar Project",
-  "plant-12": "Bhandara Solar Station",
-};
+const PLANT_GANTT_MAP: Record<string, string> = Object.fromEntries(
+  PLANTS.map(p => [`plant-${p.id}`, p.name])
+);
 
 export function OutageLossAnalytics() {
   const [rootCauseFilter, setRootCauseFilter] = useState("all");
   const [plantFilter, setPlantFilter] = useState("all");
+  const [selectedFY, setSelectedFY] = useState("FY 2025-26");
+  const [selectedVendor, setSelectedVendor] = useState("all");
+  const [durationToggle, setDurationToggle] = useState("MTD");
   const [outageViewMode, setOutageViewMode] = useState<"table" | "bar" | "pie">("table");
   const pageRef = useRef<HTMLDivElement>(null);
+
+  const currentFYMonth = 12;
+  const periodMultiplier = durationToggle === "MTD" ? 1 : durationToggle === "YTD" ? currentFYMonth : 12;
+  const periodLabel = durationToggle === "MTD" ? "Current Month" : durationToggle === "YTD" ? "Year-to-Date" : "Annual (Full FY)";
+
+  const filteredPlantOptions = useMemo(() => {
+    if (selectedVendor === "all") return PLANTS;
+    return PLANTS.filter(p => p.vendor === selectedVendor);
+  }, [selectedVendor]);
 
   const monthAbbr: Record<string, string> = {
     January: "Jan", February: "Feb", March: "Mar", April: "Apr", May: "May", June: "Jun",
     July: "Jul", August: "Aug", September: "Sep", October: "Oct", November: "Nov", December: "Dec",
   };
   const outageSummaryData = useMemo(() => {
-    return initialJmrRecords.map(rec => {
-      const fyParts = rec.fy.replace("FY ", "").split("-");
-      const startYear = parseInt(fyParts[0]);
-      const monthNum = Object.keys(monthAbbr).indexOf(rec.month);
-      const year = monthNum >= 3 ? startYear : startYear + 1;
-      const jmrMonth = `${monthAbbr[rec.month] || rec.month.substring(0, 3)}-${year}`;
-      const outageStr = rec.outage || "00:00";
-      const [h, m] = outageStr.split(":").map(Number);
-      const outageMinutes = (h || 0) * 60 + (m || 0);
-      return {
-        site: rec.plant,
-        district: rec.district,
-        vendor: rec.vendor,
-        capacityKWp: rec.capacityKWp,
-        jmrMonth,
-        energyExport: rec.energyExportKWh,
-        energyImport: rec.energyImportKWh,
-        outage: outageStr,
-        outageMinutes,
-      };
-    });
-  }, []);
+    return initialJmrRecords
+      .filter(rec => {
+        if (rec.fy !== selectedFY) return false;
+        if (selectedVendor !== "all" && rec.vendor !== selectedVendor) return false;
+        if (plantFilter !== "all" && rec.plant !== plantFilter) return false;
+        return true;
+      })
+      .map(rec => {
+        const fyParts = rec.fy.replace("FY ", "").split("-");
+        const startYear = parseInt(fyParts[0]);
+        const monthNum = Object.keys(monthAbbr).indexOf(rec.month);
+        const year = monthNum >= 3 ? startYear : startYear + 1;
+        const jmrMonth = `${monthAbbr[rec.month] || rec.month.substring(0, 3)}-${year}`;
+        const outageStr = rec.outage || "00:00";
+        const [h, m] = outageStr.split(":").map(Number);
+        const outageMinutes = (h || 0) * 60 + (m || 0);
+        return {
+          site: rec.plant,
+          district: rec.district,
+          vendor: rec.vendor,
+          capacityKWp: rec.capacityKWp,
+          jmrMonth,
+          energyExport: rec.energyExportKWh,
+          energyImport: rec.energyImportKWh,
+          outage: outageStr,
+          outageMinutes,
+        };
+      });
+  }, [selectedFY, selectedVendor, plantFilter]);
 
-  const plantFactor = PLANT_SCALE[plantFilter]?.factor ?? 1.0;
+  const computePlantFactor = useMemo(() => {
+    if (plantFilter === "all" && selectedVendor === "all") return 1.0;
+    if (plantFilter !== "all") {
+      const plant = PLANTS.find(p => p.name === plantFilter);
+      return plant ? plant.capacity / TOTAL_CAPACITY : 1.0;
+    }
+    const vendorCap = PLANTS.filter(p => p.vendor === selectedVendor).reduce((s, p) => s + p.capacity, 0);
+    return vendorCap / TOTAL_CAPACITY;
+  }, [plantFilter, selectedVendor]);
+
+  const plantFactor = computePlantFactor;
   const scale = (v: number) => Math.round(v * plantFactor * 10) / 10;
 
   const filteredCategories = useMemo(() => {
@@ -367,16 +370,15 @@ export function OutageLossAnalytics() {
       const targetId = CATEGORY_ID_MAP[rootCauseFilter];
       if (targetId) cats = cats.filter(c => c.id === targetId);
     }
-    if (plantFilter !== "all") {
-      cats = cats.map(c => ({
-        ...c,
-        incidents: Math.round(c.incidents * plantFactor),
-        hours: Math.round(c.hours * plantFactor * 10) / 10,
-        energyLoss: Math.round(c.energyLoss * plantFactor),
-      }));
-    }
+    const combinedFactor = plantFactor * periodMultiplier;
+    cats = cats.map(c => ({
+      ...c,
+      incidents: Math.round(c.incidents * combinedFactor),
+      hours: Math.round(c.hours * combinedFactor * 10) / 10,
+      energyLoss: Math.round(c.energyLoss * combinedFactor),
+    }));
     return cats;
-  }, [rootCauseFilter, plantFilter, plantFactor]);
+  }, [rootCauseFilter, plantFactor, periodMultiplier]);
 
   const totalLoss = filteredCategories.reduce((sum, cat) => sum + cat.energyLoss, 0);
 
@@ -387,17 +389,16 @@ export function OutageLossAnalytics() {
       const targetCat = targetId ? CATEGORY_LOSS_KEY_MAP[targetId] : null;
       if (targetCat) buckets = buckets.filter(b => b.category === targetCat);
     }
-    if (plantFilter !== "all") {
-      buckets = buckets.map(b => {
-        const budgeted = scale(b.budgeted);
-        const actual = scale(b.actual);
-        const variance = Math.round((actual - budgeted) * 10) / 10;
-        const variancePct = budgeted > 0 ? Math.round((variance / budgeted) * 1000) / 10 : 0;
-        return { ...b, budgeted, actual, variance, variancePct };
-      });
-    }
+    const combinedFactor = plantFactor * periodMultiplier;
+    buckets = buckets.map(b => {
+      const budgeted = Math.round(b.budgeted * combinedFactor * 10) / 10;
+      const actual = Math.round(b.actual * combinedFactor * 10) / 10;
+      const variance = Math.round((actual - budgeted) * 10) / 10;
+      const variancePct = budgeted > 0 ? Math.round((variance / budgeted) * 1000) / 10 : 0;
+      return { ...b, budgeted, actual, variance, variancePct };
+    });
     return buckets;
-  }, [rootCauseFilter, plantFilter, plantFactor]);
+  }, [rootCauseFilter, plantFactor, periodMultiplier]);
 
   const filteredWaterfallData = useMemo(() => {
     let data = [...waterfallData];
@@ -413,12 +414,12 @@ export function OutageLossAnalytics() {
         );
       }
     }
-    if (plantFilter !== "all") {
-      data = data.map(d => ({
-        ...d,
-        value: d.value < 0 ? -Math.round(Math.abs(d.value) * plantFactor) : Math.round(d.value * plantFactor),
-      }));
-    }
+    data = data.map(d => ({
+      ...d,
+      value: d.value < 0 
+        ? -Math.round(Math.abs(d.value) * plantFactor * periodMultiplier) 
+        : Math.round(d.value * plantFactor * periodMultiplier),
+    }));
     let running = 0;
     data = data.map((d, i) => {
       if (i === 0 || d.value >= 0) {
@@ -429,37 +430,31 @@ export function OutageLossAnalytics() {
       return { ...d, cumulative: running };
     });
     return data;
-  }, [rootCauseFilter, plantFilter, plantFactor]);
+  }, [rootCauseFilter, plantFactor, periodMultiplier]);
 
   const filteredMomData = useMemo(() => {
-    if (plantFilter === "all") return momData;
     return momData.map(d => ({
       ...d,
-      budgeted: scale(d.budgeted),
-      actual: scale(d.actual),
-      loss: scale(d.loss),
+      budgeted: Math.round(scale(d.budgeted) * periodMultiplier),
+      actual: Math.round(scale(d.actual) * periodMultiplier),
+      loss: Math.round(scale(d.loss) * periodMultiplier),
     }));
-  }, [plantFilter, plantFactor]);
+  }, [plantFactor, periodMultiplier]);
 
   const filteredYoyData = useMemo(() => {
-    if (plantFilter === "all") return yoyData;
-    return yoyData.map(d => ({ ...d, actual: scale(d.actual) }));
-  }, [plantFilter, plantFactor]);
+    return yoyData.map(d => ({ ...d, actual: Math.round(scale(d.actual) * periodMultiplier) }));
+  }, [plantFactor, periodMultiplier]);
 
   const filteredYtdMonthlyLossData = useMemo(() => {
-    let data = ytdMonthlyLossData;
-    if (plantFilter !== "all") {
-      data = data.map(d => ({
-        ...d,
-        gridOutage: scale(d.gridOutage),
-        equipFailure: scale(d.equipFailure),
-        plannedShutdown: scale(d.plannedShutdown),
-        forceMajeure: scale(d.forceMajeure),
-        spylTotal: scale(d.spylTotal),
-      }));
-    }
-    return data;
-  }, [plantFilter, plantFactor]);
+    return ytdMonthlyLossData.map(d => ({
+      ...d,
+      gridOutage: Math.round(scale(d.gridOutage) * periodMultiplier),
+      equipFailure: Math.round(scale(d.equipFailure) * periodMultiplier),
+      plannedShutdown: Math.round(scale(d.plannedShutdown) * periodMultiplier),
+      forceMajeure: Math.round(scale(d.forceMajeure) * periodMultiplier),
+      spylTotal: Math.round(scale(d.spylTotal) * periodMultiplier),
+    }));
+  }, [plantFactor, periodMultiplier]);
 
   const filteredYtdSummaryRows = useMemo(() => {
     let rows = ytdSummaryRows;
@@ -468,17 +463,15 @@ export function OutageLossAnalytics() {
       const targetCat = targetId ? CATEGORY_YTD_FIELD_MAP[targetId] : null;
       if (targetCat) rows = rows.filter(r => r.category === targetCat);
     }
-    if (plantFilter !== "all") {
-      rows = rows.map(r => ({
-        ...r,
-        ytdHours: Math.round(r.ytdHours * plantFactor * 10) / 10,
-        ytdMWh: Math.round(r.ytdMWh * plantFactor),
-        spylMWh: Math.round(r.spylMWh * plantFactor),
-        revenue: `₹${(parseFloat(r.revenue.replace(/[₹ Cr]/g, "")) * plantFactor).toFixed(2)} Cr`,
-      }));
-    }
+    rows = rows.map(r => ({
+      ...r,
+      ytdHours: Math.round(r.ytdHours * plantFactor * periodMultiplier * 10) / 10,
+      ytdMWh: Math.round(r.ytdMWh * plantFactor * periodMultiplier),
+      spylMWh: Math.round(r.spylMWh * plantFactor * periodMultiplier),
+      revenue: `₹${(parseFloat(r.revenue.replace(/[₹ Cr]/g, "")) * plantFactor * periodMultiplier).toFixed(2)} Cr`,
+    }));
     return rows;
-  }, [rootCauseFilter, plantFilter, plantFactor]);
+  }, [rootCauseFilter, plantFactor, periodMultiplier]);
 
   const filteredParetoData = useMemo(() => {
     let data = paretoData;
@@ -501,30 +494,34 @@ export function OutageLossAnalytics() {
         });
       }
     }
-    if (plantFilter !== "all") {
-      data = data.map(d => ({
-        ...d,
-        incidents: Math.round(d.incidents * plantFactor),
-        energyLoss: Math.round(d.energyLoss * plantFactor),
-      }));
-    }
+    data = data.map(d => ({
+      ...d,
+      incidents: Math.round(d.incidents * plantFactor * periodMultiplier),
+      energyLoss: Math.round(d.energyLoss * plantFactor * periodMultiplier),
+    }));
     return data;
-  }, [rootCauseFilter, plantFilter, plantFactor]);
+  }, [rootCauseFilter, plantFactor, periodMultiplier]);
 
   const filteredGanttData = useMemo(() => {
     let data = ganttData;
     const ganttCatName = rootCauseFilter !== "all" ? CATEGORY_GANTT_MAP[CATEGORY_ID_MAP[rootCauseFilter]] : null;
-    const ganttPlantName = plantFilter !== "all" ? PLANT_GANTT_MAP[plantFilter] : null;
+
+    const allowedPlantNames = new Set<string>();
+    if (plantFilter !== "all") {
+      allowedPlantNames.add(plantFilter);
+    } else if (selectedVendor !== "all") {
+      PLANTS.filter(p => p.vendor === selectedVendor).forEach(p => allowedPlantNames.add(p.name));
+    }
 
     return data.map(day => ({
       ...day,
       events: day.events.filter(e => {
         if (ganttCatName && e.type !== ganttCatName) return false;
-        if (ganttPlantName && e.plant !== ganttPlantName) return false;
+        if (allowedPlantNames.size > 0 && !allowedPlantNames.has(e.plant)) return false;
         return true;
       }),
     }));
-  }, [rootCauseFilter, plantFilter]);
+  }, [rootCauseFilter, plantFilter, selectedVendor]);
 
   const ytdTotalHours = useMemo(() => filteredYtdSummaryRows.reduce((s, r) => s + r.ytdHours, 0), [filteredYtdSummaryRows]);
   const ytdTotalMWh = useMemo(() => filteredYtdSummaryRows.reduce((s, r) => s + r.ytdMWh, 0), [filteredYtdSummaryRows]);
@@ -555,54 +552,85 @@ export function OutageLossAnalytics() {
               />
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 mt-2">
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-slate-600" />
-              <span className="text-xs font-medium text-slate-900">Filters:</span>
+              <Filter className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-xs font-medium text-slate-500">Filters:</span>
             </div>
-            <div className="w-44">
-              <Select value={rootCauseFilter} onValueChange={setRootCauseFilter}>
-                <SelectTrigger className="h-7 text-xs">
-                  <SelectValue placeholder="Root Cause" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="grid">Grid Outage</SelectItem>
-                  <SelectItem value="equipment">Equipment Failure</SelectItem>
-                  <SelectItem value="planned">Planned Shutdown</SelectItem>
-                  <SelectItem value="force-majeure">Force Majeure</SelectItem>
-                </SelectContent>
-              </Select>
+            <Select value={selectedFY} onValueChange={setSelectedFY}>
+              <SelectTrigger className="w-[130px] h-7 text-xs bg-slate-50 border-slate-200">
+                <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="FY 2025-26">FY 2025-26</SelectItem>
+                <SelectItem value="FY 2024-25">FY 2024-25</SelectItem>
+                <SelectItem value="FY 2023-24">FY 2023-24</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={rootCauseFilter} onValueChange={setRootCauseFilter}>
+              <SelectTrigger className="w-[165px] h-7 text-xs bg-slate-50 border-slate-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="grid">Grid Outage</SelectItem>
+                <SelectItem value="equipment">Equipment Failure</SelectItem>
+                <SelectItem value="planned">Planned Shutdown</SelectItem>
+                <SelectItem value="force-majeure">Force Majeure</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={selectedVendor} onValueChange={(v) => { setSelectedVendor(v); setPlantFilter("all"); }}>
+              <SelectTrigger className="w-[175px] h-7 text-xs bg-slate-50 border-slate-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Vendors</SelectItem>
+                {VENDORS.map(v => (
+                  <SelectItem key={v} value={v}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={plantFilter} onValueChange={setPlantFilter}>
+              <SelectTrigger className="w-[200px] h-7 text-xs bg-slate-50 border-slate-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Plants ({filteredPlantOptions.length})</SelectItem>
+                {filteredPlantOptions.map(p => (
+                  <SelectItem key={p.id} value={p.name}>{p.name} ({p.capacity} MW)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(rootCauseFilter !== "all" || selectedVendor !== "all" || plantFilter !== "all") && (
+              <button
+                onClick={() => { setRootCauseFilter("all"); setSelectedVendor("all"); setPlantFilter("all"); }}
+                className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-300 rounded hover:bg-amber-100"
+              >
+                ✕ Reset
+              </button>
+            )}
+            <div className="ml-auto flex bg-slate-100 rounded-lg p-0.5 border border-slate-200">
+              {["MTD", "YTD", "Annual"].map((duration) => (
+                <button
+                  key={duration}
+                  onClick={() => setDurationToggle(duration)}
+                  className={`px-4 py-1 text-xs font-semibold rounded transition-all ${
+                    durationToggle === duration
+                      ? "bg-[#2955A0] text-white shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  {duration}
+                </button>
+              ))}
             </div>
-            <div className="w-44">
-              <Select value={plantFilter} onValueChange={setPlantFilter}>
-                <SelectTrigger className="h-7 text-xs">
-                  <SelectValue placeholder="Plant Filter" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Plants</SelectItem>
-                  <SelectItem value="plant-1">Sakri Solar Park - 25MW</SelectItem>
-                  <SelectItem value="plant-2">Sangli Solar Farm - 15MW</SelectItem>
-                  <SelectItem value="plant-3">Osmanabad Solar Plant - 30MW</SelectItem>
-                  <SelectItem value="plant-4">Latur Solar Station - 20MW</SelectItem>
-                  <SelectItem value="plant-5">Beed Solar Park - 30MW</SelectItem>
-                  <SelectItem value="plant-6">Ahmednagar Solar Plant - 12MW</SelectItem>
-                  <SelectItem value="plant-7">Devdaithan Solar Plant - 18MW</SelectItem>
-                  <SelectItem value="plant-8">Amravati Solar Unit - 14MW</SelectItem>
-                  <SelectItem value="plant-9">Wardha Solar Park - 16MW</SelectItem>
-                  <SelectItem value="plant-10">Buldhana Solar Farm - 10MW</SelectItem>
-                  <SelectItem value="plant-11">Chandrapur Solar Project - 22MW</SelectItem>
-                  <SelectItem value="plant-12">Bhandara Solar Station - 8MW</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button variant="outline" size="sm" className="h-7 px-3 text-xs" onClick={() => { setRootCauseFilter("all"); setPlantFilter("all"); }}>Reset</Button>
           </div>
         </div>
       </div>
 
       <div className="flex-1 overflow-auto p-6">
-      {(rootCauseFilter !== "all" || plantFilter !== "all") && (
+      {(rootCauseFilter !== "all" || selectedVendor !== "all" || plantFilter !== "all") && (
         <div className="mb-4 px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-blue-800">
             <Filter className="w-3.5 h-3.5" />
@@ -612,13 +640,18 @@ export function OutageLossAnalytics() {
                 Category: {rootCauseFilter === "grid" ? "Grid Outage" : rootCauseFilter === "equipment" ? "Equipment Failure" : rootCauseFilter === "planned" ? "Planned Shutdown" : "Force Majeure"}
               </Badge>
             )}
+            {selectedVendor !== "all" && (
+              <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-[10px]">
+                Vendor: {selectedVendor}
+              </Badge>
+            )}
             {plantFilter !== "all" && (
               <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-[10px]">
-                Plant: {PLANT_SCALE[plantFilter]?.label}
+                Plant: {plantFilter}
               </Badge>
             )}
           </div>
-          <Button variant="ghost" size="sm" className="h-6 text-[10px] text-blue-700 hover:bg-blue-100" onClick={() => { setRootCauseFilter("all"); setPlantFilter("all"); }}>
+          <Button variant="ghost" size="sm" className="h-6 text-[10px] text-blue-700 hover:bg-blue-100" onClick={() => { setRootCauseFilter("all"); setSelectedVendor("all"); setPlantFilter("all"); }}>
             Clear All
           </Button>
         </div>
@@ -651,7 +684,7 @@ export function OutageLossAnalytics() {
                 <div className="space-y-2 mt-4">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-600">Incidents:</span>
-                    <span className="font-bold text-gray-900">{category.incidents}</span>
+                    <span className="font-bold text-gray-900">{category.incidents.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-600">Total Hours:</span>
@@ -660,7 +693,7 @@ export function OutageLossAnalytics() {
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-600">Energy Loss:</span>
                     <span className="font-bold" style={{ color: category.color }}>
-                      {category.energyLoss} MWh
+                      {category.energyLoss.toLocaleString()} MWh
                     </span>
                   </div>
                 </div>
@@ -673,7 +706,7 @@ export function OutageLossAnalytics() {
       {/* Waterfall Chart: Budgeted → Expected → Actual → Evacuated */}
       <Card className="mb-8">
         <CardHeader className="border-b">
-          <CardTitle className="text-base font-semibold">Energy Loss Waterfall Analysis</CardTitle>
+          <CardTitle className="text-base font-semibold">Energy Loss Waterfall Analysis — {periodLabel}</CardTitle>
           <p className="text-xs text-gray-600 mt-1">
             Budgeted Generation → Expected → Actual → Net Evacuated (MWh)
           </p>
@@ -753,7 +786,7 @@ export function OutageLossAnalytics() {
       {/* Loss Bucketing Table */}
       <Card className="mb-8">
         <CardHeader className="border-b">
-          <CardTitle className="text-base font-semibold">Loss Bucketing & Variance Analysis</CardTitle>
+          <CardTitle className="text-base font-semibold">Loss Bucketing & Variance Analysis — {periodLabel}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -786,11 +819,11 @@ export function OutageLossAnalytics() {
                     }
                   >
                     <TableCell className="font-semibold text-gray-900">{bucket.category}</TableCell>
-                    <TableCell className="text-right font-mono">{bucket.budgeted}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold">{bucket.actual}</TableCell>
+                    <TableCell className="text-right font-mono">{bucket.budgeted.toLocaleString()}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold">{bucket.actual.toLocaleString()}</TableCell>
                     <TableCell className="text-right font-mono">
                       <span className={isNegative ? "text-red-600" : isPositive ? "text-green-600" : "text-gray-900"}>
-                        {bucket.variance > 0 ? "+" : ""}{bucket.variance}
+                        {bucket.variance > 0 ? "+" : ""}{bucket.variance.toLocaleString()}
                       </span>
                     </TableCell>
                     <TableCell className="text-right font-mono">
@@ -826,7 +859,7 @@ export function OutageLossAnalytics() {
         {/* MoM Comparison */}
         <Card>
           <CardHeader className="border-b">
-            <CardTitle className="text-base font-semibold">Month-over-Month (MoM) Comparison</CardTitle>
+            <CardTitle className="text-base font-semibold">Month-over-Month (MoM) Comparison — {periodLabel}</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <ResponsiveContainer width="100%" height={300}>
@@ -1107,7 +1140,7 @@ export function OutageLossAnalytics() {
       {/* Pareto Analysis */}
       <Card className="mb-8">
         <CardHeader className="border-b">
-          <CardTitle className="text-base font-semibold">Pareto Analysis - Root Cause Classification</CardTitle>
+          <CardTitle className="text-base font-semibold">Pareto Analysis - Root Cause Classification — {periodLabel}</CardTitle>
           <p className="text-xs text-gray-600 mt-1">
             80/20 Rule: Identify top causes contributing to 80% of energy losses
           </p>
