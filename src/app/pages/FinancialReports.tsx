@@ -657,7 +657,7 @@ export function FinancialReports() {
                         <ResponsiveContainer width="100%" height={200}>
                           <ComposedChart data={filteredMonthlyData.map((m, idx) => {
                             const prev = idx > 0 ? filteredMonthlyData[idx - 1].realized : m.realized;
-                            return { month: m.month, genMWh: m.genMWh, momChange: idx === 0 ? 0 : +((m.realized - prev) / prev * 100).toFixed(1) };
+                            return { month: m.month, genMWh: m.genMWh, momChange: idx === 0 || prev === 0 ? 0 : +((m.realized - prev) / prev * 100).toFixed(1) };
                           })} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                             <XAxis dataKey="month" tick={{ fontSize: 9, fill: "#64748b" }} axisLine={false} tickLine={false} />
@@ -807,7 +807,7 @@ export function FinancialReports() {
                   {quarterlyData.map((q) => {
                     const scaledBudgeted = q.budgeted * capacityShare;
                     const scaledRealized = q.realized * capacityShare;
-                    const gapPct = ((scaledBudgeted - scaledRealized) / scaledBudgeted) * 100;
+                    const gapPct = scaledBudgeted > 0 ? ((scaledBudgeted - scaledRealized) / scaledBudgeted) * 100 : 0;
                     return (
                       <div key={q.quarter} className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                         <p className="text-xs font-bold text-slate-800 mb-3">{q.quarter}</p>
@@ -1033,7 +1033,7 @@ export function FinancialReports() {
 
                   <div className={`grid gap-4 ${filteredVendorRevenue.length <= 2 ? "grid-cols-2" : filteredVendorRevenue.length <= 3 ? "grid-cols-3" : "grid-cols-5"}`}>
                     {filteredVendorRevenue.map((v) => {
-                      const realizePct = (v.realized / v.budgeted * 100);
+                      const realizePct = v.budgeted > 0 ? (v.realized / v.budgeted * 100) : 0;
                       const color = vendorColors[v.vendor] || "#94a3b8";
                       return (
                         <Card key={v.vendor} className="border border-slate-200">

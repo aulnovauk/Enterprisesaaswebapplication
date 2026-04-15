@@ -1723,6 +1723,7 @@ const auditRecords = [
     ipAddress: "192.168.1.105",
     plant: "Sakri Solar Park",
     vendor: "SolarCo India",
+    fy: "FY 2025-26",
   },
   {
     versionNo: 3,
@@ -1735,6 +1736,7 @@ const auditRecords = [
     ipAddress: "192.168.1.102",
     plant: "Sakri Solar Park",
     vendor: "SolarCo India",
+    fy: "FY 2025-26",
   },
   {
     versionNo: 2,
@@ -1747,6 +1749,7 @@ const auditRecords = [
     ipAddress: "192.168.1.110",
     plant: "Sangli Solar Farm",
     vendor: "SunPower Tech",
+    fy: "FY 2025-26",
   },
   {
     versionNo: 1,
@@ -1759,6 +1762,7 @@ const auditRecords = [
     ipAddress: "192.168.1.108",
     plant: "Osmanabad Solar Plant",
     vendor: "Green Energy Ltd",
+    fy: "FY 2025-26",
   },
   {
     versionNo: 2,
@@ -1771,6 +1775,7 @@ const auditRecords = [
     ipAddress: "192.168.1.112",
     plant: "Beed Solar Park",
     vendor: "Mega Solar Inc",
+    fy: "FY 2025-26",
   },
   {
     versionNo: 1,
@@ -1783,6 +1788,7 @@ const auditRecords = [
     ipAddress: "192.168.1.115",
     plant: "Latur Solar Station",
     vendor: "TechSolar Pvt",
+    fy: "FY 2025-26",
   },
 ];
 
@@ -4120,7 +4126,13 @@ export function JMRDataManagement() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {filteredJMRRecords.map((record) => {
+                            {filteredJMRRecords.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={12} className="text-center py-12 text-slate-400">
+                                  No JMR records found for the selected filters
+                                </TableCell>
+                              </TableRow>
+                            ) : filteredJMRRecords.map((record) => {
                               const statusConfig = getStatusConfig(record.approvalStatus);
                               const StatusIcon = statusConfig.icon;
 
@@ -4303,12 +4315,22 @@ export function JMRDataManagement() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {auditRecords.filter((audit) => {
-                              if (selectedPlant !== "All Plants" && audit.plant !== selectedPlant) return false;
-                              if (selectedVendor !== "All Vendors" && audit.vendor !== selectedVendor) return false;
-                              return true;
-                            }).map((audit) => (
-                              <TableRow key={`${audit.plant}-${audit.versionNo}`} className="hover:bg-slate-50">
+                            {(() => {
+                              const filtered = auditRecords.filter((audit) => {
+                                if (selectedFY !== "All Years" && audit.fy !== selectedFY) return false;
+                                if (selectedPlant !== "All Plants" && audit.plant !== selectedPlant) return false;
+                                if (selectedVendor !== "All Vendors" && audit.vendor !== selectedVendor) return false;
+                                return true;
+                              });
+                              if (filtered.length === 0) return (
+                                <TableRow>
+                                  <TableCell colSpan={9} className="text-center py-12 text-slate-400">
+                                    No audit records found for the selected filters
+                                  </TableCell>
+                                </TableRow>
+                              );
+                              return filtered.map((audit) => (
+                              <TableRow key={`${audit.plant}-${audit.versionNo}-${audit.fy}`} className="hover:bg-slate-50">
                                 <TableCell className="text-center">
                                   <Badge variant="outline" className="font-mono">
                                     v{audit.versionNo}
@@ -4385,7 +4407,8 @@ export function JMRDataManagement() {
                                   </div>
                                 </TableCell>
                               </TableRow>
-                            ))}
+                            ));
+                            })()}
                           </TableBody>
                         </Table>
                       </div>

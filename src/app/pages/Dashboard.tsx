@@ -1102,7 +1102,7 @@ export function Dashboard() {
 
     // --- CUF by state ---
     const cufRows = Object.entries(byState)
-      .sort((a, b) => b[1].cuf / b[1].cap - a[1].cuf / a[1].cap)
+      .sort((a, b) => (b[1].cap > 0 ? b[1].cuf / b[1].cap : 0) - (a[1].cap > 0 ? a[1].cuf / a[1].cap : 0))
       .map(([state, d]) => {
         const wCuf = d.cap > 0 ? +(d.cuf / d.cap).toFixed(1) : 0;
         return {
@@ -1119,7 +1119,7 @@ export function Dashboard() {
 
     // --- Grid availability by state ---
     const gaRows = Object.entries(byState)
-      .sort((a, b) => b[1].avail / b[1].cap - a[1].avail / a[1].cap)
+      .sort((a, b) => (b[1].cap > 0 ? b[1].avail / b[1].cap : 0) - (a[1].cap > 0 ? a[1].avail / a[1].cap : 0))
       .map(([state, d]) => {
         const wAvail = d.cap > 0 ? +(d.avail / d.cap).toFixed(1) : 0;
         const downHrs = Math.round((100 - wAvail) / 100 * 720);
@@ -2037,13 +2037,15 @@ export function Dashboard() {
               </CardHeader>
               <CardContent className="p-4">
                 <div className="h-72">
-                  {filteredCufTrend.length === 1 ? (
+                  {filteredCufTrend.length === 0 ? (
+                    <div className="h-full flex items-center justify-center text-slate-400 text-sm">No CUF data for selected filters</div>
+                  ) : filteredCufTrend.length === 1 ? (
                     <div className="h-full flex flex-col items-center justify-center gap-4">
                       <div className="relative w-36 h-36">
                         <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
                           <circle cx="60" cy="60" r="52" fill="none" stroke="#e2e8f0" strokeWidth="10" />
                           <circle cx="60" cy="60" r="52" fill="none" stroke="#2955A0" strokeWidth="10"
-                            strokeDasharray={`${(filteredCufTrend[0].portfolio / filteredCufTrend[0].target) * 326.7} 326.7`}
+                            strokeDasharray={`${Math.min(1, filteredCufTrend[0].target > 0 ? filteredCufTrend[0].portfolio / filteredCufTrend[0].target : 0) * 326.7} 326.7`}
                             strokeLinecap="round" />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">

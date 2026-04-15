@@ -53,6 +53,7 @@ A React + TypeScript + Vite frontend application for Indian government EESL (Ene
 - **Dashboard Drag-and-Drop Layout** (`Dashboard.tsx`): Users can click "Customize" in the header toolbar to enable drag-and-drop reordering of dashboard sections (Rows 2-6). Each section shows a grip handle when in customize mode. Layout order persists in localStorage (`dashboard-widget-order`). "Reset Layout" button restores defaults. Uses `react-dnd` + `react-dnd-html5-backend` (same libraries as Reports & MIS). Row 1 (KPI cards) stays fixed at top. Widget IDs: `geo-risk`, `generation`, `commercial`, `benchmarking`, `advanced`.
 - **Dashboard Month Filter Removed**: Month dropdown removed from Dashboard filter bar (redundant with MTD/YTD/Annual toggle). Current month auto-detected from system date.
 - **Portfolio CUF Trend responds to MTD/YTD/Annual**: MTD shows radial gauge for current month, YTD shows Apr–current month line chart, Annual shows full 12-month trend. Title/description dynamically update. Single-point data (MTD or early YTD) renders as gauge instead of line chart.
+- **Production Hardening (Apr 2026)**: Division-by-zero guards added across Dashboard (CUF gauge, sort comparators), FinancialReports (quarterly gap%, vendor realization%, MoM change%), and JMR (delta calculations). Empty state messages added for JMR Repository and Audit tables. CUF gauge capped at 100% arc with zero-target protection. JMR Audit tab now respects FY filter. All audit record keys include FY for uniqueness.
 
 ## Project Structure
 
