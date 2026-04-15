@@ -847,7 +847,11 @@ function DraggableWidget({
 
 export function Dashboard() {
   const [financialYear, setFinancialYear] = useState("FY 2025-26");
-  const [month, setMonth] = useState("February");
+  const [month] = useState(() => {
+    const now = new Date();
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    return monthNames[now.getMonth()];
+  });
   const [stateFilter, setStateFilter] = useState("All States");
   const [vendorFilter, setVendorFilter] = useState("All Vendors");
   const [plantFilter, setPlantFilter] = useState("All Plants");
@@ -2563,17 +2567,6 @@ export function Dashboard() {
                   <SelectItem value="FY 2025-26">FY 2025-26</SelectItem>
                   <SelectItem value="FY 2024-25">FY 2024-25</SelectItem>
                   <SelectItem value="FY 2023-24">FY 2023-24</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={month} onValueChange={setMonth}>
-                <SelectTrigger className="w-28 h-7 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((m) => (
-                    <SelectItem key={m} value={m}>{m}</SelectItem>
-                  ))}
                 </SelectContent>
               </Select>
 
