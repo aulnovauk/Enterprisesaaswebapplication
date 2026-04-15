@@ -2316,12 +2316,12 @@ export function JMRDataManagement() {
   return (
     <div ref={pageRef} className="min-h-screen bg-slate-50 flex flex-col">
       {/* GLOBAL HEADER */}
-      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 sticky top-0 z-30">
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 sticky top-0 z-20">
         <div className="px-6 py-2">
           {/* Row 1: Title & Actions */}
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-gradient-to-br from-[#2955A0] to-[#2955A0]/80 rounded-xl shadow-md">
+              <div className="p-1.5 bg-[#2955A0] rounded-lg">
                 <Database className="w-4 h-4 text-white" />
               </div>
               <div>

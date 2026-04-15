@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
+import { VENDORS } from "../data/plants";
 import {
   IndianRupee,
   TrendingDown,
@@ -34,6 +35,7 @@ import {
   Scale,
   ShieldAlert,
   CircleDollarSign,
+  Filter,
   BarChart3,
   Table2,
   ChevronDown,
@@ -134,6 +136,7 @@ const quarterlyData = [
 export function FinancialReports() {
   const pageRef = useRef<HTMLDivElement>(null);
   const [selectedFY, setSelectedFY] = useState("FY 2025-26");
+  const [selectedVendor, setSelectedVendor] = useState("all");
   const [activeTab, setActiveTab] = useState("revenue-impact");
   const [revenueView, setRevenueView] = useState<"table" | "chart">("chart");
   const [expandedVendors, setExpandedVendors] = useState<string[]>([]);
@@ -229,31 +232,60 @@ export function FinancialReports() {
   return (
     <div ref={pageRef} className="flex-1 overflow-auto bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
       <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
-        <div className="px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-[#2955A0] text-white shadow-lg">
-              <IndianRupee className="w-5 h-5" />
+        <div className="px-6 py-2">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-[#2955A0] rounded-lg">
+                <IndianRupee className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-slate-900 leading-none">Financial Reports</h1>
+                <p className="text-xs text-slate-600 mt-0.5">Revenue tracking, loss attribution, invoicing & collection analytics</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-base font-bold text-slate-900">Financial Reports</h1>
-              <p className="text-xs text-slate-500">Revenue tracking, loss attribution, invoicing & collection analytics</p>
+            <div className="flex items-center gap-3">
+              <Badge className="bg-emerald-100 text-emerald-800 px-3 py-1">
+                <Clock className="w-3 h-3 mr-1" />
+                Last Updated: 07-Apr-2026
+              </Badge>
+              <PageExportMenu pageTitle="Financial Reports" contentRef={pageRef} />
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Filter className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-xs font-medium text-slate-500">Filters:</span>
+            </div>
             <Select value={selectedFY} onValueChange={setSelectedFY}>
-              <SelectTrigger className="w-[140px] h-8 text-xs">
+              <SelectTrigger className="w-[130px] h-7 text-xs bg-slate-50 border-slate-200">
                 <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="FY 2025-26">FY 2025-26</SelectItem>
+                <SelectItem value="FY 2024-25">FY 2024-25</SelectItem>
+                <SelectItem value="FY 2023-24">FY 2023-24</SelectItem>
               </SelectContent>
             </Select>
-            <Badge className="bg-emerald-100 text-emerald-800 px-3 py-1">
-              <Clock className="w-3 h-3 mr-1" />
-              Last Updated: 07-Apr-2026
-            </Badge>
-            <PageExportMenu pageTitle="Financial Reports" contentRef={pageRef} />
+            <Select value={selectedVendor} onValueChange={setSelectedVendor}>
+              <SelectTrigger className="w-[175px] h-7 text-xs bg-slate-50 border-slate-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Vendors</SelectItem>
+                {VENDORS.map(v => (
+                  <SelectItem key={v} value={v}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedVendor !== "all" && (
+              <button
+                onClick={() => setSelectedVendor("all")}
+                className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-300 rounded hover:bg-amber-100"
+              >
+                ✕ Reset
+              </button>
+            )}
           </div>
         </div>
       </div>

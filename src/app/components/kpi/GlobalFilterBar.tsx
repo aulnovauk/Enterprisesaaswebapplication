@@ -139,11 +139,12 @@ export function GlobalFilterBar({
               <SelectValue placeholder="Portfolio" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Plants (45)</SelectItem>
-              <SelectItem value="North">North Cluster</SelectItem>
-              <SelectItem value="South">South Cluster</SelectItem>
-              <SelectItem value="East">East Cluster</SelectItem>
-              <SelectItem value="West">West Cluster</SelectItem>
+              <SelectItem value="all">All Plants (12)</SelectItem>
+              <SelectItem value="SolarCo India">SolarCo India (3 plants)</SelectItem>
+              <SelectItem value="SunPower Tech">SunPower Tech (4 plants)</SelectItem>
+              <SelectItem value="Green Energy Ltd">Green Energy Ltd (1 plant)</SelectItem>
+              <SelectItem value="TechSolar Pvt">TechSolar Pvt (1 plant)</SelectItem>
+              <SelectItem value="Mega Solar Inc">Mega Solar Inc (3 plants)</SelectItem>
             </SelectContent>
           </Select>
 

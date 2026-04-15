@@ -119,13 +119,15 @@ export function ReportStudio() {
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Top Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <LayoutDashboard className="w-6 h-6 text-blue-600" />
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
+        <div className="flex items-center justify-between px-6 py-2">
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 bg-[#2955A0] rounded-lg">
+              <LayoutDashboard className="w-4 h-4 text-white" />
+            </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">Report Studio</h1>
-              <p className="text-xs text-gray-600">Enterprise-grade analytics for solar governance</p>
+              <h1 className="text-base font-bold text-slate-900 leading-none">Report Studio</h1>
+              <p className="text-xs text-slate-600 mt-0.5">Enterprise-grade analytics for solar governance</p>
             </div>
           </div>
           <div className="flex items-center gap-3">

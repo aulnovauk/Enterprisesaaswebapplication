@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { PageExportMenu } from "../components/PageExportMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
@@ -6,6 +6,8 @@ import { Button } from "../components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Separator } from "../components/ui/separator";
 import { ScrollArea } from "../components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { VENDORS } from "../data/plants";
 import {
   Shield,
   AlertTriangle,
@@ -21,6 +23,8 @@ import {
   ArrowDown,
   Minus,
   Bell,
+  Calendar,
+  Filter,
 } from "lucide-react";
 import {
   RadarChart,
@@ -237,6 +241,9 @@ const getCellColor = (score: number) => {
 };
 
 export function PortfolioComplianceHealth() {
+  const [selectedFY, setSelectedFY] = useState("FY 2025-26");
+  const [selectedPeriod, setSelectedPeriod] = useState("ytd");
+  const [selectedVendor, setSelectedVendor] = useState("all");
   const riskColors = {
     green: { bg: "bg-green-500", text: "text-green-600", badge: "bg-green-100 border-green-300" },
     amber: { bg: "bg-yellow-500", text: "text-yellow-600", badge: "bg-yellow-100 border-yellow-300" },
@@ -250,11 +257,13 @@ export function PortfolioComplianceHealth() {
     <div ref={pageRef} className="bg-gray-50 min-h-screen">
       <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
         <div className="px-8 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Shield className="w-5 h-5 text-blue-600" />
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 bg-[#2955A0] rounded-lg">
+              <Shield className="w-4 h-4 text-white" />
+            </div>
             <div>
-              <h1 className="text-base font-bold text-gray-900">Portfolio Compliance Health Dashboard</h1>
-              <p className="text-xs text-gray-600 mt-0.5">
+              <h1 className="text-base font-bold text-slate-900 leading-none">Portfolio Compliance Health Dashboard</h1>
+              <p className="text-xs text-slate-600 mt-0.5">
                 Executive-level strategic compliance monitoring and risk management
               </p>
             </div>
@@ -270,6 +279,54 @@ export function PortfolioComplianceHealth() {
               label="Export Report"
             />
           </div>
+        </div>
+        <div className="px-8 pb-2 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Filter className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-xs font-medium text-slate-500">Scope:</span>
+          </div>
+          <Select value={selectedFY} onValueChange={setSelectedFY}>
+            <SelectTrigger className="w-[130px] h-7 text-xs bg-slate-50 border-slate-200">
+              <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="FY 2025-26">FY 2025-26</SelectItem>
+              <SelectItem value="FY 2024-25">FY 2024-25</SelectItem>
+              <SelectItem value="FY 2023-24">FY 2023-24</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <SelectTrigger className="w-[140px] h-7 text-xs bg-slate-50 border-slate-200">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ytd">Year to Date</SelectItem>
+              <SelectItem value="q1">Q1 (Apr-Jun)</SelectItem>
+              <SelectItem value="q2">Q2 (Jul-Sep)</SelectItem>
+              <SelectItem value="q3">Q3 (Oct-Dec)</SelectItem>
+              <SelectItem value="q4">Q4 (Jan-Mar)</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={selectedVendor} onValueChange={setSelectedVendor}>
+            <SelectTrigger className="w-[175px] h-7 text-xs bg-slate-50 border-slate-200">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Vendors</SelectItem>
+              {VENDORS.map(v => (
+                <SelectItem key={v} value={v}>{v}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {(selectedVendor !== "all" || selectedPeriod !== "ytd") && (
+            <button
+              onClick={() => { setSelectedVendor("all"); setSelectedPeriod("ytd"); }}
+              className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-300 rounded hover:bg-amber-100"
+            >
+              ✕ Reset
+            </button>
+          )}
         </div>
       </div>
       <div className="p-8">

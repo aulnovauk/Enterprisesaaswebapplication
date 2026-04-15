@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { PageExportMenu } from "../components/PageExportMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
@@ -6,6 +6,7 @@ import { Button } from "../components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Separator } from "../components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { PLANTS } from "../data/plants";
 import {
   TrendingDown,
   Zap,
@@ -14,6 +15,7 @@ import {
   DollarSign,
   ChevronRight,
   ChevronDown,
+  Filter,
 } from "lucide-react";
 import {
   BarChart,
@@ -177,35 +179,70 @@ const rootCauseData = [
 ];
 
 export function WaterfallLossAnalytics() {
+  const [selectedPlant, setSelectedPlant] = useState("Latur Solar Station");
+  const [selectedMonth, setSelectedMonth] = useState("feb2026");
   const totalLosses = waterfallData
     .filter((d) => d.type === "loss")
     .reduce((sum, d) => sum + Math.abs(d.value), 0);
   const pageRef = useRef<HTMLDivElement>(null);
+  const currentPlant = PLANTS.find(p => p.name === selectedPlant);
 
   return (
     <div ref={pageRef} className="bg-gray-50 min-h-screen">
       <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
-        <div className="px-8 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-base font-bold text-gray-900">Waterfall & Loss Intelligence Analytics</h1>
-            <p className="text-xs text-gray-600 mt-0.5">
-              Generation flow analysis with financial impact assessment for February 2026
-            </p>
+        <div className="px-6 py-2">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-[#2955A0] rounded-lg">
+                <TrendingDown className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-slate-900 leading-none">Waterfall & Loss Intelligence Analytics</h1>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Generation flow analysis with financial impact assessment
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <PageExportMenu
+                pageTitle="Waterfall & Loss Intelligence"
+                contentRef={pageRef}
+                label="Export Report"
+              />
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Select defaultValue="feb2026">
-              <SelectTrigger className="w-48 h-8 text-xs">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Filter className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-xs font-medium text-slate-500">Filters:</span>
+            </div>
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-[160px] h-7 text-xs bg-slate-50 border-slate-200">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="feb2026">February 2026</SelectItem>
                 <SelectItem value="jan2026">January 2026</SelectItem>
                 <SelectItem value="dec2025">December 2025</SelectItem>
+                <SelectItem value="nov2025">November 2025</SelectItem>
+                <SelectItem value="oct2025">October 2025</SelectItem>
               </SelectContent>
             </Select>
-            <Badge className="bg-blue-100 text-blue-800 px-3 py-1">
-              Latur Solar Station (20 MW)
-            </Badge>
+            <Select value={selectedPlant} onValueChange={setSelectedPlant}>
+              <SelectTrigger className="w-[230px] h-7 text-xs bg-slate-50 border-slate-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PLANTS.map(p => (
+                  <SelectItem key={p.id} value={p.name}>{p.name} ({p.capacity} MW)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {currentPlant && (
+              <Badge className="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 text-[10px]">
+                {currentPlant.vendor} · {currentPlant.district}
+              </Badge>
+            )}
           </div>
         </div>
       </div>

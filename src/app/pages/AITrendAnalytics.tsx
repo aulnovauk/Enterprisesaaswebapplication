@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Separator } from "../components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { PLANTS, VENDORS } from "../data/plants";
 import {
   BrainCircuit,
   TrendingUp,
@@ -17,6 +20,7 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
+  Filter,
 } from "lucide-react";
 import {
   LineChart,
@@ -214,6 +218,9 @@ const aiInsights = [
 ];
 
 export function AITrendAnalytics() {
+  const [selectedFY, setSelectedFY] = useState("FY 2025-26");
+  const [selectedVendor, setSelectedVendor] = useState("all");
+  const [selectedPlant, setSelectedPlant] = useState("all");
   const overallHealthScore = 86.6;
   const totalInsights = aiInsights.length;
   const criticalInsights = aiInsights.filter((i) => i.type === "Critical").length;
@@ -241,6 +248,53 @@ export function AITrendAnalytics() {
                 Last Updated: Apr 07, 2026
               </Badge>
             </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 mt-2">
+            <div className="flex items-center gap-2">
+              <Filter className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-xs font-medium text-slate-500">Scope:</span>
+            </div>
+            <Select value={selectedFY} onValueChange={setSelectedFY}>
+              <SelectTrigger className="w-[130px] h-7 text-xs bg-slate-50 border-slate-200">
+                <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="FY 2025-26">FY 2025-26</SelectItem>
+                <SelectItem value="FY 2024-25">FY 2024-25</SelectItem>
+                <SelectItem value="FY 2023-24">FY 2023-24</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={selectedVendor} onValueChange={setSelectedVendor}>
+              <SelectTrigger className="w-[175px] h-7 text-xs bg-slate-50 border-slate-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Vendors</SelectItem>
+                {VENDORS.map(v => (
+                  <SelectItem key={v} value={v}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedPlant} onValueChange={setSelectedPlant}>
+              <SelectTrigger className="w-[200px] h-7 text-xs bg-slate-50 border-slate-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Plants (12)</SelectItem>
+                {PLANTS.map(p => (
+                  <SelectItem key={p.id} value={p.name}>{p.name} ({p.capacity} MW)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(selectedVendor !== "all" || selectedPlant !== "all") && (
+              <button
+                onClick={() => { setSelectedVendor("all"); setSelectedPlant("all"); }}
+                className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-300 rounded hover:bg-amber-100"
+              >
+                ✕ Reset
+              </button>
+            )}
           </div>
         </div>
       </div>

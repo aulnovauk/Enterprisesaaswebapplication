@@ -111,6 +111,20 @@ These fields are displayed in:
 2. **Dashboard** → Plant listing shows district alongside plant name
 3. **Outage & Loss Analytics** → "Site-wise Monthly Outage Summary" table at bottom with all client sample data rows (ABC–JKL sites), color-coded outage severity
 
+## Header & Filter Bar Standards
+
+All pages follow a consistent production-grade sticky header pattern:
+
+- **Sticky header**: `bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0`
+- **Icon**: Navy box pattern — `p-1.5 bg-[#2955A0] rounded-lg` with white icon `w-4 h-4`
+- **Title**: `text-base font-bold text-slate-900 leading-none`
+- **Subtitle**: `text-xs text-slate-600 mt-0.5`
+- **Filter row**: Below title with `Filter` icon label + Select dropdowns (h-7 text-xs bg-slate-50 border-slate-200)
+- **Reset button**: Amber-styled `✕ Reset` button appears when any filter is active
+- **Plant data**: All plant/vendor dropdowns use canonical 12-plant list from `src/app/data/plants.ts`
+
+Pages with filter bars: Dashboard, JMR Data Management, KPI Engine, Outage & Loss Analytics, Contract & LD Analytics, Financial Reports, Waterfall & Loss Analytics, AI & Trend Analytics, Portfolio Compliance Health.
+
 ## Development
 
 - Workflow: `npm run dev` on port 5000
