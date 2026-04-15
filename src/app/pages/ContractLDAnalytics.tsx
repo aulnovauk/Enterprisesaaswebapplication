@@ -408,9 +408,19 @@ export function ContractLDAnalytics() {
   const [selectedPlant, setSelectedPlant] = useState("all");
   const [durationToggle, setDurationToggle] = useState("MTD");
 
-  const currentFYMonth = 12;
+  const currentFYMonth = useMemo(() => {
+    const today = new Date();
+    const fyParts = selectedFY.replace("FY ", "").split("-");
+    const fyStartYear = parseInt(fyParts[0]);
+    const fyStart = new Date(fyStartYear, 3, 1);
+    const fyEnd = new Date(fyStartYear + 1, 2, 31);
+    if (today >= fyEnd) return 12;
+    if (today < fyStart) return 12;
+    const monthDiff = (today.getFullYear() - fyStart.getFullYear()) * 12 + (today.getMonth() - fyStart.getMonth());
+    return Math.max(1, Math.min(12, monthDiff + 1));
+  }, [selectedFY]);
   const periodMultiplier = durationToggle === "MTD" ? 1 : durationToggle === "YTD" ? currentFYMonth : 12;
-  const periodLabel = durationToggle === "MTD" ? "Current Month" : durationToggle === "YTD" ? "Year-to-Date" : "Annual (Full FY)";
+  const periodLabel = durationToggle === "MTD" ? "Current Month" : durationToggle === "YTD" ? `Year-to-Date (${currentFYMonth} mo)` : "Annual (Full FY)";
 
   // ── Filtered site data — recomputes whenever filters change ────────
   const filteredSites = useMemo(() => {

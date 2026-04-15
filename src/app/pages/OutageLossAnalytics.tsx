@@ -294,9 +294,29 @@ const CATEGORY_WATERFALL_MAP: Record<string, string> = {
   "force-majeure": "Force Majeure",
 };
 
-const PLANT_GANTT_MAP: Record<string, string> = Object.fromEntries(
-  PLANTS.map(p => [`plant-${p.id}`, p.name])
-);
+const MONTH_ABBR: Record<string, string> = {
+  January: "Jan", February: "Feb", March: "Mar", April: "Apr", May: "May", June: "Jun",
+  July: "Jul", August: "Aug", September: "Sep", October: "Oct", November: "Nov", December: "Dec",
+};
+
+function computeCurrentFYMonth(selectedFY: string): number {
+  const today = new Date();
+  const fyParts = selectedFY.replace("FY ", "").split("-");
+  const fyStartYear = parseInt(fyParts[0]);
+  const fyEndYear = fyStartYear + 1;
+  const fyStart = new Date(fyStartYear, 3, 1);
+  const fyEnd = new Date(fyEndYear, 2, 31);
+  if (today >= fyEnd) return 12;
+  if (today < fyStart) return 12;
+  const monthDiff = (today.getFullYear() - fyStart.getFullYear()) * 12 + (today.getMonth() - fyStart.getMonth());
+  return Math.max(1, Math.min(12, monthDiff + 1));
+}
+
+function getFYDateRange(selectedFY: string): string {
+  const fyParts = selectedFY.replace("FY ", "").split("-");
+  const startYear = parseInt(fyParts[0]);
+  return `Apr ${startYear} – Mar ${startYear + 1}`;
+}
 
 export function OutageLossAnalytics() {
   const [rootCauseFilter, setRootCauseFilter] = useState("all");
@@ -307,19 +327,15 @@ export function OutageLossAnalytics() {
   const [outageViewMode, setOutageViewMode] = useState<"table" | "bar" | "pie">("table");
   const pageRef = useRef<HTMLDivElement>(null);
 
-  const currentFYMonth = 12;
+  const currentFYMonth = useMemo(() => computeCurrentFYMonth(selectedFY), [selectedFY]);
   const periodMultiplier = durationToggle === "MTD" ? 1 : durationToggle === "YTD" ? currentFYMonth : 12;
-  const periodLabel = durationToggle === "MTD" ? "Current Month" : durationToggle === "YTD" ? "Year-to-Date" : "Annual (Full FY)";
+  const periodLabel = durationToggle === "MTD" ? "Current Month" : durationToggle === "YTD" ? `Year-to-Date (${currentFYMonth} mo)` : "Annual (Full FY)";
 
   const filteredPlantOptions = useMemo(() => {
     if (selectedVendor === "all") return PLANTS;
     return PLANTS.filter(p => p.vendor === selectedVendor);
   }, [selectedVendor]);
 
-  const monthAbbr: Record<string, string> = {
-    January: "Jan", February: "Feb", March: "Mar", April: "Apr", May: "May", June: "Jun",
-    July: "Jul", August: "Aug", September: "Sep", October: "Oct", November: "Nov", December: "Dec",
-  };
   const outageSummaryData = useMemo(() => {
     return initialJmrRecords
       .filter(rec => {
@@ -331,9 +347,9 @@ export function OutageLossAnalytics() {
       .map(rec => {
         const fyParts = rec.fy.replace("FY ", "").split("-");
         const startYear = parseInt(fyParts[0]);
-        const monthNum = Object.keys(monthAbbr).indexOf(rec.month);
+        const monthNum = Object.keys(MONTH_ABBR).indexOf(rec.month);
         const year = monthNum >= 3 ? startYear : startYear + 1;
-        const jmrMonth = `${monthAbbr[rec.month] || rec.month.substring(0, 3)}-${year}`;
+        const jmrMonth = `${MONTH_ABBR[rec.month] || rec.month.substring(0, 3)}-${year}`;
         const outageStr = rec.outage || "00:00";
         const [h, m] = outageStr.split(":").map(Number);
         const outageMinutes = (h || 0) * 60 + (m || 0);
@@ -499,6 +515,12 @@ export function OutageLossAnalytics() {
       incidents: Math.round(d.incidents * plantFactor * periodMultiplier),
       energyLoss: Math.round(d.energyLoss * plantFactor * periodMultiplier),
     }));
+    let cum = 0;
+    const totalE = data.reduce((s, d) => s + d.energyLoss, 0);
+    data = data.map(d => {
+      cum += d.energyLoss;
+      return { ...d, cumPct: totalE > 0 ? Math.round((cum / totalE) * 1000) / 10 : 0 };
+    });
     return data;
   }, [rootCauseFilter, plantFactor, periodMultiplier]);
 
@@ -894,7 +916,7 @@ export function OutageLossAnalytics() {
               <BarChart data={filteredYoyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6B7280" />
-                <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" domain={plantFilter === "all" ? [4000, 5000] : ["auto", "auto"]} />
+                <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" domain={["auto", "auto"]} />
                 <Tooltip content={<CustomChartTooltip unit="MWh" />} />
                 <Bar dataKey="actual" name="Actual Generation (MWh)">
                   {filteredYoyData.map((entry, index) => (
@@ -904,7 +926,7 @@ export function OutageLossAnalytics() {
                     />
                   ))}
                 </Bar>
-                <ReferenceLine y={scale(4750)} stroke="#2955A0" strokeDasharray="3 3" label="Baseline" />
+                <ReferenceLine y={Math.round(scale(4750) * periodMultiplier)} stroke="#2955A0" strokeDasharray="3 3" label="Baseline" />
               </BarChart>
             </ResponsiveContainer>
             {(() => {
@@ -942,10 +964,10 @@ export function OutageLossAnalytics() {
             <div className="flex items-center gap-2">
               <CalendarDays className="w-5 h-5 text-white" />
               <CardTitle className="text-base font-semibold text-white">
-                Year-to-Date (YTD) Loss Comparison — FY 2025-26
+                Year-to-Date (YTD) Loss Comparison — {selectedFY}
               </CardTitle>
             </div>
-            <span className="text-xs text-blue-200 font-medium">Apr 2025 – Mar 2026 &nbsp;·&nbsp; 12 months</span>
+            <span className="text-xs text-blue-200 font-medium">{getFYDateRange(selectedFY)} &nbsp;·&nbsp; {currentFYMonth} months</span>
           </div>
         </CardHeader>
 
