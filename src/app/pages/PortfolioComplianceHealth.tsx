@@ -247,18 +247,17 @@ export function PortfolioComplianceHealth() {
   const pageRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div ref={pageRef} className="p-8 bg-gray-50 min-h-screen">
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-3">
-              <Shield className="w-7 h-7 text-blue-600" />
-              Portfolio Compliance Health Dashboard
-            </h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Executive-level strategic compliance monitoring and risk management
-            </p>
+    <div ref={pageRef} className="bg-gray-50 min-h-screen">
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
+        <div className="px-8 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Shield className="w-5 h-5 text-blue-600" />
+            <div>
+              <h1 className="text-base font-bold text-gray-900">Portfolio Compliance Health Dashboard</h1>
+              <p className="text-xs text-gray-600 mt-0.5">
+                Executive-level strategic compliance monitoring and risk management
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <Badge className="bg-blue-100 text-blue-800 px-3 py-1">
@@ -273,6 +272,7 @@ export function PortfolioComplianceHealth() {
           </div>
         </div>
       </div>
+      <div className="p-8">
 
       {/* TOP SECTION - Composite Score & Risk Status */}
       <div className="grid grid-cols-12 gap-6 mb-8">
@@ -760,6 +760,7 @@ export function PortfolioComplianceHealth() {
             </CardContent>
           </Card>
         </div>
+      </div>
       </div>
     </div>
   );

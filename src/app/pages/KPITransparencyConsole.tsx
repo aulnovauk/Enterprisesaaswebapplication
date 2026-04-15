@@ -199,25 +199,24 @@ export function KPITransparencyConsole() {
   const selectedKPIData = kpiList.find((k) => k.id === selectedKPI);
 
   return (
-    <div ref={pageRef} className="p-8 bg-gray-50 min-h-screen">
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-3">
-              <Calculator className="w-7 h-7 text-blue-600" />
-              KPI Transparency Console
-            </h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Full calculation transparency for all KPIs derived from monthly JMR data with contract traceability
-            </p>
+    <div ref={pageRef} className="bg-gray-50 min-h-screen">
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
+        <div className="px-8 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Calculator className="w-5 h-5 text-blue-600" />
+            <div>
+              <h1 className="text-base font-bold text-gray-900">KPI Transparency Console</h1>
+              <p className="text-xs text-gray-600 mt-0.5">
+                Full calculation transparency for all KPIs derived from monthly JMR data with contract traceability
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded">
-              <Lock className={`w-4 h-4 ${isAdminMode ? "text-gray-400" : "text-red-600"}`} />
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded">
+              <Lock className={`w-3.5 h-3.5 ${isAdminMode ? "text-gray-400" : "text-red-600"}`} />
               <span className="text-xs font-medium text-gray-700">Admin Mode</span>
               <Switch checked={isAdminMode} onCheckedChange={setIsAdminMode} />
-              <Unlock className={`w-4 h-4 ${isAdminMode ? "text-green-600" : "text-gray-400"}`} />
+              <Unlock className={`w-3.5 h-3.5 ${isAdminMode ? "text-green-600" : "text-gray-400"}`} />
             </div>
             <Badge className="bg-blue-100 text-blue-800 px-3 py-1">
               Data Source: Sakri Solar Park - Apr 2026
@@ -225,6 +224,7 @@ export function KPITransparencyConsole() {
           </div>
         </div>
       </div>
+      <div className="p-8">
 
       {/* Three-Panel Layout */}
       <div className="grid grid-cols-12 gap-6 mb-6">
@@ -701,6 +701,7 @@ export function KPITransparencyConsole() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

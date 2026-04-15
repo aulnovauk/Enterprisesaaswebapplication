@@ -2501,7 +2501,15 @@ export function Dashboard() {
                 <p className="text-xs text-slate-600 mt-0.5">
                   {dashboardData.filteredPortfolioCap} MW · {dashboardData.filteredPlantCount} Plants · {dashboardData.uniqueStates.length} {dashboardData.uniqueStates.length === 1 ? "State" : "States"}
                   {(stateFilter !== "All States" || vendorFilter !== "All Vendors" || plantFilter !== "All Plants") && (
-                    <span className="ml-2 px-1.5 py-0.5 bg-amber-100 text-amber-700 border border-amber-300 rounded text-[10px] font-bold">Filtered View</span>
+                    <>
+                      <span className="ml-2 px-1.5 py-0.5 bg-amber-100 text-amber-700 border border-amber-300 rounded text-[10px] font-bold">Filtered View</span>
+                      <button
+                        onClick={() => { setStateFilter("All States"); setVendorFilter("All Vendors"); setPlantFilter("All Plants"); }}
+                        className="ml-1.5 px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-300 rounded text-[10px] font-medium transition-colors"
+                      >
+                        ✕ Reset
+                      </button>
+                    </>
                   )}
                 </p>
               </div>

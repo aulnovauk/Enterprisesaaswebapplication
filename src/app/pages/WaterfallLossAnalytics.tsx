@@ -183,19 +183,18 @@ export function WaterfallLossAnalytics() {
   const pageRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div ref={pageRef} className="p-8 bg-gray-50 min-h-screen">
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
+    <div ref={pageRef} className="bg-gray-50 min-h-screen">
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
+        <div className="px-8 py-3 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Waterfall & Loss Intelligence Analytics</h1>
-            <p className="text-sm text-gray-600 mt-1">
+            <h1 className="text-base font-bold text-gray-900">Waterfall & Loss Intelligence Analytics</h1>
+            <p className="text-xs text-gray-600 mt-0.5">
               Generation flow analysis with financial impact assessment for February 2026
             </p>
           </div>
           <div className="flex items-center gap-3">
             <Select defaultValue="feb2026">
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-48 h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -210,6 +209,7 @@ export function WaterfallLossAnalytics() {
           </div>
         </div>
       </div>
+      <div className="p-8">
 
       {/* Main Section - Waterfall Chart */}
       <Card className="border-2 mb-6">
@@ -622,6 +622,7 @@ export function WaterfallLossAnalytics() {
           </Table>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

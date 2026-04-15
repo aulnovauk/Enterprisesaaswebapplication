@@ -228,20 +228,20 @@ export function FinancialReports() {
 
   return (
     <div ref={pageRef} className="flex-1 overflow-auto bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
+        <div className="px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-[#2955A0] text-white shadow-lg">
-              <IndianRupee className="w-6 h-6" />
+            <div className="p-2 rounded-xl bg-[#2955A0] text-white shadow-lg">
+              <IndianRupee className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Financial Reports</h1>
-              <p className="text-sm text-slate-500">Revenue tracking, loss attribution, invoicing & collection analytics</p>
+              <h1 className="text-base font-bold text-slate-900">Financial Reports</h1>
+              <p className="text-xs text-slate-500">Revenue tracking, loss attribution, invoicing & collection analytics</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <Select value={selectedFY} onValueChange={setSelectedFY}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[140px] h-8 text-xs">
                 <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
                 <SelectValue />
               </SelectTrigger>
@@ -256,6 +256,8 @@ export function FinancialReports() {
             <PageExportMenu pageTitle="Financial Reports" contentRef={pageRef} />
           </div>
         </div>
+      </div>
+      <div className="p-6 space-y-6">
 
         <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
           {[

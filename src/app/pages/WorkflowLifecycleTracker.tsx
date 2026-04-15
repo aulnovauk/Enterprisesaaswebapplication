@@ -238,18 +238,17 @@ export function WorkflowLifecycleTracker() {
   const progressPercentage = (completedStages / totalStages) * 100;
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      {/* Page Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-3">
-              <FileCheck className="w-7 h-7 text-blue-600" />
-              JMR Workflow Lifecycle Tracker
-            </h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Monthly Joint Report governance and approval workflow management
-            </p>
+    <div className="bg-gray-50 min-h-screen">
+      <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
+        <div className="px-8 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <FileCheck className="w-5 h-5 text-blue-600" />
+            <div>
+              <h1 className="text-base font-bold text-gray-900">JMR Workflow Lifecycle Tracker</h1>
+              <p className="text-xs text-gray-600 mt-0.5">
+                Monthly Joint Report governance and approval workflow management
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <Badge className="bg-blue-100 text-blue-800 px-3 py-1 text-sm">
@@ -261,6 +260,7 @@ export function WorkflowLifecycleTracker() {
           </div>
         </div>
       </div>
+      <div className="p-8">
 
       {/* Top Horizontal Lifecycle Bar */}
       <Card className="mb-6 border-2 border-blue-300 shadow-lg">
@@ -708,6 +708,7 @@ export function WorkflowLifecycleTracker() {
             </Card>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
