@@ -128,6 +128,17 @@ All pages follow a consistent production-grade sticky header pattern:
 
 Pages with filter bars: Dashboard, JMR Data Management, KPI Engine, Outage & Loss Analytics, Contract & LD Analytics, Financial Reports, Waterfall & Loss Analytics, AI & Trend Analytics, Portfolio Compliance Health.
 
+## Financial Reports Filter Overhaul
+
+- **Filters**: FY, Month, Vendor, Plant — with cascade logic (vendor→plant scoping, plant→vendor auto-select)
+- **Capacity share scaling**: When filtering to a plant or vendor, revenue/budget values scale proportionally by MW share of the 220 MW portfolio
+- **Filtered data sources**: `filteredMonthlyData`, `filteredVendorRevenue`, `filteredVendorInvoice` — all render sections use these instead of raw arrays
+- **Responsive grids**: Month tile grid and vendor card grid adapt column count based on filtered result count
+- **Quarterly data**: Budgeted/realized values scaled by `capacityShare` for consistent plant/vendor-scoped views
+- **KPIs**: All 6 KPI cards (budgeted, realized, shortfall, collection rate, revenue per MW, LD exposure) react to active filters
+- **Zero-division guards**: Projection and percentage calculations guarded against empty filtered arrays
+- **Sticky header**: Consistent with platform standard (no overflow-auto on page div)
+
 ## Development
 
 - Workflow: `npm run dev` on port 5000

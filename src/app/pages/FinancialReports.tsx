@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { VENDORS } from "../data/plants";
+import { VENDORS, PLANTS } from "../data/plants";
 import {
   IndianRupee,
   TrendingDown,
@@ -133,20 +133,119 @@ const quarterlyData = [
   { quarter: "Q4 (Jan–Mar 26)", budgeted: 7.82, actual: 7.41, realized: 7.22, shortfall: 0.60, collection: 92.3 },
 ];
 
+const FY_MONTHS = ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"];
+const MONTH_OPTIONS = [
+  { value: "all", label: "All Months (YTD)" },
+  ...FY_MONTHS.map((m, i) => {
+    const yr = i < 9 ? "25" : "26";
+    return { value: `${m} ${yr}`, label: `${m} ${yr}` };
+  }),
+];
+
 export function FinancialReports() {
   const pageRef = useRef<HTMLDivElement>(null);
   const [selectedFY, setSelectedFY] = useState("FY 2025-26");
   const [selectedVendor, setSelectedVendor] = useState("all");
+  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [selectedPlant, setSelectedPlant] = useState("all");
   const [activeTab, setActiveTab] = useState("revenue-impact");
   const [revenueView, setRevenueView] = useState<"table" | "chart">("chart");
   const [expandedVendors, setExpandedVendors] = useState<string[]>([]);
+
+  const plantOptions = useMemo(() => {
+    if (selectedVendor === "all") return PLANTS;
+    return PLANTS.filter(p => p.vendor === selectedVendor);
+  }, [selectedVendor]);
+
+  const handleVendorChange = (v: string) => {
+    setSelectedVendor(v);
+    if (v !== "all" && selectedPlant !== "all") {
+      const plant = PLANTS.find(p => p.name === selectedPlant);
+      if (plant && plant.vendor !== v) setSelectedPlant("all");
+    }
+  };
+
+  const handlePlantChange = (p: string) => {
+    setSelectedPlant(p);
+    if (p !== "all" && selectedVendor === "all") {
+      const plant = PLANTS.find(pl => pl.name === p);
+      if (plant) setSelectedVendor(plant.vendor);
+    }
+  };
+
+  const resetFilters = () => {
+    setSelectedVendor("all");
+    setSelectedMonth("all");
+    setSelectedPlant("all");
+  };
+
+  const hasActiveFilter = selectedVendor !== "all" || selectedMonth !== "all" || selectedPlant !== "all";
+
+  const capacityShare = useMemo(() => {
+    const totalCap = PLANTS.reduce((s, p) => s + p.capacity, 0);
+    if (selectedPlant !== "all") {
+      const plant = PLANTS.find(p => p.name === selectedPlant);
+      return plant ? plant.capacity / totalCap : 1;
+    }
+    if (selectedVendor !== "all") {
+      const vendorCap = PLANTS.filter(p => p.vendor === selectedVendor).reduce((s, p) => s + p.capacity, 0);
+      return vendorCap / totalCap;
+    }
+    return 1;
+  }, [selectedVendor, selectedPlant]);
 
   const toggleVendor = (vendor: string) => {
     setExpandedVendors(prev => prev.includes(vendor) ? prev.filter(v => v !== vendor) : [...prev, vendor]);
   };
 
+  const filteredMonthlyData = useMemo(() => {
+    let data = monthlyRevenueData;
+    if (selectedMonth !== "all") {
+      data = data.filter(m => m.month === selectedMonth);
+    }
+    if (capacityShare < 1) {
+      data = data.map(m => ({
+        ...m,
+        budgeted: +(m.budgeted * capacityShare).toFixed(3),
+        expected: +(m.expected * capacityShare).toFixed(3),
+        actual: +(m.actual * capacityShare).toFixed(3),
+        realized: +(m.realized * capacityShare).toFixed(3),
+        genMWh: Math.round(m.genMWh * capacityShare),
+        gridLoss: +(m.gridLoss * capacityShare).toFixed(3),
+        eqLoss: +(m.eqLoss * capacityShare).toFixed(3),
+        weatherLoss: +(m.weatherLoss * capacityShare).toFixed(3),
+        curtailmentLoss: +(m.curtailmentLoss * capacityShare).toFixed(3),
+        otherLoss: +(m.otherLoss * capacityShare).toFixed(3),
+        collection: m.collection,
+      }));
+    }
+    return data;
+  }, [selectedMonth, capacityShare]);
+
+  const filteredVendorInvoice = useMemo(() => {
+    let data = vendorInvoiceData;
+    if (selectedVendor !== "all") {
+      data = data.filter(v => v.vendor === selectedVendor);
+    }
+    if (selectedPlant !== "all") {
+      data = data.map(v => ({
+        ...v,
+        plants: v.plants.filter(p => p.name === selectedPlant),
+      })).filter(v => v.plants.length > 0);
+    }
+    return data;
+  }, [selectedVendor, selectedPlant]);
+
+  const filteredVendorRevenue = useMemo(() => {
+    let data = vendorRevenueData;
+    if (selectedVendor !== "all") {
+      data = data.filter(v => v.vendor === selectedVendor);
+    }
+    return data;
+  }, [selectedVendor]);
+
   const invoiceAggregates = useMemo(() => {
-    const allPlants = vendorInvoiceData.flatMap(v => v.plants);
+    const allPlants = filteredVendorInvoice.flatMap(v => v.plants);
     const totals = {
       invoices: allPlants.reduce((s, p) => s + p.invoices, 0),
       paid: allPlants.reduce((s, p) => s + p.paid, 0),
@@ -171,10 +270,10 @@ export function FinancialReports() {
       { status: "Disputed", count: totals.disputed, amount: disputedAmt, color: invoiceStatusColors.disputed },
     ];
     return { ...totals, statusBreakdown };
-  }, []);
+  }, [filteredVendorInvoice]);
 
   const vendorSummaries = useMemo(() => {
-    return vendorInvoiceData.map(v => {
+    return filteredVendorInvoice.map(v => {
       const totals = v.plants.reduce((acc, p) => ({
         invoices: acc.invoices + p.invoices,
         paid: acc.paid + p.paid,
@@ -187,24 +286,24 @@ export function FinancialReports() {
       }), { invoices: 0, paid: 0, partiallyPaid: 0, pending: 0, overdue: 0, disputed: 0, amount: 0, collected: 0 });
       return { ...v, ...totals, collectionPct: totals.amount > 0 ? (totals.collected / totals.amount) * 100 : 0 };
     });
-  }, []);
+  }, [filteredVendorInvoice]);
 
   const ytdTotals = useMemo(() => {
-    const data = monthlyRevenueData;
+    const data = filteredMonthlyData;
     return {
       budgeted: data.reduce((s, d) => s + d.budgeted, 0),
       expected: data.reduce((s, d) => s + d.expected, 0),
       actual: data.reduce((s, d) => s + d.actual, 0),
       realized: data.reduce((s, d) => s + d.realized, 0),
       totalGen: data.reduce((s, d) => s + d.genMWh, 0),
-      avgCollection: data.reduce((s, d) => s + d.collection, 0) / data.length,
+      avgCollection: data.length > 0 ? data.reduce((s, d) => s + d.collection, 0) / data.length : 0,
       gridLoss: data.reduce((s, d) => s + d.gridLoss, 0),
       eqLoss: data.reduce((s, d) => s + d.eqLoss, 0),
       weatherLoss: data.reduce((s, d) => s + d.weatherLoss, 0),
       curtailmentLoss: data.reduce((s, d) => s + d.curtailmentLoss, 0),
       otherLoss: data.reduce((s, d) => s + d.otherLoss, 0),
     };
-  }, []);
+  }, [filteredMonthlyData]);
 
   const totalShortfall = ytdTotals.budgeted - ytdTotals.realized;
   const totalLossBreakdown = [
@@ -228,9 +327,10 @@ export function FinancialReports() {
   ];
 
   const invoiceTotal = invoiceAggregates.amount;
+  const filterScopeLabel = selectedPlant !== "all" ? selectedPlant : selectedVendor !== "all" ? selectedVendor : "All Plants";
 
   return (
-    <div ref={pageRef} className="flex-1 overflow-auto bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+    <div ref={pageRef} className="flex-1 bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
       <div className="bg-white border-b-2 border-slate-200 shadow-sm shrink-0 z-20 sticky top-0">
         <div className="px-6 py-2">
           <div className="flex items-center justify-between mb-2">
@@ -267,8 +367,18 @@ export function FinancialReports() {
                 <SelectItem value="FY 2023-24">FY 2023-24</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={selectedVendor} onValueChange={setSelectedVendor}>
-              <SelectTrigger className="w-[175px] h-7 text-xs bg-slate-50 border-slate-200">
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-[155px] h-7 text-xs bg-slate-50 border-slate-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MONTH_OPTIONS.map(m => (
+                  <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedVendor} onValueChange={handleVendorChange}>
+              <SelectTrigger className="w-[160px] h-7 text-xs bg-slate-50 border-slate-200">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -278,9 +388,22 @@ export function FinancialReports() {
                 ))}
               </SelectContent>
             </Select>
-            {selectedVendor !== "all" && (
+            <Select value={selectedPlant} onValueChange={handlePlantChange}>
+              <SelectTrigger className="w-[195px] h-7 text-xs bg-slate-50 border-slate-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Plants ({plantOptions.length})</SelectItem>
+                {plantOptions.map(p => (
+                  <SelectItem key={p.id} value={p.name}>
+                    {p.name} · {p.capacity} MW
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {hasActiveFilter && (
               <button
-                onClick={() => setSelectedVendor("all")}
+                onClick={resetFilters}
                 className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-300 rounded hover:bg-amber-100"
               >
                 ✕ Reset
@@ -293,12 +416,12 @@ export function FinancialReports() {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
           {[
-            { label: "YTD Budgeted Revenue", value: `₹${ytdTotals.budgeted.toFixed(2)} Cr`, sub: `${monthlyRevenueData.length} months`, icon: Target, color: "bg-slate-100 text-slate-600" },
+            { label: "YTD Budgeted Revenue", value: `₹${ytdTotals.budgeted.toFixed(2)} Cr`, sub: `${filteredMonthlyData.length} months`, icon: Target, color: "bg-slate-100 text-slate-600" },
             { label: "YTD Realized Revenue", value: `₹${ytdTotals.realized.toFixed(2)} Cr`, sub: `${((ytdTotals.realized / ytdTotals.budgeted) * 100).toFixed(1)}% of budget`, icon: Wallet, color: "bg-[#2955A0]/10 text-[#2955A0]" },
             { label: "Revenue Shortfall", value: `₹${totalShortfall.toFixed(2)} Cr`, sub: `${((totalShortfall / ytdTotals.budgeted) * 100).toFixed(1)}% gap`, icon: TrendingDown, color: "bg-rose-50 text-rose-600" },
             { label: "Avg Collection Rate", value: `${ytdTotals.avgCollection.toFixed(1)}%`, sub: ytdTotals.avgCollection >= 92 ? "On Track" : "Below Target", icon: Receipt, color: ytdTotals.avgCollection >= 92 ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600" },
-            { label: "Revenue per MW", value: `₹${(ytdTotals.realized / 0.18).toFixed(1)} L`, sub: "Portfolio average", icon: CircleDollarSign, color: "bg-violet-50 text-violet-600" },
-            { label: "Total LD Exposure", value: `₹${vendorRevenueData.reduce((s, v) => s + v.ldExposure, 0).toFixed(2)} Cr`, sub: `${vendorRevenueData.filter(v => v.ldExposure > 0).length} vendors at risk`, icon: Scale, color: "bg-orange-50 text-orange-600" },
+            { label: "Revenue per MW", value: `₹${(ytdTotals.realized / (PLANTS.reduce((s, p) => s + p.capacity, 0) * capacityShare / 1000)).toFixed(1)} L`, sub: selectedPlant !== "all" ? selectedPlant : "Portfolio average", icon: CircleDollarSign, color: "bg-violet-50 text-violet-600" },
+            { label: "Total LD Exposure", value: `₹${filteredVendorRevenue.reduce((s, v) => s + v.ldExposure, 0).toFixed(2)} Cr`, sub: `${filteredVendorRevenue.filter(v => v.ldExposure > 0).length} vendors at risk`, icon: Scale, color: "bg-orange-50 text-orange-600" },
           ].map((kpi) => (
             <Card key={kpi.label} className="border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
               <CardContent className="p-4">
@@ -339,14 +462,14 @@ export function FinancialReports() {
                     <BarChart2 className="w-4 h-4 text-[#2955A0]" />
                     Monthly Revenue Impact — Budgeted vs Realized (₹ Cr)
                   </CardTitle>
-                  <CardDescription>Month-wise revenue tracking with budget variance for {selectedFY}</CardDescription>
+                  <CardDescription>Month-wise revenue tracking with budget variance — {selectedFY}{hasActiveFilter ? ` · ${filterScopeLabel}` : ""}</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
                   <ResponsiveContainer width="100%" height={340}>
-                    <ComposedChart data={monthlyRevenueData} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+                    <ComposedChart data={filteredMonthlyData} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                       <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} domain={[1.5, 3.0]} />
+                      <YAxis tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
                       <RechartsTooltip
                         content={({ active, payload, label }) => {
                           if (!active || !payload?.length) return null;
@@ -383,7 +506,7 @@ export function FinancialReports() {
                   <CardDescription>Where budget vs realization gap occurs</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4 space-y-3">
-                  {monthlyRevenueData.slice(-5).reverse().map((m) => {
+                  {filteredMonthlyData.slice(-5).reverse().map((m) => {
                     const gap = m.budgeted - m.realized;
                     const gapPct = (gap / m.budgeted) * 100;
                     return (
@@ -413,7 +536,7 @@ export function FinancialReports() {
                     </div>
                     <p className="text-xl font-bold text-amber-900">₹{totalShortfall.toFixed(2)} Cr</p>
                     <p className="text-[10px] text-amber-700 mt-0.5">
-                      {((totalShortfall / ytdTotals.budgeted) * 100).toFixed(1)}% below annual budget · Projected annual gap: ₹{(totalShortfall * (12 / monthlyRevenueData.length)).toFixed(2)} Cr
+                      {ytdTotals.budgeted > 0 ? ((totalShortfall / ytdTotals.budgeted) * 100).toFixed(1) : "0.0"}% below annual budget · Projected annual gap: ₹{(filteredMonthlyData.length > 0 ? totalShortfall * (12 / filteredMonthlyData.length) : 0).toFixed(2)} Cr
                     </p>
                   </div>
                 </CardContent>
@@ -428,7 +551,7 @@ export function FinancialReports() {
                       <IndianRupee className="w-4 h-4 text-[#2955A0]" />
                       Month-wise Revenue Detail
                     </CardTitle>
-                    <CardDescription>Complete financial breakdown for each month — {selectedFY}</CardDescription>
+                    <CardDescription>Complete financial breakdown for each month — {selectedFY}{hasActiveFilter ? ` · ${filterScopeLabel}` : ""}</CardDescription>
                   </div>
                   <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
                     <button
@@ -452,8 +575,8 @@ export function FinancialReports() {
                     <div>
                       <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-3">Revenue Pipeline — Budget → Expected → Actual → Realized (₹Cr)</p>
                       <ResponsiveContainer width="100%" height={300}>
-                        <ComposedChart data={monthlyRevenueData.map((m, idx) => {
-                          const prev = idx > 0 ? monthlyRevenueData[idx - 1].realized : m.realized;
+                        <ComposedChart data={filteredMonthlyData.map((m, idx) => {
+                          const prev = idx > 0 ? filteredMonthlyData[idx - 1].realized : m.realized;
                           return { ...m, shortfall: +(m.budgeted - m.realized).toFixed(2), momChange: +((m.realized - prev) / prev * 100).toFixed(1), shortfallPct: +((m.budgeted - m.realized) / m.budgeted * 100).toFixed(1) };
                         })} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
@@ -495,7 +618,7 @@ export function FinancialReports() {
                       <div>
                         <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-3">Shortfall Trend (₹Cr) & Shortfall % of Budget</p>
                         <ResponsiveContainer width="100%" height={200}>
-                          <ComposedChart data={monthlyRevenueData.map(m => ({
+                          <ComposedChart data={filteredMonthlyData.map(m => ({
                             month: m.month,
                             shortfall: +(m.budgeted - m.realized).toFixed(2),
                             shortfallPct: +((m.budgeted - m.realized) / m.budgeted * 100).toFixed(1),
@@ -516,7 +639,7 @@ export function FinancialReports() {
                               );
                             }} />
                             <Bar yAxisId="val" dataKey="shortfall" name="Shortfall (₹Cr)" radius={[3, 3, 0, 0]} barSize={20}>
-                              {monthlyRevenueData.map((m, i) => {
+                              {filteredMonthlyData.map((m, i) => {
                                 const pct = (m.budgeted - m.realized) / m.budgeted * 100;
                                 return <Cell key={i} fill={pct > 12 ? "#ef4444" : pct > 8 ? "#f59e0b" : "#10b981"} opacity={0.75} />;
                               })}
@@ -530,8 +653,8 @@ export function FinancialReports() {
                       <div>
                         <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-3">Generation (MWh) & MoM Realized Change (%)</p>
                         <ResponsiveContainer width="100%" height={200}>
-                          <ComposedChart data={monthlyRevenueData.map((m, idx) => {
-                            const prev = idx > 0 ? monthlyRevenueData[idx - 1].realized : m.realized;
+                          <ComposedChart data={filteredMonthlyData.map((m, idx) => {
+                            const prev = idx > 0 ? filteredMonthlyData[idx - 1].realized : m.realized;
                             return { month: m.month, genMWh: m.genMWh, momChange: idx === 0 ? 0 : +((m.realized - prev) / prev * 100).toFixed(1) };
                           })} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
@@ -551,9 +674,9 @@ export function FinancialReports() {
                             }} />
                             <Area yAxisId="gen" type="monotone" dataKey="genMWh" name="Generation (MWh)" fill="#2955A0" fillOpacity={0.1} stroke="#2955A0" strokeWidth={2} />
                             <Bar yAxisId="mom" dataKey="momChange" name="MoM Change %" radius={[3, 3, 0, 0]} barSize={16}>
-                              {monthlyRevenueData.map((_, i) => {
-                                const prev = i > 0 ? monthlyRevenueData[i - 1].realized : monthlyRevenueData[i].realized;
-                                const ch = i === 0 ? 0 : (monthlyRevenueData[i].realized - prev) / prev * 100;
+                              {filteredMonthlyData.map((_, i) => {
+                                const prev = i > 0 ? filteredMonthlyData[i - 1].realized : filteredMonthlyData[i].realized;
+                                const ch = i === 0 ? 0 : (filteredMonthlyData[i].realized - prev) / prev * 100;
                                 return <Cell key={i} fill={ch >= 0 ? "#10b981" : "#ef4444"} opacity={0.6} />;
                               })}
                             </Bar>
@@ -563,8 +686,8 @@ export function FinancialReports() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-12 gap-1 px-1">
-                      {monthlyRevenueData.map((m) => {
+                    <div className={`grid gap-1 px-1 ${filteredMonthlyData.length <= 1 ? "grid-cols-1" : filteredMonthlyData.length <= 4 ? "grid-cols-4" : filteredMonthlyData.length <= 6 ? "grid-cols-6" : "grid-cols-12"}`}>
+                      {filteredMonthlyData.map((m) => {
                         const shortfall = m.budgeted - m.realized;
                         const shortfallPct = (shortfall / m.budgeted) * 100;
                         return (
@@ -609,10 +732,10 @@ export function FinancialReports() {
                         </tr>
                       </thead>
                       <tbody>
-                        {monthlyRevenueData.map((m, idx) => {
+                        {filteredMonthlyData.map((m, idx) => {
                           const shortfall = m.budgeted - m.realized;
                           const shortfallPct = (shortfall / m.budgeted) * 100;
-                          const prevRealized = idx > 0 ? monthlyRevenueData[idx - 1].realized : m.realized;
+                          const prevRealized = idx > 0 ? filteredMonthlyData[idx - 1].realized : m.realized;
                           const momChange = ((m.realized - prevRealized) / prevRealized) * 100;
                           return (
                             <tr key={m.month} className={`border-b border-slate-100 hover:bg-slate-50 ${idx % 2 === 0 ? "" : "bg-slate-50/50"}`}>
@@ -679,18 +802,20 @@ export function FinancialReports() {
               <CardContent className="pt-4">
                 <div className="grid grid-cols-4 gap-4">
                   {quarterlyData.map((q) => {
-                    const gapPct = ((q.budgeted - q.realized) / q.budgeted) * 100;
+                    const scaledBudgeted = q.budgeted * capacityShare;
+                    const scaledRealized = q.realized * capacityShare;
+                    const gapPct = ((scaledBudgeted - scaledRealized) / scaledBudgeted) * 100;
                     return (
                       <div key={q.quarter} className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                         <p className="text-xs font-bold text-slate-800 mb-3">{q.quarter}</p>
                         <div className="space-y-2">
                           <div className="flex justify-between text-[10px]">
                             <span className="text-slate-500">Budgeted</span>
-                            <span className="font-semibold text-slate-700">₹{q.budgeted.toFixed(2)} Cr</span>
+                            <span className="font-semibold text-slate-700">₹{scaledBudgeted.toFixed(2)} Cr</span>
                           </div>
                           <div className="flex justify-between text-[10px]">
                             <span className="text-slate-500">Realized</span>
-                            <span className="font-bold text-[#2955A0]">₹{q.realized.toFixed(2)} Cr</span>
+                            <span className="font-bold text-[#2955A0]">₹{scaledRealized.toFixed(2)} Cr</span>
                           </div>
                           <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
                             <div className="h-full rounded-full bg-[#2955A0]" style={{ width: `${(q.realized / q.budgeted) * 100}%` }} />
@@ -802,7 +927,7 @@ export function FinancialReports() {
               </CardHeader>
               <CardContent className="pt-4">
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={monthlyRevenueData} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+                  <BarChart data={filteredMonthlyData} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                     <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
@@ -847,7 +972,7 @@ export function FinancialReports() {
                 "Green Energy Ltd": "#10b981",
                 "TechSolar Pvt": "#8b5cf6",
               };
-              const vendorBarData = vendorRevenueData.map(v => ({
+              const vendorBarData = filteredVendorRevenue.map(v => ({
                 name: v.vendor.split(" ").slice(0, 2).join(" "),
                 fullName: v.vendor,
                 budgeted: v.budgeted,
@@ -865,7 +990,7 @@ export function FinancialReports() {
                         <BarChart2 className="w-4 h-4 text-[#2955A0]" />
                         Vendor Revenue — Budgeted vs Realized
                       </CardTitle>
-                      <CardDescription>Side-by-side comparison with shortfall gap — {selectedFY}</CardDescription>
+                      <CardDescription>Side-by-side comparison with shortfall gap — {selectedFY}{hasActiveFilter ? ` · ${filterScopeLabel}` : ""}</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-4">
                       <ResponsiveContainer width="100%" height={320}>
@@ -889,7 +1014,7 @@ export function FinancialReports() {
                           <Bar dataKey="budgeted" name="Budgeted" fill="#cbd5e1" radius={[4, 4, 0, 0]} barSize={36} />
                           <Bar dataKey="realized" name="Realized" radius={[4, 4, 0, 0]} barSize={36}>
                             {vendorBarData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={vendorColors[vendorRevenueData[index].vendor] || "#2955A0"} />
+                              <Cell key={`cell-${index}`} fill={vendorColors[filteredVendorRevenue[index].vendor] || "#2955A0"} />
                             ))}
                           </Bar>
                           <Legend wrapperStyle={{ fontSize: "11px" }} />
@@ -898,8 +1023,8 @@ export function FinancialReports() {
                     </CardContent>
                   </Card>
 
-                  <div className="grid grid-cols-5 gap-4">
-                    {vendorRevenueData.map((v) => {
+                  <div className={`grid gap-4 ${filteredVendorRevenue.length <= 2 ? "grid-cols-2" : filteredVendorRevenue.length <= 3 ? "grid-cols-3" : "grid-cols-5"}`}>
+                    {filteredVendorRevenue.map((v) => {
                       const realizePct = (v.realized / v.budgeted * 100);
                       const color = vendorColors[v.vendor] || "#94a3b8";
                       return (
@@ -1119,10 +1244,10 @@ export function FinancialReports() {
                     <CardDescription>Expand each vendor to view plant-level invoice breakdown with district details</CardDescription>
                   </div>
                   <button
-                    onClick={() => setExpandedVendors(expandedVendors.length === vendorInvoiceData.length ? [] : vendorInvoiceData.map(v => v.vendor))}
+                    onClick={() => setExpandedVendors(expandedVendors.length === filteredVendorInvoice.length ? [] : filteredVendorInvoice.map(v => v.vendor))}
                     className="text-xs text-[#2955A0] hover:underline font-medium"
                   >
-                    {expandedVendors.length === vendorInvoiceData.length ? "Collapse All" : "Expand All"}
+                    {expandedVendors.length === filteredVendorInvoice.length ? "Collapse All" : "Expand All"}
                   </button>
                 </div>
               </CardHeader>
@@ -1271,7 +1396,7 @@ export function FinancialReports() {
                 </CardHeader>
                 <CardContent className="pt-4">
                   <ResponsiveContainer width="100%" height={220}>
-                    <AreaChart data={monthlyRevenueData} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+                    <AreaChart data={filteredMonthlyData} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                       <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
                       <YAxis domain={[78, 100]} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
