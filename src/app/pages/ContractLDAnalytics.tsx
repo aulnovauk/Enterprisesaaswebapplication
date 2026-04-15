@@ -49,18 +49,6 @@ import {
 } from "recharts";
 import { CustomChartTooltip } from "../components/ChartTooltip";
 
-// Portfolio summary data
-const portfolioSummary = {
-  totalCapacity: 220,
-  totalSites: 12,
-  compliantSites: 2,
-  nonCompliantSites: 3,
-  totalLDExposure: 14.2,
-  ytdLDExposure: 82.5,
-  criticalEscalations: 2,
-  complianceRate: 40,
-};
-
 // Site-wise LD exposure
 const sitewiseLD = [
   {
@@ -78,6 +66,10 @@ const sitewiseLD = [
     targetAvailability: 95.0,
     cuf: 23.5,
     targetCuf: 23.0,
+    pr: 79.8,
+    targetPr: 78.0,
+    responseTime: 3.5,
+    targetResponseTime: 4.0,
   },
   {
     siteId: "EESL-MH-002",
@@ -94,6 +86,10 @@ const sitewiseLD = [
     targetAvailability: 95.0,
     cuf: 21.2,
     targetCuf: 23.0,
+    pr: 76.5,
+    targetPr: 78.0,
+    responseTime: 4.2,
+    targetResponseTime: 4.0,
   },
   {
     siteId: "EESL-MH-003",
@@ -110,6 +106,10 @@ const sitewiseLD = [
     targetAvailability: 95.0,
     cuf: 24.1,
     targetCuf: 23.0,
+    pr: 80.2,
+    targetPr: 78.0,
+    responseTime: 3.6,
+    targetResponseTime: 4.0,
   },
   {
     siteId: "EESL-MH-004",
@@ -126,6 +126,10 @@ const sitewiseLD = [
     targetAvailability: 95.0,
     cuf: 23.8,
     targetCuf: 23.0,
+    pr: 81.0,
+    targetPr: 78.0,
+    responseTime: 3.2,
+    targetResponseTime: 4.0,
   },
   {
     siteId: "EESL-MH-005",
@@ -142,6 +146,10 @@ const sitewiseLD = [
     targetAvailability: 95.0,
     cuf: 24.5,
     targetCuf: 23.0,
+    pr: 79.5,
+    targetPr: 78.0,
+    responseTime: 3.4,
+    targetResponseTime: 4.0,
   },
   {
     siteId: "EESL-MH-006",
@@ -158,6 +166,10 @@ const sitewiseLD = [
     targetAvailability: 95.0,
     cuf: 23.2,
     targetCuf: 23.0,
+    pr: 78.8,
+    targetPr: 78.0,
+    responseTime: 3.8,
+    targetResponseTime: 4.0,
   },
   {
     siteId: "EESL-MH-007",
@@ -174,6 +186,10 @@ const sitewiseLD = [
     targetAvailability: 95.0,
     cuf: 19.5,
     targetCuf: 23.0,
+    pr: 74.2,
+    targetPr: 78.0,
+    responseTime: 4.8,
+    targetResponseTime: 4.0,
   },
   {
     siteId: "EESL-MH-008",
@@ -190,6 +206,10 @@ const sitewiseLD = [
     targetAvailability: 95.0,
     cuf: 18.5,
     targetCuf: 23.0,
+    pr: 72.5,
+    targetPr: 78.0,
+    responseTime: 5.2,
+    targetResponseTime: 4.0,
   },
   {
     siteId: "EESL-MH-009",
@@ -206,6 +226,10 @@ const sitewiseLD = [
     targetAvailability: 95.0,
     cuf: 20.8,
     targetCuf: 23.0,
+    pr: 76.8,
+    targetPr: 78.0,
+    responseTime: 4.5,
+    targetResponseTime: 4.0,
   },
   {
     siteId: "EESL-MH-010",
@@ -222,6 +246,10 @@ const sitewiseLD = [
     targetAvailability: 95.0,
     cuf: 22.8,
     targetCuf: 23.0,
+    pr: 79.0,
+    targetPr: 78.0,
+    responseTime: 3.6,
+    targetResponseTime: 4.0,
   },
   {
     siteId: "EESL-MH-011",
@@ -238,6 +266,10 @@ const sitewiseLD = [
     targetAvailability: 95.0,
     cuf: 21.5,
     targetCuf: 23.0,
+    pr: 77.2,
+    targetPr: 78.0,
+    responseTime: 4.1,
+    targetResponseTime: 4.0,
   },
   {
     siteId: "EESL-MH-012",
@@ -254,55 +286,10 @@ const sitewiseLD = [
     targetAvailability: 95.0,
     cuf: 23.0,
     targetCuf: 23.0,
-  },
-];
-
-// Vendor-wise aggregation
-const vendorwiseLD = [
-  {
-    vendorName: "SolarCo India",
-    sites: 3,
-    totalCapacity: 51,
-    totalLDAmount: 10.8,
-    complianceRate: 67,
-    avgAvailability: 93.97,
-    status: "warning",
-  },
-  {
-    vendorName: "SunPower Tech",
-    sites: 4,
-    totalCapacity: 63,
-    totalLDAmount: 5.01,
-    complianceRate: 50,
-    avgAvailability: 94.7,
-    status: "warning",
-  },
-  {
-    vendorName: "Green Energy Ltd",
-    sites: 1,
-    totalCapacity: 30,
-    totalLDAmount: 1.05,
-    complianceRate: 100,
-    avgAvailability: 96.8,
-    status: "healthy",
-  },
-  {
-    vendorName: "TechSolar Pvt",
-    sites: 1,
-    totalCapacity: 20,
-    totalLDAmount: 0,
-    complianceRate: 100,
-    avgAvailability: 97.5,
-    status: "healthy",
-  },
-  {
-    vendorName: "Mega Solar Inc",
-    sites: 3,
-    totalCapacity: 56,
-    totalLDAmount: 4.86,
-    complianceRate: 67,
-    avgAvailability: 95.27,
-    status: "warning",
+    pr: 78.5,
+    targetPr: 78.0,
+    responseTime: 3.7,
+    targetResponseTime: 4.0,
   },
 ];
 
@@ -364,15 +351,6 @@ const clientwiseLD = [
     tariff: "₹2.00/kWh",
     status: "good",
   },
-];
-
-// Guaranteed vs Actual comparison
-const guaranteedVsActual = [
-  { parameter: "Generation (MWh)", guaranteed: 10900, actual: 10480, variance: -420, variancePct: -3.85, status: "red" },
-  { parameter: "Availability (%)", guaranteed: 95.0, actual: 94.2, variance: -0.8, variancePct: -0.84, status: "red" },
-  { parameter: "CUF (%)", guaranteed: 23.0, actual: 22.4, variance: -0.6, variancePct: -2.61, status: "red" },
-  { parameter: "PR (%)", guaranteed: 78.0, actual: 78.6, variance: 0.6, variancePct: 0.77, status: "green" },
-  { parameter: "Response Time (hrs)", guaranteed: 4.0, actual: 3.8, variance: -0.2, variancePct: -5.0, status: "green" },
 ];
 
 // Escalation alerts
@@ -481,8 +459,20 @@ export function ContractLDAnalytics() {
       { parameter: "Generation (MWh)", guaranteed: totalContracted, actual: totalActual, variance: genVar, variancePct: parseFloat(genVarPct.toFixed(2)), status: genVar >= 0 ? "green" : "red" },
       { parameter: "Availability (%)", guaranteed: parseFloat(wTargetAvail.toFixed(1)), actual: parseFloat(wAvail.toFixed(1)), variance: parseFloat(availVar.toFixed(1)), variancePct: parseFloat(availVarPct.toFixed(2)), status: availVar >= 0 ? "green" : "red" },
       { parameter: "CUF (%)", guaranteed: parseFloat(wTargetCuf.toFixed(1)), actual: parseFloat(wCuf.toFixed(1)), variance: parseFloat(cufVar.toFixed(1)), variancePct: parseFloat(cufVarPct.toFixed(2)), status: cufVar >= 0 ? "green" : "red" },
-      { parameter: "PR (%)", guaranteed: 78.0, actual: 78.6, variance: 0.6, variancePct: 0.77, status: "green" },
-      { parameter: "Response Time (hrs)", guaranteed: 4.0, actual: 3.8, variance: -0.2, variancePct: -5.0, status: "green" },
+      (() => {
+        const wPr = totalCap > 0 ? sites.reduce((s, p) => s + p.pr * p.capacity, 0) / totalCap : 0;
+        const wTargetPr = totalCap > 0 ? sites.reduce((s, p) => s + p.targetPr * p.capacity, 0) / totalCap : 0;
+        const prVar = wPr - wTargetPr;
+        const prVarPct = wTargetPr > 0 ? (prVar / wTargetPr) * 100 : 0;
+        return { parameter: "PR (%)", guaranteed: parseFloat(wTargetPr.toFixed(1)), actual: parseFloat(wPr.toFixed(1)), variance: parseFloat(prVar.toFixed(1)), variancePct: parseFloat(prVarPct.toFixed(2)), status: prVar >= 0 ? "green" as const : "red" as const };
+      })(),
+      (() => {
+        const wResp = totalCap > 0 ? sites.reduce((s, p) => s + p.responseTime * p.capacity, 0) / totalCap : 0;
+        const wTargetResp = totalCap > 0 ? sites.reduce((s, p) => s + p.targetResponseTime * p.capacity, 0) / totalCap : 0;
+        const respVar = wResp - wTargetResp;
+        const respVarPct = wTargetResp > 0 ? (respVar / wTargetResp) * 100 : 0;
+        return { parameter: "Response Time (hrs)", guaranteed: parseFloat(wTargetResp.toFixed(1)), actual: parseFloat(wResp.toFixed(1)), variance: parseFloat(respVar.toFixed(1)), variancePct: parseFloat(respVarPct.toFixed(2)), status: respVar <= 0 ? "green" as const : "red" as const };
+      })(),
     ];
   }, [filteredSites]);
 
@@ -544,7 +534,7 @@ export function ContractLDAnalytics() {
   const exCap = parseFloat(ldCapPct) || 10;
   const exThreshold = parseFloat(ldThresholdPct) || 0;
   const exShortfall = Math.max(0, exPlant.contractedGen - exPlant.actualGen);
-  const exShortfallPct = ((exPlant.contractedGen - exPlant.actualGen) / exPlant.contractedGen) * 100;
+  const exShortfallPct = exPlant.contractedGen > 0 ? ((exPlant.contractedGen - exPlant.actualGen) / exPlant.contractedGen) * 100 : 0;
   const exAboveThreshold = exShortfallPct > exThreshold && exShortfall > 0;
   const TARIFF = 2.0; // ₹/kWh assumed
   const exContractValue = exPlant.contractedGen * 1000 * TARIFF; // ₹
@@ -1064,7 +1054,7 @@ export function ContractLDAnalytics() {
                 {filteredSites.length === 0 ? (
                   <TableRow><TableCell colSpan={10} className="text-center py-8 text-slate-400">No sites match the selected filters</TableCell></TableRow>
                 ) : filteredSites.map((site, idx) => {
-                  const bgColor = site.complianceStatus === "green" ? "bg-green-50" : "bg-red-50";
+                  const bgColor = site.complianceStatus === "green" ? "bg-green-50" : site.complianceStatus === "amber" ? "bg-amber-50" : "bg-red-50";
                   
                   return (
                     <TableRow key={idx} className={bgColor}>
@@ -1090,6 +1080,11 @@ export function ContractLDAnalytics() {
                           <Badge className="bg-green-100 text-green-800 border-2 border-green-300 font-semibold">
                             <CheckCircle className="w-3 h-3 mr-1" />
                             Compliant
+                          </Badge>
+                        ) : site.complianceStatus === "amber" ? (
+                          <Badge className="bg-amber-100 text-amber-800 border-2 border-amber-300 font-semibold">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            Below Target
                           </Badge>
                         ) : (
                           <Badge variant="destructive" className="border-2 border-red-300 font-semibold">
@@ -1139,7 +1134,7 @@ export function ContractLDAnalytics() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Compliance Rate:</span>
-                      <span className={`font-bold ${vendor.complianceRate === 0 ? "text-red-600" : "text-orange-600"}`}>
+                      <span className={`font-bold ${vendor.complianceRate === 100 ? "text-green-600" : vendor.complianceRate === 0 ? "text-red-600" : "text-orange-600"}`}>
                         {vendor.complianceRate}%
                       </span>
                     </div>
@@ -1345,20 +1340,30 @@ export function ContractLDAnalytics() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {/* Totals */}
-                <TableRow className="bg-slate-100 border-t-2 border-slate-300 font-bold">
-                  <TableCell className="font-bold text-slate-900">Portfolio Total</TableCell>
-                  <TableCell />
-                  <TableCell className="text-right font-mono font-bold">5</TableCell>
-                  <TableCell className="text-right font-mono font-bold">11,300</TableCell>
-                  <TableCell className="text-right font-mono font-bold">10,780</TableCell>
-                  <TableCell className="text-right font-mono font-bold text-red-600">-520</TableCell>
-                  <TableCell className="text-right font-mono font-bold text-red-600 text-base">₹8.35L</TableCell>
-                  <TableCell className="text-right font-semibold text-slate-700">₹22.6 Cr</TableCell>
-                  <TableCell className="text-center">
-                    <Badge className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px]">40% avg</Badge>
-                  </TableCell>
-                </TableRow>
+                {/* Totals — computed dynamically */}
+                {(() => {
+                  const totSites = clientwiseLD.reduce((s, c) => s + c.sites, 0);
+                  const totContracted = clientwiseLD.reduce((s, c) => s + c.totalContractedMWh, 0);
+                  const totActual = clientwiseLD.reduce((s, c) => s + c.totalActualMWh, 0);
+                  const totShortfall = clientwiseLD.reduce((s, c) => s + c.totalShortfall, 0);
+                  const totLD = clientwiseLD.reduce((s, c) => s + c.ldExposure, 0);
+                  const avgCompliance = clientwiseLD.length > 0 ? Math.round(clientwiseLD.reduce((s, c) => s + c.complianceRate, 0) / clientwiseLD.length) : 0;
+                  return (
+                    <TableRow className="bg-slate-100 border-t-2 border-slate-300 font-bold">
+                      <TableCell className="font-bold text-slate-900">Portfolio Total</TableCell>
+                      <TableCell />
+                      <TableCell className="text-right font-mono font-bold">{totSites}</TableCell>
+                      <TableCell className="text-right font-mono font-bold">{totContracted.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono font-bold">{totActual.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono font-bold text-red-600">{totShortfall > 0 ? `-${totShortfall}` : `+${Math.abs(totShortfall)}`}</TableCell>
+                      <TableCell className="text-right font-mono font-bold text-red-600 text-base">₹{totLD.toFixed(2)}L</TableCell>
+                      <TableCell className="text-right font-semibold text-slate-700">—</TableCell>
+                      <TableCell className="text-center">
+                        <Badge className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px]">{avgCompliance}% avg</Badge>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })()}
               </TableBody>
             </Table>
           </div>

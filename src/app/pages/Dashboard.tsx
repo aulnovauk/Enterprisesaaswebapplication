@@ -79,7 +79,7 @@ import {
 // Portfolio Configuration
 const PORTFOLIO_CONFIG = {
   totalCapacity: 220, // MW
-  totalPlants: 45,
+  totalPlants: 12,
   states: ["Maharashtra"],
 };
 
