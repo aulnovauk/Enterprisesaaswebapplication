@@ -100,7 +100,7 @@ const strategicKPIs = [
   },
   {
     id: "mtd-generation",
-    title: "MTD Generation",
+    title: "Generation",
     value: "42,580",
     unit: "MWh",
     target: 45000,
@@ -113,7 +113,7 @@ const strategicKPIs = [
   },
   {
     id: "ytd-generation",
-    title: "YTD Generation",
+    title: "Cumulative Generation",
     value: "485,240",
     unit: "MWh",
     target: 520000,
@@ -977,7 +977,7 @@ export function Dashboard() {
     // Period change label
     const genChange = fyFactor < 1.0
       ? `-${Math.round((1 - fyFactor) * 100)}% vs FY 2025-26`
-      : durationToggle === "MTD" ? "+5.2% MoM" : durationToggle === "YTD" ? "+8.4% YoY" : "+6.1% YoY";
+      : durationToggle === "MTD" ? "+5.2%" : durationToggle === "YTD" ? "+8.4%" : "+6.1%";
 
     return {
       filtered, filteredCap, filteredPortfolioCap, filteredPlantCount, uniqueStates,
@@ -997,11 +997,9 @@ export function Dashboard() {
       revenueShortfall, ldExposure, co2, assetHealth, filteredPortfolioCap, genChange,
     } = dashboardData;
 
-    const periodLabel =
-      durationToggle === "MTD" ? "MTD Generation" :
-      durationToggle === "YTD" ? "YTD Generation" : "Annual Generation";
+    const periodLabel = "Generation";
 
-    const ytdLabel = durationToggle === "Annual" ? "Annual Projection" : "YTD Cumulative";
+    const ytdLabel = durationToggle === "Annual" ? "Annual Projection" : "Cumulative Generation";
     const ytdVal   = durationToggle === "Annual" ? annualGen   : ytdGen;
     const ytdTgt   = durationToggle === "Annual" ? annualTarget : ytdTarget;
 
@@ -1192,7 +1190,7 @@ export function Dashboard() {
     const treesEquiv = Math.round(co2 / 22);
     co2Rows.push({ label: "Equivalent Trees", value: `${(treesEquiv / 1000).toFixed(1)}K`, subValue: "Trees planted equiv.", status: "green" });
 
-    const periodLabel = durationToggle === "MTD" ? "MTD" : durationToggle === "YTD" ? "YTD" : "Annual";
+    const periodLabel = durationToggle === "MTD" ? "Monthly" : durationToggle === "YTD" ? "Year-to-Date" : "Annual";
 
     return {
       capacity: {
@@ -1216,7 +1214,7 @@ export function Dashboard() {
         footer: `${periodLabel} total: ${periodGen.toLocaleString()} MWh · Target: ${periodTarget.toLocaleString()} MWh`,
       },
       "ytd-generation": {
-        title: "YTD Generation Summary",
+        title: "Cumulative Generation Summary",
         rows: ytdRows,
         chart: {
           label: "Quarterly Generation (GWh)",
@@ -1227,7 +1225,7 @@ export function Dashboard() {
             { name: "Q4", value: +(ytdGen * 0.22 / 1000).toFixed(1) },
           ],
         },
-        footer: `YTD pace: ${ytdTarget > 0 ? Math.round(ytdGen / ytdTarget * 100) : 0}% of annual plan`,
+        footer: `Cumulative pace: ${ytdTarget > 0 ? Math.round(ytdGen / ytdTarget * 100) : 0}% of annual plan`,
       },
       "portfolio-cuf": {
         title: "CUF Analysis by Cluster",
@@ -1595,7 +1593,9 @@ export function Dashboard() {
                                 }`}>
                                   {kpi.change}
                                 </span>
-                                <span className="text-[9px] text-slate-500">MoM</span>
+                                <span className="text-[9px] text-slate-500">
+                                  {durationToggle === "MTD" ? "MoM" : durationToggle === "YTD" ? "YoY" : "YoY"}
+                                </span>
                               </div>
                               <div className="h-5 w-14">
                                 <ResponsiveContainer width="100%" height="100%">
@@ -1632,7 +1632,7 @@ export function Dashboard() {
                 <Building2 className="w-4 h-4 text-[#2955A0]" />
                 Vendor Revenue Health
               </h3>
-              <p className="text-[10px] text-slate-400 mt-0.5">YTD realization performance by vendor — FY 2025-26</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Realization performance by vendor — FY 2025-26</p>
             </div>
             <div className="flex items-center gap-2">
               {[
@@ -1978,7 +1978,7 @@ export function Dashboard() {
               <CardHeader className="border-b border-slate-100 pb-3">
                 <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle className="text-base">MTD vs Target Generation</CardTitle>
+                    <CardTitle className="text-base">Actual vs Target Generation</CardTitle>
                     <CardDescription className="text-xs">Top 6 plants by capacity</CardDescription>
                   </div>
                   <button
@@ -2016,7 +2016,7 @@ export function Dashboard() {
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-base">
-                      {durationToggle === "MTD" ? `Portfolio CUF — ${month}` : durationToggle === "YTD" ? `Portfolio CUF Trend (YTD)` : "Portfolio CUF Trend (12 Months)"}
+                      {durationToggle === "MTD" ? `Portfolio CUF — ${month}` : durationToggle === "YTD" ? "Portfolio CUF Trend" : "Portfolio CUF Trend (12 Months)"}
                     </CardTitle>
                     <CardDescription className="text-xs">
                       {durationToggle === "MTD" ? "Current month performance vs target" : durationToggle === "YTD" ? `Apr to ${month.substring(0, 3)} performance vs target` : "Monthly performance vs target"}
