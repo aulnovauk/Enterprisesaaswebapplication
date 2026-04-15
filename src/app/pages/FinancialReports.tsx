@@ -417,10 +417,10 @@ export function FinancialReports() {
         <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
           {[
             { label: "YTD Budgeted Revenue", value: `₹${ytdTotals.budgeted.toFixed(2)} Cr`, sub: `${filteredMonthlyData.length} months`, icon: Target, color: "bg-slate-100 text-slate-600" },
-            { label: "YTD Realized Revenue", value: `₹${ytdTotals.realized.toFixed(2)} Cr`, sub: `${((ytdTotals.realized / ytdTotals.budgeted) * 100).toFixed(1)}% of budget`, icon: Wallet, color: "bg-[#2955A0]/10 text-[#2955A0]" },
-            { label: "Revenue Shortfall", value: `₹${totalShortfall.toFixed(2)} Cr`, sub: `${((totalShortfall / ytdTotals.budgeted) * 100).toFixed(1)}% gap`, icon: TrendingDown, color: "bg-rose-50 text-rose-600" },
+            { label: "YTD Realized Revenue", value: `₹${ytdTotals.realized.toFixed(2)} Cr`, sub: `${ytdTotals.budgeted > 0 ? ((ytdTotals.realized / ytdTotals.budgeted) * 100).toFixed(1) : "0.0"}% of budget`, icon: Wallet, color: "bg-[#2955A0]/10 text-[#2955A0]" },
+            { label: "Revenue Shortfall", value: `₹${totalShortfall.toFixed(2)} Cr`, sub: `${ytdTotals.budgeted > 0 ? ((totalShortfall / ytdTotals.budgeted) * 100).toFixed(1) : "0.0"}% gap`, icon: TrendingDown, color: "bg-rose-50 text-rose-600" },
             { label: "Avg Collection Rate", value: `${ytdTotals.avgCollection.toFixed(1)}%`, sub: ytdTotals.avgCollection >= 92 ? "On Track" : "Below Target", icon: Receipt, color: ytdTotals.avgCollection >= 92 ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600" },
-            { label: "Revenue per MW", value: `₹${(ytdTotals.realized / (PLANTS.reduce((s, p) => s + p.capacity, 0) * capacityShare / 1000)).toFixed(1)} L`, sub: selectedPlant !== "all" ? selectedPlant : "Portfolio average", icon: CircleDollarSign, color: "bg-violet-50 text-violet-600" },
+            { label: "Revenue per MW", value: `₹${((PLANTS.reduce((s, p) => s + p.capacity, 0) * capacityShare) > 0 ? (ytdTotals.realized / (PLANTS.reduce((s, p) => s + p.capacity, 0) * capacityShare / 1000)).toFixed(1) : "0.0")} L`, sub: selectedPlant !== "all" ? selectedPlant : "Portfolio average", icon: CircleDollarSign, color: "bg-violet-50 text-violet-600" },
             { label: "Total LD Exposure", value: `₹${filteredVendorRevenue.reduce((s, v) => s + v.ldExposure, 0).toFixed(2)} Cr`, sub: `${filteredVendorRevenue.filter(v => v.ldExposure > 0).length} vendors at risk`, icon: Scale, color: "bg-orange-50 text-orange-600" },
           ].map((kpi) => (
             <Card key={kpi.label} className="border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
@@ -506,9 +506,11 @@ export function FinancialReports() {
                   <CardDescription>Where budget vs realization gap occurs</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4 space-y-3">
-                  {filteredMonthlyData.slice(-5).reverse().map((m) => {
+                  {filteredMonthlyData.length === 0 ? (
+                    <div className="text-center py-8 text-slate-400 text-xs">No data matches current filters</div>
+                  ) : filteredMonthlyData.slice(-5).reverse().map((m) => {
                     const gap = m.budgeted - m.realized;
-                    const gapPct = (gap / m.budgeted) * 100;
+                    const gapPct = m.budgeted > 0 ? (gap / m.budgeted) * 100 : 0;
                     return (
                       <div key={m.month} className="flex items-center gap-3">
                         <div className="w-14 text-xs font-semibold text-slate-700">{m.month}</div>
@@ -522,7 +524,7 @@ export function FinancialReports() {
                           <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                             <div
                               className="h-full rounded-full bg-[#2955A0]"
-                              style={{ width: `${(m.realized / m.budgeted) * 100}%` }}
+                              style={{ width: `${m.budgeted > 0 ? (m.realized / m.budgeted) * 100 : 0}%` }}
                             />
                           </div>
                         </div>
@@ -577,11 +579,11 @@ export function FinancialReports() {
                       <ResponsiveContainer width="100%" height={300}>
                         <ComposedChart data={filteredMonthlyData.map((m, idx) => {
                           const prev = idx > 0 ? filteredMonthlyData[idx - 1].realized : m.realized;
-                          return { ...m, shortfall: +(m.budgeted - m.realized).toFixed(2), momChange: +((m.realized - prev) / prev * 100).toFixed(1), shortfallPct: +((m.budgeted - m.realized) / m.budgeted * 100).toFixed(1) };
+                          return { ...m, shortfall: +(m.budgeted - m.realized).toFixed(2), momChange: prev > 0 ? +((m.realized - prev) / prev * 100).toFixed(1) : 0, shortfallPct: m.budgeted > 0 ? +((m.budgeted - m.realized) / m.budgeted * 100).toFixed(1) : 0 };
                         })} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                           <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
-                          <YAxis yAxisId="revenue" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v}`} domain={[1.5, 3.2]} />
+                          <YAxis yAxisId="revenue" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v}`} />
                           <YAxis yAxisId="pct" orientation="right" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} domain={[75, 100]} />
                           <RechartsTooltip content={({ active, payload, label }) => {
                             if (!active || !payload?.length) return null;
@@ -640,7 +642,7 @@ export function FinancialReports() {
                             }} />
                             <Bar yAxisId="val" dataKey="shortfall" name="Shortfall (₹Cr)" radius={[3, 3, 0, 0]} barSize={20}>
                               {filteredMonthlyData.map((m, i) => {
-                                const pct = (m.budgeted - m.realized) / m.budgeted * 100;
+                                const pct = m.budgeted > 0 ? (m.budgeted - m.realized) / m.budgeted * 100 : 0;
                                 return <Cell key={i} fill={pct > 12 ? "#ef4444" : pct > 8 ? "#f59e0b" : "#10b981"} opacity={0.75} />;
                               })}
                             </Bar>
@@ -676,7 +678,7 @@ export function FinancialReports() {
                             <Bar yAxisId="mom" dataKey="momChange" name="MoM Change %" radius={[3, 3, 0, 0]} barSize={16}>
                               {filteredMonthlyData.map((_, i) => {
                                 const prev = i > 0 ? filteredMonthlyData[i - 1].realized : filteredMonthlyData[i].realized;
-                                const ch = i === 0 ? 0 : (filteredMonthlyData[i].realized - prev) / prev * 100;
+                                const ch = i === 0 || prev === 0 ? 0 : (filteredMonthlyData[i].realized - prev) / prev * 100;
                                 return <Cell key={i} fill={ch >= 0 ? "#10b981" : "#ef4444"} opacity={0.6} />;
                               })}
                             </Bar>
@@ -689,17 +691,18 @@ export function FinancialReports() {
                     <div className={`grid gap-1 px-1 ${filteredMonthlyData.length <= 1 ? "grid-cols-1" : filteredMonthlyData.length <= 4 ? "grid-cols-4" : filteredMonthlyData.length <= 6 ? "grid-cols-6" : "grid-cols-12"}`}>
                       {filteredMonthlyData.map((m) => {
                         const shortfall = m.budgeted - m.realized;
-                        const shortfallPct = (shortfall / m.budgeted) * 100;
+                        const shortfallPct = m.budgeted > 0 ? (shortfall / m.budgeted) * 100 : 0;
+                        const realizePct = m.budgeted > 0 ? (m.realized / m.budgeted) * 100 : 0;
                         return (
                           <div key={m.month} className="text-center p-2 rounded-lg bg-slate-50 border border-slate-100">
                             <p className="text-[9px] font-bold text-slate-700 mb-1">{m.month.split(" ")[0]}</p>
                             <p className="text-[8px] text-slate-400">{(m.genMWh / 1000).toFixed(1)}k MWh</p>
                             <div className="mt-1.5 space-y-0.5">
                               <div className="h-1 rounded-full bg-slate-200 overflow-hidden">
-                                <div className="h-full rounded-full bg-[#2955A0]" style={{ width: `${(m.realized / m.budgeted) * 100}%` }} />
+                                <div className="h-full rounded-full bg-[#2955A0]" style={{ width: `${realizePct}%` }} />
                               </div>
                             </div>
-                            <p className={`text-[8px] font-bold mt-1 ${shortfallPct > 10 ? "text-rose-600" : shortfallPct > 6 ? "text-amber-600" : "text-emerald-600"}`}>{(m.realized / m.budgeted * 100).toFixed(0)}%</p>
+                            <p className={`text-[8px] font-bold mt-1 ${shortfallPct > 10 ? "text-rose-600" : shortfallPct > 6 ? "text-amber-600" : "text-emerald-600"}`}>{realizePct.toFixed(0)}%</p>
                           </div>
                         );
                       })}
@@ -734,9 +737,9 @@ export function FinancialReports() {
                       <tbody>
                         {filteredMonthlyData.map((m, idx) => {
                           const shortfall = m.budgeted - m.realized;
-                          const shortfallPct = (shortfall / m.budgeted) * 100;
+                          const shortfallPct = m.budgeted > 0 ? (shortfall / m.budgeted) * 100 : 0;
                           const prevRealized = idx > 0 ? filteredMonthlyData[idx - 1].realized : m.realized;
-                          const momChange = ((m.realized - prevRealized) / prevRealized) * 100;
+                          const momChange = prevRealized > 0 ? ((m.realized - prevRealized) / prevRealized) * 100 : 0;
                           return (
                             <tr key={m.month} className={`border-b border-slate-100 hover:bg-slate-50 ${idx % 2 === 0 ? "" : "bg-slate-50/50"}`}>
                               <td className="px-4 py-2.5 font-semibold text-slate-800 text-xs">{m.month}</td>
@@ -818,7 +821,7 @@ export function FinancialReports() {
                             <span className="font-bold text-[#2955A0]">₹{scaledRealized.toFixed(2)} Cr</span>
                           </div>
                           <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                            <div className="h-full rounded-full bg-[#2955A0]" style={{ width: `${(q.realized / q.budgeted) * 100}%` }} />
+                            <div className="h-full rounded-full bg-[#2955A0]" style={{ width: `${scaledBudgeted > 0 ? (scaledRealized / scaledBudgeted) * 100 : 0}%` }} />
                           </div>
                           <div className="flex justify-between text-[10px]">
                             <span className={`font-bold ${gapPct > 8 ? "text-rose-600" : "text-amber-600"}`}>-{gapPct.toFixed(1)}% gap</span>
@@ -841,7 +844,7 @@ export function FinancialReports() {
                     <ArrowRight className="w-4 h-4 text-[#2955A0]" />
                     Revenue Waterfall — Budget to Realization
                   </CardTitle>
-                  <CardDescription>Step-by-step flow showing where revenue was lost from budget to realized amount</CardDescription>
+                  <CardDescription>Step-by-step flow showing where revenue was lost — {selectedFY}{hasActiveFilter ? ` · ${filterScopeLabel}` : ""}</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
                   <ResponsiveContainer width="100%" height={320}>
@@ -884,7 +887,7 @@ export function FinancialReports() {
                 <CardContent className="pt-4">
                   <div className="space-y-3">
                     {totalLossBreakdown.map((item) => {
-                      const pct = (item.value / totalLoss) * 100;
+                      const pct = totalLoss > 0 ? (item.value / totalLoss) * 100 : 0;
                       return (
                         <div key={item.category} className="flex items-center gap-3">
                           <div className="p-1.5 rounded-lg" style={{ backgroundColor: item.color + "15" }}>
@@ -909,8 +912,13 @@ export function FinancialReports() {
                       Key Insight
                     </div>
                     <p className="text-[11px] text-blue-700">
-                      Weather/Irradiance accounts for the largest revenue impact at ₹{ytdTotals.weatherLoss.toFixed(2)} Cr ({((ytdTotals.weatherLoss / totalLoss) * 100).toFixed(0)}%).
-                      Monsoon months (Jun-Aug) show 2.5x higher weather losses vs dry season.
+                      {(() => {
+                        const sorted = [...totalLossBreakdown].sort((a, b) => b.value - a.value);
+                        const top = sorted[0];
+                        return totalLoss > 0
+                          ? `${top.category} accounts for the largest revenue impact at ₹${top.value.toFixed(2)} Cr (${((top.value / totalLoss) * 100).toFixed(0)}%). ${top.category === "Weather / Irradiance" ? "Monsoon months (Jun-Aug) show 2.5x higher weather losses vs dry season." : `Focus on ${top.category.toLowerCase()} mitigation to reduce shortfall.`}`
+                          : "No losses recorded for the current filter selection.";
+                      })()}
                     </p>
                   </div>
                 </CardContent>
@@ -923,7 +931,7 @@ export function FinancialReports() {
                   <BarChart2 className="w-4 h-4 text-[#2955A0]" />
                   Month-wise Revenue Loss Stacked View
                 </CardTitle>
-                <CardDescription>How each loss category impacts monthly revenue across the year</CardDescription>
+                <CardDescription>How each loss category impacts monthly revenue — {selectedFY}{hasActiveFilter ? ` · ${filterScopeLabel}` : ""}</CardDescription>
               </CardHeader>
               <CardContent className="pt-4">
                 <ResponsiveContainer width="100%" height={300}>
@@ -1115,8 +1123,8 @@ export function FinancialReports() {
               <Card className="border-2 border-blue-200 bg-blue-50/30">
                 <CardContent className="p-4 text-center">
                   <p className="text-[10px] text-blue-600 uppercase tracking-wider font-semibold">Invoice Collection</p>
-                  <p className={`text-2xl font-bold mt-1 ${(invoiceAggregates.collected / invoiceAggregates.amount * 100) >= 92 ? "text-emerald-700" : "text-amber-700"}`}>
-                    {(invoiceAggregates.collected / invoiceAggregates.amount * 100).toFixed(1)}%
+                  <p className={`text-2xl font-bold mt-1 ${(invoiceAggregates.amount > 0 ? (invoiceAggregates.collected / invoiceAggregates.amount * 100) : 0) >= 92 ? "text-emerald-700" : "text-amber-700"}`}>
+                    {invoiceAggregates.amount > 0 ? (invoiceAggregates.collected / invoiceAggregates.amount * 100).toFixed(1) : "0.0"}%
                   </p>
                   <p className="text-[10px] text-blue-500">₹{invoiceAggregates.collected.toFixed(2)} / ₹{invoiceAggregates.amount.toFixed(2)} Cr</p>
                 </CardContent>

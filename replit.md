@@ -134,9 +134,12 @@ Pages with filter bars: Dashboard, JMR Data Management, KPI Engine, Outage & Los
 - **Capacity share scaling**: When filtering to a plant or vendor, revenue/budget values scale proportionally by MW share of the 220 MW portfolio
 - **Filtered data sources**: `filteredMonthlyData`, `filteredVendorRevenue`, `filteredVendorInvoice` — all render sections use these instead of raw arrays
 - **Responsive grids**: Month tile grid and vendor card grid adapt column count based on filtered result count
-- **Quarterly data**: Budgeted/realized values scaled by `capacityShare` for consistent plant/vendor-scoped views
+- **Quarterly data**: Budgeted/realized values and progress bars scaled by `capacityShare` for consistent plant/vendor-scoped views
 - **KPIs**: All 6 KPI cards (budgeted, realized, shortfall, collection rate, revenue per MW, LD exposure) react to active filters
-- **Zero-division guards**: Projection and percentage calculations guarded against empty filtered arrays
+- **Zero-division guards**: All percentage/ratio calculations guarded against zero denominators (budgeted, totalLoss, invoiceAmount, prevRealized, capacityShare). Empty state message when no data matches filters.
+- **Dynamic Y-axis**: Revenue chart Y-axis auto-scales instead of hardcoded domain, so small-plant filtering doesn't break chart proportions
+- **Dynamic Key Insight**: Loss Attribution "Key Insight" dynamically identifies the largest loss category instead of hardcoding "Weather"
+- **Filter scope labels**: All tab card descriptions reflect active filter scope (FY + vendor/plant name)
 - **Sticky header**: Consistent with platform standard (no overflow-auto on page div)
 
 ## Development
