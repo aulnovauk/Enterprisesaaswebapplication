@@ -117,7 +117,7 @@ const months = [
   "April", "May", "June", "July", "August", "September",
   "October", "November", "December", "January", "February", "March"
 ];
-const states = ["Maharashtra", "Maharashtra", "Maharashtra", "Maharashtra", "Maharashtra", "Maharashtra"];
+const states = ["Maharashtra"];
 const vendors = ["SolarCo India", "SunPower Tech", "Green Energy Ltd", "TechSolar Pvt", "Mega Solar Inc"];
 const ppaTypes = ["Long Term (25Y)", "Medium Term (15Y)", "Short Term (5Y)"];
 
@@ -2144,6 +2144,14 @@ export function JMRDataManagement() {
         };
       }).sort((a, b) => b.absMwhImpact - a.absMwhImpact);
 
+      const lossDeltas = currMonthLosses.map((c: { key: string; label: string; lossMWh: number }, i: number) => ({
+        label: c.label,
+        absDelta: Math.abs(c.lossMWh - prevMonthLosses[i].lossMWh),
+      })).sort((a: { absDelta: number }, b: { absDelta: number }) => b.absDelta - a.absDelta);
+      const topFactorLabel = lossDeltas.length > 0 && lossDeltas[0].absDelta > 0
+        ? lossDeltas[0].label
+        : reasons[0]?.label || "No Change";
+
       return {
         ...row,
         diff,
@@ -2151,7 +2159,7 @@ export function JMRDataManagement() {
         reasons,
         prevMonthLosses,
         currMonthLosses,
-        primaryReason: reasons[0].label,
+        primaryReason: topFactorLabel,
       };
     });
 
@@ -2205,6 +2213,7 @@ export function JMRDataManagement() {
   }, [jmrRecords, selectedFY, cmpCurrentMonth, cmpPrevMonth]);
 
   const [showMissingAlert, setShowMissingAlert] = useState(true);
+  const [selectedVariancePlant, setSelectedVariancePlant] = useState<string>("__all__");
   const [lastDismissedFY, setLastDismissedFY] = useState<string | null>(null);
 
   useEffect(() => {
@@ -4851,13 +4860,28 @@ export function JMRDataManagement() {
 
                       <Card className="border-2 border-slate-200">
                         <CardHeader className="border-b border-slate-100 pb-4">
-                          <CardTitle className="text-base flex items-center gap-2">
-                            <AlertCircle className="w-4 h-4 text-[#2955A0]" />
-                            Plant-wise Variance Breakdown
-                          </CardTitle>
-                          <CardDescription>
-                            Month-over-month loss factor comparison at each plant — {cmpCurrentMonth} vs {cmpPrevMonth}
-                          </CardDescription>
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <CardTitle className="text-base flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4 text-[#2955A0]" />
+                                Plant-wise Variance Breakdown
+                              </CardTitle>
+                              <CardDescription className="mt-1">
+                                Month-over-month loss factor comparison — {cmpCurrentMonth} vs {cmpPrevMonth}
+                              </CardDescription>
+                            </div>
+                            <Select value={selectedVariancePlant} onValueChange={setSelectedVariancePlant}>
+                              <SelectTrigger className="w-[220px] h-9 text-xs">
+                                <SelectValue placeholder="Select Plant" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__all__">All Plants (Summary)</SelectItem>
+                                {comparisonData.plantVarianceData.map((p) => (
+                                  <SelectItem key={p.fullName} value={p.fullName}>{p.fullName}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                           <div className="flex items-center gap-4 mt-2">
                             <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
                               <span className="w-3 h-2 rounded-sm bg-slate-300 inline-block" /> {cmpPrevMonth}
@@ -4873,8 +4897,67 @@ export function JMRDataManagement() {
                             </span>
                           </div>
                         </CardHeader>
-                        <CardContent className="p-0 divide-y divide-slate-100">
-                          {comparisonData.plantVarianceData.map((plant, idx) => {
+                        <CardContent className="p-0">
+                          {selectedVariancePlant === "__all__" ? (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs">
+                                <thead>
+                                  <tr className="border-b border-slate-200 bg-slate-50/60">
+                                    <th className="text-left py-2.5 px-4 font-semibold text-slate-600">Plant</th>
+                                    <th className="text-right py-2.5 px-3 font-semibold text-slate-600">{cmpPrevMonth} (MWh)</th>
+                                    <th className="text-right py-2.5 px-3 font-semibold text-slate-600">{cmpCurrentMonth} (MWh)</th>
+                                    <th className="text-right py-2.5 px-3 font-semibold text-slate-600">Δ MWh</th>
+                                    <th className="text-center py-2.5 px-3 font-semibold text-slate-600">Impact</th>
+                                    <th className="text-left py-2.5 px-3 font-semibold text-slate-600">Top Factor</th>
+                                    <th className="text-center py-2.5 px-3 font-semibold text-slate-600"></th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                  {comparisonData.plantVarianceData.map((plant) => {
+                                    const isGain = plant.diff >= 0;
+                                    return (
+                                      <tr key={plant.fullName} className="hover:bg-slate-50/80 transition-colors">
+                                        <td className="py-2.5 px-4 font-medium text-slate-800">{plant.fullName}</td>
+                                        <td className="py-2.5 px-3 text-right text-slate-600 tabular-nums">{plant.previous.toLocaleString("en-IN")}</td>
+                                        <td className="py-2.5 px-3 text-right text-slate-800 font-medium tabular-nums">{plant.current.toLocaleString("en-IN")}</td>
+                                        <td className="py-2.5 px-3 text-right tabular-nums">
+                                          {plant.diff !== 0 ? (
+                                            <span className={`inline-flex items-center gap-0.5 font-semibold ${isGain ? "text-emerald-700" : "text-rose-600"}`}>
+                                              {isGain ? "+" : ""}{plant.diff.toLocaleString("en-IN")}
+                                            </span>
+                                          ) : (
+                                            <span className="text-slate-400">—</span>
+                                          )}
+                                        </td>
+                                        <td className="py-2.5 px-3 text-center">
+                                          {plant.absDiff === 0 ? (
+                                            <Badge className="bg-slate-100 text-slate-500 text-[10px]">None</Badge>
+                                          ) : plant.absDiff > 200 ? (
+                                            <Badge className="bg-rose-100 text-rose-700 text-[10px]">High</Badge>
+                                          ) : plant.absDiff > 80 ? (
+                                            <Badge className="bg-amber-100 text-amber-700 text-[10px]">Medium</Badge>
+                                          ) : (
+                                            <Badge className="bg-emerald-100 text-emerald-700 text-[10px]">Low</Badge>
+                                          )}
+                                        </td>
+                                        <td className="py-2.5 px-3 text-slate-600">{plant.primaryReason}</td>
+                                        <td className="py-2.5 px-3 text-center">
+                                          <button
+                                            onClick={() => setSelectedVariancePlant(plant.fullName)}
+                                            className="text-[10px] text-[#2955A0] hover:text-[#1e3f73] font-semibold hover:underline"
+                                          >
+                                            View Details →
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div className="divide-y divide-slate-100">
+                          {comparisonData.plantVarianceData.filter((p) => p.fullName === selectedVariancePlant).map((plant, idx) => {
                             const isGain = plant.diff >= 0;
                             const prevLosses = plant.prevMonthLosses || [];
                             const currLosses = plant.currMonthLosses || [];
@@ -4990,9 +5073,15 @@ export function JMRDataManagement() {
                                           </div>
                                         )}
                                       </div>
-                                      <Badge className="mt-2 text-[9px] px-2 py-0.5" style={{ backgroundColor: plant.reasons[0]?.color + "20", color: plant.reasons[0]?.color }}>
-                                        Top: {plant.primaryReason}
-                                      </Badge>
+                                      {(() => {
+                                        const topReason = plant.reasons.find((r: { label: string }) => r.label === plant.primaryReason) || plant.reasons[0];
+                                        const topColor = topReason?.color || "#64748b";
+                                        return (
+                                          <Badge className="mt-2 text-[9px] px-2 py-0.5" style={{ backgroundColor: topColor + "20", color: topColor }}>
+                                            Top: {plant.primaryReason}
+                                          </Badge>
+                                        );
+                                      })()}
                                     </div>
                                   </div>
                                 )}
@@ -5003,6 +5092,8 @@ export function JMRDataManagement() {
                               </div>
                             );
                           })}
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
 
