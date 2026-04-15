@@ -86,6 +86,9 @@ vite.config.ts        - Vite config (port 5000, host 0.0.0.0)
   - Auto-generated insight banner summarizing portfolio performance
   - Month selector with auto-previous-month detection
   - Plant-level data aggregation (handles multiple records per plant/month)
+  - **Top-level Plant/Vendor filters fully applied**: comparisonData useMemo filters by selectedPlant and selectedVendor in addition to FY/month. Subtitle dynamically reflects active filter scope.
+
+- **Audit & Version History Tab** (`JMRDataManagement.tsx`): Audit trail table now respects top-level Plant/Vendor filters. Each audit record has plant and vendor fields matching canonical JMR record names. Plant column added to audit table.
 
 - **Missing JMR Alert Banner** (`JMRDataManagement.tsx`): Persistent alert banner shown across all JMR tabs when any plant has JMR submissions missing for more than 1 month. Features:
   - Automatic gap detection: compares each plant's latest JMR month against the FY's most recent month

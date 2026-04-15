@@ -1713,7 +1713,7 @@ export const initialJmrRecords = [
 // Audit Trail Mock Data
 const auditRecords = [
   {
-    versionNo: 2,
+    versionNo: 4,
     modifiedBy: "Priya Sharma",
     role: "Checker",
     timestamp: "2026-03-02 14:30:45",
@@ -1721,9 +1721,11 @@ const auditRecords = [
     changeSummary: "Approved and locked JMR record",
     approvalStatus: "Approved",
     ipAddress: "192.168.1.105",
+    plant: "Sakri Solar Park",
+    vendor: "SolarCo India",
   },
   {
-    versionNo: 1,
+    versionNo: 3,
     modifiedBy: "Rajesh Kumar",
     role: "Maker",
     timestamp: "2026-03-01 10:15:22",
@@ -1731,6 +1733,56 @@ const auditRecords = [
     changeSummary: "Initial JMR data entry",
     approvalStatus: "Submitted",
     ipAddress: "192.168.1.102",
+    plant: "Sakri Solar Park",
+    vendor: "SolarCo India",
+  },
+  {
+    versionNo: 2,
+    modifiedBy: "Anita Desai",
+    role: "Checker",
+    timestamp: "2026-03-03 09:45:10",
+    fieldsChanged: ["Approval Status"],
+    changeSummary: "Approved JMR after verification",
+    approvalStatus: "Approved",
+    ipAddress: "192.168.1.110",
+    plant: "Sangli Solar Farm",
+    vendor: "SunPower Tech",
+  },
+  {
+    versionNo: 1,
+    modifiedBy: "Vikram Patil",
+    role: "Maker",
+    timestamp: "2026-03-02 16:20:33",
+    fieldsChanged: ["Gross Generation", "Net Export", "Revenue", "Grid Availability"],
+    changeSummary: "Monthly JMR data submission",
+    approvalStatus: "Submitted",
+    ipAddress: "192.168.1.108",
+    plant: "Osmanabad Solar Plant",
+    vendor: "Green Energy Ltd",
+  },
+  {
+    versionNo: 2,
+    modifiedBy: "Suresh Mehta",
+    role: "Checker",
+    timestamp: "2026-02-28 11:05:18",
+    fieldsChanged: ["Revenue", "Tariff Rate"],
+    changeSummary: "Corrected tariff and recalculated revenue",
+    approvalStatus: "Approved",
+    ipAddress: "192.168.1.112",
+    plant: "Beed Solar Park",
+    vendor: "Mega Solar Inc",
+  },
+  {
+    versionNo: 1,
+    modifiedBy: "Deepak Joshi",
+    role: "Maker",
+    timestamp: "2026-02-27 08:30:55",
+    fieldsChanged: ["Gross Generation", "Net Export"],
+    changeSummary: "Initial JMR data entry for February",
+    approvalStatus: "Submitted",
+    ipAddress: "192.168.1.115",
+    plant: "Latur Solar Station",
+    vendor: "TechSolar Pvt",
   },
 ];
 
@@ -2041,8 +2093,14 @@ export function JMRDataManagement() {
   const [cmpPrevMonth, setCmpPrevMonth] = useState("March");
 
   const comparisonData = useMemo(() => {
-    const currentRecs = jmrRecords.filter(r => r.fy === selectedFY && r.month === cmpCurrentMonth);
-    const prevRecs = jmrRecords.filter(r => r.fy === selectedFY && r.month === cmpPrevMonth);
+    const baseFilter = (r: typeof jmrRecords[0]) => {
+      if (r.fy !== selectedFY) return false;
+      if (selectedPlant !== "All Plants" && r.plant !== selectedPlant) return false;
+      if (selectedVendor !== "All Vendors" && r.vendor !== selectedVendor) return false;
+      return true;
+    };
+    const currentRecs = jmrRecords.filter(r => baseFilter(r) && r.month === cmpCurrentMonth);
+    const prevRecs = jmrRecords.filter(r => baseFilter(r) && r.month === cmpPrevMonth);
 
     const sumBy = (recs: typeof jmrRecords, key: keyof typeof jmrRecords[0]) =>
       recs.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
@@ -2210,7 +2268,7 @@ export function JMRDataManagement() {
       portfolioDiff,
       portfolioAbsDiff,
     };
-  }, [jmrRecords, selectedFY, cmpCurrentMonth, cmpPrevMonth]);
+  }, [jmrRecords, selectedFY, selectedPlant, selectedVendor, cmpCurrentMonth, cmpPrevMonth]);
 
   const [showMissingAlert, setShowMissingAlert] = useState(true);
   const [selectedVariancePlant, setSelectedVariancePlant] = useState<string>("__all__");
@@ -4233,6 +4291,7 @@ export function JMRDataManagement() {
                           <TableHeader>
                             <TableRow className="bg-slate-50">
                               <TableHead className="font-bold text-center">Version</TableHead>
+                              <TableHead className="font-bold">Plant</TableHead>
                               <TableHead className="font-bold">Modified By</TableHead>
                               <TableHead className="font-bold">Role</TableHead>
                               <TableHead className="font-bold">Timestamp</TableHead>
@@ -4244,12 +4303,19 @@ export function JMRDataManagement() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {auditRecords.map((audit) => (
-                              <TableRow key={audit.versionNo} className="hover:bg-slate-50">
+                            {auditRecords.filter((audit) => {
+                              if (selectedPlant !== "All Plants" && audit.plant !== selectedPlant) return false;
+                              if (selectedVendor !== "All Vendors" && audit.vendor !== selectedVendor) return false;
+                              return true;
+                            }).map((audit) => (
+                              <TableRow key={`${audit.plant}-${audit.versionNo}`} className="hover:bg-slate-50">
                                 <TableCell className="text-center">
                                   <Badge variant="outline" className="font-mono">
                                     v{audit.versionNo}
                                   </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <span className="text-sm font-medium text-slate-700">{audit.plant}</span>
                                 </TableCell>
                                 <TableCell className="font-semibold">{audit.modifiedBy}</TableCell>
                                 <TableCell>
@@ -4428,7 +4494,7 @@ export function JMRDataManagement() {
                         Month-over-Month Generation Comparison
                       </h2>
                       <p className="text-sm text-slate-500 mt-0.5">
-                        Compare JMR generation metrics across two months to support data-driven decision making
+                        Compare JMR generation metrics across two months{selectedPlant !== "All Plants" ? ` · ${selectedPlant}` : selectedVendor !== "All Vendors" ? ` · ${selectedVendor} plants` : ""} · {selectedFY}
                       </p>
                     </div>
                     <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-sm">
@@ -4638,7 +4704,7 @@ export function JMRDataManagement() {
                         Detailed Plant-wise Comparison
                       </CardTitle>
                       <CardDescription>
-                        {cmpCurrentMonth} vs {cmpPrevMonth} · {selectedFY} — all JMR-submitted plants
+                        {cmpCurrentMonth} vs {cmpPrevMonth} · {selectedFY} — {selectedPlant !== "All Plants" ? selectedPlant : selectedVendor !== "All Vendors" ? `${selectedVendor} plants` : "all JMR-submitted plants"}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">
