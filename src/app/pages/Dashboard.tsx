@@ -913,8 +913,8 @@ export function Dashboard() {
     const capRatio    = BASE_KPI.plantsCap > 0 ? filteredCap / BASE_KPI.plantsCap : 0;
 
     // Scaled portfolio metadata
-    const filteredPortfolioCap   = Math.round(PORTFOLIO_CONFIG.totalCapacity * capRatio);
-    const filteredPlantCount     = Math.max(1, Math.round(PORTFOLIO_CONFIG.totalPlants * capRatio));
+    const filteredPortfolioCap   = filteredCap;
+    const filteredPlantCount     = filtered.length;
     const uniqueStates           = [...new Set(filtered.map(p => p.state))];
 
     // MTD
@@ -983,7 +983,7 @@ export function Dashboard() {
       revenueRealized, revenueTarget, revenueShortfall,
       ldExposure, co2, assetHealth, genChange,
     };
-  }, [financialYear, month, stateFilter, vendorFilter, durationToggle]);
+  }, [financialYear, month, stateFilter, vendorFilter, plantFilter, durationToggle]);
 
   // ── Build computed KPI cards from dashboardData ───────────────────────────
   const computedKPIs = useMemo(() => {
@@ -1273,11 +1273,250 @@ export function Dashboard() {
     };
   }, [dashboardData, durationToggle]);
 
-  const mergedMtdData = mtdGenerationData.map((d, i) => ({
+  const filteredMtdData = useMemo(() => {
+    const filtered = dashboardData.filtered;
+    return filtered
+      .map((p: any) => ({
+        plant: p.name.length > 18 ? p.name.slice(0, 18) + "…" : p.name,
+        target: p.target,
+        actual: p.generation,
+      }))
+      .sort((a: any, b: any) => b.actual - a.actual)
+      .slice(0, 6);
+  }, [dashboardData]);
+
+  const mergedMtdData = filteredMtdData.map((d: any) => ({
     ...d,
-    prevActual: prevYearMtdGenerationData[i]?.actual,
-    prevTarget: prevYearMtdGenerationData[i]?.target,
+    prevActual: Math.round(d.actual * 0.92),
+    prevTarget: Math.round(d.target * 0.93),
   }));
+
+  const filteredVendorHealthData = useMemo(() => {
+    const filtered = dashboardData.filtered;
+    const vendorMap: Record<string, { plants: any[]; cap: number }> = {};
+    for (const p of filtered) {
+      if (!vendorMap[p.vendor]) vendorMap[p.vendor] = { plants: [], cap: 0 };
+      vendorMap[p.vendor].plants.push(p);
+      vendorMap[p.vendor].cap += p.capacity;
+    }
+    const colors: Record<string, string> = {
+      "SolarCo India": "#2955A0",
+      "SunPower Tech": "#ef4444",
+      "Mega Solar Inc": "#f59e0b",
+      "Green Energy Ltd": "#10b981",
+      "TechSolar Pvt": "#8b5cf6",
+    };
+    return Object.entries(vendorMap).map(([vendor, data]) => {
+      const plants = data.plants;
+      const cap = data.cap;
+      const origVendor = vendorHealthData.find(v => v.vendor === vendor);
+      const origCap = origVendor ? origVendor.capacity : cap;
+      const capScale = origCap > 0 ? cap / origCap : 1;
+      const budgeted = origVendor ? parseFloat((origVendor.budgeted * capScale).toFixed(2)) : parseFloat((cap * 0.24).toFixed(2));
+      const realized = origVendor ? parseFloat((origVendor.realized * capScale).toFixed(2)) : parseFloat((budgeted * 0.9).toFixed(2));
+      const shortfall = parseFloat(Math.max(0, budgeted - realized).toFixed(2));
+      const collection = origVendor ? origVendor.collection : 90;
+      const ldExp = parseFloat((plants.filter((p: any) => p.ldRisk === "high").length * 0.55 + plants.filter((p: any) => p.ldRisk === "medium").length * 0.14).toFixed(2));
+      const pct = budgeted > 0 ? realized / budgeted : 0;
+      const origStatus = origVendor ? origVendor.status : "healthy";
+      const status = plants.length === (origVendor?.plantCount ?? 0) ? origStatus : (pct < 0.88 ? "critical" : pct < 0.93 ? "warning" : "healthy");
+      return {
+        vendor,
+        plantCount: plants.length,
+        capacity: cap,
+        budgeted,
+        realized,
+        shortfall,
+        collection,
+        ldExposure: ldExp,
+        status,
+        color: colors[vendor] || "#64748b",
+      };
+    });
+  }, [dashboardData]);
+
+  const filteredRiskData = useMemo(() => {
+    const filtered = dashboardData.filtered;
+    const nonCompliantPlants = filtered.filter((p: any) => p.status === "non-compliant" || p.status === "curtailment").length;
+    const highLDRisk = filtered.filter((p: any) => p.ldRisk === "high").length;
+    const escalationTriggered = Math.min(nonCompliantPlants, Math.ceil(nonCompliantPlants * 0.4));
+    const pendingJMR = filtered.length > 0 ? Math.max(1, Math.round(filtered.length * 0.27)) : 0;
+    const overdueJMR = Math.max(0, Math.round(pendingJMR * 0.25));
+    const ldExposureCr = parseFloat((highLDRisk * 0.55 + filtered.filter((p: any) => p.ldRisk === "medium").length * 0.14).toFixed(2));
+    const complianceRatio = filtered.length > 0 ? filtered.filter((p: any) => p.status === "compliant").length / filtered.length : 1;
+    const riskScore = Math.round(100 - complianceRatio * 50 - (1 - highLDRisk / Math.max(1, filtered.length)) * 20);
+
+    const topUnderperforming = [...filtered]
+      .sort((a: any, b: any) => a.cuf - b.cuf)
+      .slice(0, 3)
+      .map((p: any) => ({ plant: p.name, state: p.state, cuf: p.cuf, gap: parseFloat((p.cuf - 24).toFixed(1)) }));
+
+    const recentAlerts = filtered
+      .filter((p: any) => p.status !== "compliant")
+      .slice(0, 5)
+      .map((p: any, i: number) => {
+        const catMap: Record<string, string> = { "non-compliant": "Non-Compliant", curtailment: "Curtailment", warning: "Warning" };
+        const sevMap: Record<string, string> = { "non-compliant": "critical", curtailment: "high", warning: "medium" };
+        return {
+          id: i + 1,
+          category: catMap[p.status] || "Warning",
+          plant: p.name,
+          state: p.state,
+          daysOpen: Math.round(Math.random() * 10) + 1,
+          severity: sevMap[p.status] || "medium",
+          detail: p.status === "non-compliant"
+            ? `CUF ${p.cuf}% — ${(24 - p.cuf).toFixed(1)}% below target`
+            : p.status === "curtailment"
+            ? `Grid curtailment — ${(100 - p.availability).toFixed(1)}% generation loss`
+            : `CUF trending below threshold`,
+        };
+      });
+
+    const vendorLDMap: Record<string, { plants: number; ldCr: number; risk: string }> = {};
+    for (const p of filtered) {
+      if (!vendorLDMap[p.vendor]) vendorLDMap[p.vendor] = { plants: 0, ldCr: 0, risk: "low" };
+      vendorLDMap[p.vendor].plants++;
+      if (p.ldRisk === "high") vendorLDMap[p.vendor].ldCr += 0.55;
+      if (p.ldRisk === "medium") vendorLDMap[p.vendor].ldCr += 0.14;
+    }
+    const vendorLDExposure = Object.entries(vendorLDMap)
+      .filter(([, d]) => d.ldCr > 0)
+      .sort((a, b) => b[1].ldCr - a[1].ldCr)
+      .map(([vendor, d]) => ({
+        vendor,
+        plants: d.plants,
+        ldCr: parseFloat(d.ldCr.toFixed(2)),
+        risk: d.ldCr > 0.4 ? "high" : d.ldCr > 0 ? "medium" : "low",
+      }));
+
+    return {
+      nonCompliantPlants,
+      highLDRisk,
+      escalationTriggered,
+      pendingJMR,
+      overdueJMR,
+      ldExposureCr,
+      riskScore: Math.max(0, Math.min(100, riskScore)),
+      topUnderperforming,
+      complianceTrend: riskData.complianceTrend,
+      recentAlerts: recentAlerts.length > 0 ? recentAlerts : [{ id: 1, category: "None", plant: "No alerts", state: "", daysOpen: 0, severity: "medium", detail: "All plants operating normally" }],
+      vendorLDExposure,
+    };
+  }, [dashboardData]);
+
+  const filteredLdExposureData = useMemo(() => {
+    const filtered = dashboardData.filtered;
+    const vendorMap: Record<string, { plants: number; ldAmount: number }> = {};
+    for (const p of filtered) {
+      if (!vendorMap[p.vendor]) vendorMap[p.vendor] = { plants: 0, ldAmount: 0 };
+      vendorMap[p.vendor].plants++;
+      if (p.ldRisk === "high") vendorMap[p.vendor].ldAmount += 0.55;
+      if (p.ldRisk === "medium") vendorMap[p.vendor].ldAmount += 0.14;
+    }
+    return Object.entries(vendorMap)
+      .map(([vendor, d]) => ({
+        vendor,
+        plants: d.plants,
+        ldAmount: parseFloat(d.ldAmount.toFixed(2)),
+        severity: d.ldAmount > 0.4 ? "high" : d.ldAmount > 0 ? "medium" : "none",
+      }))
+      .sort((a, b) => b.ldAmount - a.ldAmount);
+  }, [dashboardData]);
+
+  const filteredVendorRankingData = useMemo(() => {
+    const filtered = dashboardData.filtered;
+    const vendorMap: Record<string, { plants: any[] }> = {};
+    for (const p of filtered) {
+      if (!vendorMap[p.vendor]) vendorMap[p.vendor] = { plants: [] };
+      vendorMap[p.vendor].plants.push(p);
+    }
+    return Object.entries(vendorMap)
+      .map(([vendor, data]) => {
+        const plants = data.plants;
+        const avgCuf = parseFloat((plants.reduce((s: number, p: any) => s + p.cuf, 0) / plants.length).toFixed(1));
+        const avgAvail = parseFloat((plants.reduce((s: number, p: any) => s + p.availability, 0) / plants.length).toFixed(1));
+        const ldExp = parseFloat((plants.filter((p: any) => p.ldRisk === "high").length * 0.55 + plants.filter((p: any) => p.ldRisk === "medium").length * 0.14).toFixed(2));
+        const compliance = parseFloat((plants.filter((p: any) => p.status === "compliant").length / plants.length * 100).toFixed(1));
+        return { rank: 0, vendor, plants: plants.length, avgCuf, avgAvailability: avgAvail, ldExposure: ldExp, compliance };
+      })
+      .sort((a, b) => b.avgCuf - a.avgCuf || a.ldExposure - b.ldExposure)
+      .map((v, i) => ({ ...v, rank: i + 1 }));
+  }, [dashboardData]);
+
+  const filteredClusterData = useMemo(() => {
+    const filtered = dashboardData.filtered;
+    const stateMap: Record<string, { plants: any[] }> = {};
+    for (const p of filtered) {
+      if (!stateMap[p.state]) stateMap[p.state] = { plants: [] };
+      stateMap[p.state].plants.push(p);
+    }
+    return Object.entries(stateMap).map(([state, data]) => {
+      const plants = data.plants;
+      const cap = plants.reduce((s: number, p: any) => s + p.capacity, 0);
+      const gen = plants.reduce((s: number, p: any) => s + p.generation, 0);
+      const avgCuf = parseFloat((plants.reduce((s: number, p: any) => s + p.cuf, 0) / plants.length).toFixed(1));
+      const avgAvail = parseFloat((plants.reduce((s: number, p: any) => s + p.availability, 0) / plants.length).toFixed(1));
+      const ldExp = parseFloat((plants.filter((p: any) => p.ldRisk === "high").length * 0.55 + plants.filter((p: any) => p.ldRisk === "medium").length * 0.14).toFixed(2));
+      return { state, capacity: cap, generation: gen, cuf: avgCuf, availability: avgAvail, ldExposure: ldExp };
+    });
+  }, [dashboardData]);
+
+  const filteredRevenueWaterfall = useMemo(() => {
+    const { revenueTarget, revenueRealized } = dashboardData;
+    const budgeted = parseFloat((revenueTarget * 1.08).toFixed(1));
+    const expected = parseFloat((revenueTarget * 1.02).toFixed(1));
+    return [
+      { stage: "Budgeted", value: budgeted, delta: 0 },
+      { stage: "Expected", value: expected, delta: parseFloat((expected - budgeted).toFixed(1)) },
+      { stage: "Actual", value: revenueTarget, delta: parseFloat((revenueTarget - expected).toFixed(1)) },
+      { stage: "Realized", value: revenueRealized, delta: parseFloat((revenueRealized - revenueTarget).toFixed(1)) },
+    ];
+  }, [dashboardData]);
+
+  const filteredOmDeviation = useMemo(() => {
+    const filtered = dashboardData.filtered;
+    const avgCuf = filtered.length > 0 ? filtered.reduce((s: number, p: any) => s + p.cuf, 0) / filtered.length : 0;
+    const actualPR = parseFloat((avgCuf / 25 * 100 * 0.95).toFixed(1));
+    const prBenchmark = 82.0;
+    const gap = Math.max(0, prBenchmark - actualPR);
+    const settlement = parseFloat((gap * 0.55).toFixed(2));
+    return { prBenchmark, actualPR, settlementAmount: settlement };
+  }, [dashboardData]);
+
+  const filteredCufTrend = useMemo(() => {
+    const { portfolioCuf } = dashboardData;
+    const baseVariance = [-0.9, -0.6, 0.0, -0.3, -1.2, -0.7, -0.2, 0.2, -0.1, -0.4, 0.1, 0.0];
+    return cufTrendData.map((d, i) => ({
+      ...d,
+      portfolio: parseFloat((portfolioCuf + baseVariance[i]).toFixed(1)),
+      prevPortfolio: prevYearCufTrendData[i].prevPortfolio,
+    }));
+  }, [dashboardData]);
+
+  const filteredDowntimeData = useMemo(() => {
+    const filtered = dashboardData.filtered;
+    const hasCurtailment = filtered.some((p: any) => p.status === "curtailment");
+    const hasNonCompliant = filtered.some((p: any) => p.status === "non-compliant");
+    const base = [
+      { name: "Grid Outage", value: hasNonCompliant ? 38 : 30, color: "#EF4444" },
+      { name: "Equipment Failure", value: hasNonCompliant ? 25 : 20, color: "#F59E0B" },
+      { name: "Planned Shutdown", value: 18, color: "#10B981" },
+      { name: "Curtailment", value: hasCurtailment ? 12 : 5, color: "#E8A800" },
+      { name: "Force Majeure", value: 7, color: "#8B5CF6" },
+    ];
+    const total = base.reduce((s, d) => s + d.value, 0);
+    return base.map(d => ({ ...d, value: Math.round(d.value / total * 100) }));
+  }, [dashboardData]);
+
+  const filteredLpiData = useMemo(() => {
+    const { filteredCap } = dashboardData;
+    const ratio = BASE_KPI.plantsCap > 0 ? filteredCap / BASE_KPI.plantsCap : 1;
+    return lpiData.map(d => ({
+      ...d,
+      energyLostMWh: Math.round(d.energyLostMWh * ratio),
+      expectedMWh: Math.round(d.expectedMWh * ratio),
+    }));
+  }, [dashboardData]);
 
   const widgetRegistry: Record<string, { title: string; render: () => React.ReactNode }> = {
     "kpi-cards": {
@@ -1379,16 +1618,16 @@ export function Dashboard() {
             </div>
             <div className="flex items-center gap-2">
               {[
-                { label: "Critical", count: vendorHealthData.filter(v => v.status === "critical").length, cls: "bg-rose-100 text-rose-700" },
-                { label: "At Risk", count: vendorHealthData.filter(v => v.status === "warning").length, cls: "bg-amber-100 text-amber-700" },
-                { label: "Healthy", count: vendorHealthData.filter(v => v.status === "healthy").length, cls: "bg-emerald-100 text-emerald-700" },
+                { label: "Critical", count: filteredVendorHealthData.filter(v => v.status === "critical").length, cls: "bg-rose-100 text-rose-700" },
+                { label: "At Risk", count: filteredVendorHealthData.filter(v => v.status === "warning").length, cls: "bg-amber-100 text-amber-700" },
+                { label: "Healthy", count: filteredVendorHealthData.filter(v => v.status === "healthy").length, cls: "bg-emerald-100 text-emerald-700" },
               ].filter(s => s.count > 0).map(s => (
                 <Badge key={s.label} className={`text-[9px] ${s.cls}`}>{s.count} {s.label}</Badge>
               ))}
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            {vendorHealthData.map((v) => {
+          <div className={`grid gap-3 ${filteredVendorHealthData.length >= 5 ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-5" : filteredVendorHealthData.length >= 3 ? "grid-cols-2 md:grid-cols-3" : filteredVendorHealthData.length === 2 ? "grid-cols-2" : "grid-cols-1 max-w-xs"}`}>
+            {filteredVendorHealthData.map((v) => {
               const pct = (v.realized / v.budgeted) * 100;
               const circumference = 2 * Math.PI * 36;
               const offset = circumference - (circumference * Math.min(pct, 100)) / 100;
@@ -1569,7 +1808,7 @@ export function Dashboard() {
                   <div className="flex items-center gap-2">
                     <div className="text-right">
                       <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Risk Score</div>
-                      <div className="text-xs font-bold text-orange-600">{riskData.riskScore}/100</div>
+                      <div className="text-xs font-bold text-orange-600">{filteredRiskData.riskScore}/100</div>
                     </div>
                     <div className="px-2 py-1 rounded-md text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-300 uppercase tracking-wide">
                       Elevated
@@ -1582,30 +1821,30 @@ export function Dashboard() {
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-2.5 bg-rose-50 rounded-lg border-2 border-rose-200">
                       <div className="text-[10px] font-semibold text-rose-700 mb-0.5">Non-Compliant Plants</div>
-                      <div className="text-2xl font-bold text-rose-900 leading-none">{riskData.nonCompliantPlants}</div>
+                      <div className="text-2xl font-bold text-rose-900 leading-none">{filteredRiskData.nonCompliantPlants}</div>
                       <div className="text-[9px] text-rose-500 mt-1">↑ 1 vs last month</div>
                     </div>
                     <div className="p-2.5 bg-amber-50 rounded-lg border-2 border-amber-200">
                       <div className="text-[10px] font-semibold text-amber-700 mb-0.5">High LD Risk</div>
-                      <div className="text-2xl font-bold text-amber-900 leading-none">{riskData.highLDRisk}</div>
-                      <div className="text-[9px] text-amber-600 mt-1">₹{riskData.ldExposureCr} Cr exposure</div>
+                      <div className="text-2xl font-bold text-amber-900 leading-none">{filteredRiskData.highLDRisk}</div>
+                      <div className="text-[9px] text-amber-600 mt-1">₹{filteredRiskData.ldExposureCr} Cr exposure</div>
                     </div>
                     <div className="p-2.5 bg-purple-50 rounded-lg border-2 border-purple-200">
                       <div className="text-[10px] font-semibold text-purple-700 mb-0.5">Escalations</div>
-                      <div className="text-2xl font-bold text-purple-900 leading-none">{riskData.escalationTriggered}</div>
-                      <div className="text-[9px] text-purple-500 mt-1">2 awaiting response</div>
+                      <div className="text-2xl font-bold text-purple-900 leading-none">{filteredRiskData.escalationTriggered}</div>
+                      <div className="text-[9px] text-purple-500 mt-1">{filteredRiskData.escalationTriggered > 0 ? `${Math.ceil(filteredRiskData.escalationTriggered * 0.67)} awaiting response` : "None pending"}</div>
                     </div>
                     <div className="p-2.5 bg-blue-50 rounded-lg border-2 border-blue-200">
                       <div className="text-[10px] font-semibold text-blue-700 mb-0.5">Pending JMR</div>
-                      <div className="text-2xl font-bold text-blue-900 leading-none">{riskData.pendingJMR}</div>
-                      <div className="text-[9px] text-rose-600 mt-1 font-semibold">⚠ {riskData.overdueJMR} overdue &gt;7 days</div>
+                      <div className="text-2xl font-bold text-blue-900 leading-none">{filteredRiskData.pendingJMR}</div>
+                      <div className="text-[9px] text-rose-600 mt-1 font-semibold">{filteredRiskData.overdueJMR > 0 ? `⚠ ${filteredRiskData.overdueJMR} overdue >7 days` : "All on time"}</div>
                     </div>
                   </div>
                   <div className="p-2.5 rounded-lg border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 flex items-center justify-between">
                     <div>
                       <div className="text-[9px] font-bold text-orange-600 uppercase tracking-wide mb-0.5">Total LD Financial Exposure</div>
-                      <div className="text-lg font-bold text-orange-800">₹{riskData.ldExposureCr} Cr at risk</div>
-                      <div className="text-[9px] text-orange-600">Across {riskData.highLDRisk} plants · SunPower Tech highest</div>
+                      <div className="text-lg font-bold text-orange-800">₹{filteredRiskData.ldExposureCr} Cr at risk</div>
+                      <div className="text-[9px] text-orange-600">Across {filteredRiskData.highLDRisk} plants{filteredRiskData.vendorLDExposure.length > 0 ? ` · ${filteredRiskData.vendorLDExposure[0].vendor} highest` : ""}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-[9px] text-orange-500 mb-1">vs Budget</div>
@@ -1617,7 +1856,7 @@ export function Dashboard() {
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-2">Active Alerts</h4>
                     <div className="space-y-1.5">
-                      {riskData.recentAlerts.map((alert: any) => {
+                      {filteredRiskData.recentAlerts.map((alert: any) => {
                         const sevStyle: Record<string, { dot: string; bg: string; badge: string; text: string }> = {
                           critical: { dot: "bg-rose-500",   bg: "bg-rose-50 border-rose-200",     badge: "bg-rose-100 text-rose-700 border-rose-300",     text: "text-rose-700" },
                           high:     { dot: "bg-orange-500", bg: "bg-orange-50 border-orange-200", badge: "bg-orange-100 text-orange-700 border-orange-300", text: "text-orange-600" },
@@ -1682,8 +1921,8 @@ export function Dashboard() {
                   <div>
                     <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-2">Vendor LD Exposure</h4>
                     <div className="space-y-2">
-                      {riskData.vendorLDExposure.map((v: any) => {
-                        const maxLd = Math.max(...riskData.vendorLDExposure.map((x: any) => x.ldCr));
+                      {filteredRiskData.vendorLDExposure.map((v: any) => {
+                        const maxLd = Math.max(...filteredRiskData.vendorLDExposure.map((x: any) => x.ldCr), 0.01);
                         const pct = Math.round((v.ldCr / maxLd) * 100);
                         const col = v.risk === "high" ? "#EF4444" : v.risk === "medium" ? "#F97316" : "#F59E0B";
                         const bgBadge = v.risk === "high" ? "bg-rose-100 text-rose-700 border-rose-200" : v.risk === "medium" ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-amber-100 text-amber-700 border-amber-200";
@@ -1777,7 +2016,7 @@ export function Dashboard() {
               <CardContent className="p-4">
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={mergedCufData}>
+                    <LineChart data={filteredCufTrend}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="#64748b" />
                       <YAxis domain={[18, 25]} tick={{ fontSize: 10 }} stroke="#64748b" />
@@ -1825,7 +2064,7 @@ export function Dashboard() {
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={downtimeData}
+                        data={filteredDowntimeData}
                         cx="50%"
                         cy="50%"
                         innerRadius={50}
@@ -1834,7 +2073,7 @@ export function Dashboard() {
                         label={(entry) => `${entry.value}%`}
                         labelLine={false}
                       >
-                        {downtimeData.map((entry, index) => (
+                        {filteredDowntimeData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
@@ -1843,7 +2082,7 @@ export function Dashboard() {
                   </ResponsiveContainer>
                 </div>
                 <div className="mt-4 space-y-2">
-                  {downtimeData.map((item) => (
+                  {filteredDowntimeData.map((item) => (
                     <div key={item.name} className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded" style={{ backgroundColor: item.color }}></div>
@@ -1870,10 +2109,10 @@ export function Dashboard() {
               <CardContent className="p-4">
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={revenueWaterfallData}>
+                    <BarChart data={filteredRevenueWaterfall}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis dataKey="stage" tick={{ fontSize: 10 }} stroke="#64748b" />
-                      <YAxis domain={[25, 33]} tick={{ fontSize: 10 }} stroke="#64748b" />
+                      <YAxis domain={['auto', 'auto']} tick={{ fontSize: 10 }} stroke="#64748b" />
                       <Tooltip content={<CustomChartTooltip unit="₹ Cr" />} />
                       <Bar dataKey="value" fill="#2955A0" />
                     </BarChart>
@@ -1881,8 +2120,8 @@ export function Dashboard() {
                 </div>
                 <div className="mt-4 p-3 bg-amber-50 rounded-lg border-2 border-amber-200">
                   <div className="text-xs font-semibold text-amber-700 mb-1">Total Shortfall</div>
-                  <div className="text-xl font-bold text-amber-900">₹2.7 Cr</div>
-                  <div className="text-xs text-amber-600 mt-1">8.7% below budget</div>
+                  <div className="text-xl font-bold text-amber-900">₹{Math.max(0, filteredRevenueWaterfall[0].value - filteredRevenueWaterfall[3].value).toFixed(1)} Cr</div>
+                  <div className="text-xs text-amber-600 mt-1">{filteredRevenueWaterfall[0].value > 0 ? ((1 - filteredRevenueWaterfall[3].value / filteredRevenueWaterfall[0].value) * 100).toFixed(1) : "0"}% below budget</div>
                 </div>
               </CardContent>
             </Card>
@@ -1902,7 +2141,7 @@ export function Dashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {ldExposureData.map((vendor) => (
+                    {filteredLdExposureData.map((vendor) => (
                       <TableRow key={vendor.vendor} className="hover:bg-slate-50">
                         <TableCell className="text-xs font-semibold">{vendor.vendor}</TableCell>
                         <TableCell className="text-xs text-center">{vendor.plants}</TableCell>
@@ -1926,7 +2165,7 @@ export function Dashboard() {
                 </Table>
                 <div className="mt-4 p-3 bg-rose-50 rounded-lg border-2 border-rose-200">
                   <div className="text-xs font-semibold text-rose-700 mb-1">Total Portfolio LD</div>
-                  <div className="text-xl font-bold text-rose-900">₹1.24 Cr</div>
+                  <div className="text-xl font-bold text-rose-900">₹{dashboardData.ldExposure} Cr</div>
                 </div>
               </CardContent>
             </Card>
@@ -1941,23 +2180,23 @@ export function Dashboard() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <div className="text-xs font-semibold text-slate-600 mb-2">PR Benchmark</div>
-                        <div className="text-3xl font-bold text-slate-900">{omDeviationData.prBenchmark}%</div>
+                        <div className="text-3xl font-bold text-slate-900">{filteredOmDeviation.prBenchmark}%</div>
                       </div>
                       <div>
                         <div className="text-xs font-semibold text-slate-600 mb-2">Actual PR</div>
-                        <div className="text-3xl font-bold text-rose-600">{omDeviationData.actualPR}%</div>
+                        <div className="text-3xl font-bold text-rose-600">{filteredOmDeviation.actualPR}%</div>
                       </div>
                     </div>
                   </div>
                   <div className="p-4 bg-amber-50 rounded-lg border-2 border-amber-200">
                     <div className="text-xs font-semibold text-amber-700 mb-2">PR Gap</div>
                     <div className="text-2xl font-bold text-amber-900">
-                      -{(omDeviationData.prBenchmark - omDeviationData.actualPR).toFixed(1)}%
+                      -{(filteredOmDeviation.prBenchmark - filteredOmDeviation.actualPR).toFixed(1)}%
                     </div>
                   </div>
                   <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
                     <div className="text-xs font-semibold text-blue-700 mb-2">Settlement Amount</div>
-                    <div className="text-2xl font-bold text-blue-900">₹{omDeviationData.settlementAmount} Cr</div>
+                    <div className="text-2xl font-bold text-blue-900">₹{filteredOmDeviation.settlementAmount} Cr</div>
                     <div className="text-xs text-blue-600 mt-1">Payable to EESL</div>
                   </div>
                 </div>
@@ -1989,7 +2228,7 @@ export function Dashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {vendorRankingData.map((vendor) => (
+                    {filteredVendorRankingData.map((vendor) => (
                       <TableRow key={vendor.rank} className="hover:bg-slate-50 cursor-pointer">
                         <TableCell>
                           <div className="w-7 h-7 rounded-lg bg-[#2955A0] text-white flex items-center justify-center font-bold text-xs">
@@ -2026,7 +2265,7 @@ export function Dashboard() {
               </CardHeader>
               <CardContent className="p-4">
                 <div className="space-y-4">
-                  {clusterComparisonData.map((cluster) => (
+                  {filteredClusterData.map((cluster) => (
                     <div key={cluster.state} className="p-4 bg-slate-50 rounded-lg border-2 border-slate-200 hover:border-[#2955A0] transition-all cursor-pointer">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="text-sm font-bold text-slate-900">{cluster.state}</h4>
@@ -2072,7 +2311,7 @@ export function Dashboard() {
               <CardContent className="p-4">
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={lpiData} margin={{ top: 5, right: 10, bottom: 0, left: -10 }}>
+                    <ComposedChart data={filteredLpiData} margin={{ top: 5, right: 10, bottom: 0, left: -10 }}>
                       <defs>
                         <linearGradient id="colorGrid" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#EF4444" stopOpacity={0.6}/><stop offset="95%" stopColor="#EF4444" stopOpacity={0.1}/>
@@ -2126,16 +2365,16 @@ export function Dashboard() {
                   <div className="flex items-center gap-1.5"><div className="w-6 border-t-2 border-dashed border-emerald-500" /><span className="text-[10px] text-slate-600">Target</span></div>
                 </div>
                 {(() => {
-                  const avgLPI = lpiData.reduce((s, d) => s + d.lpi, 0) / lpiData.length;
-                  const totalLostMWh = lpiData.reduce((s, d) => s + d.energyLostMWh, 0);
-                  const totalExpectedMWh = lpiData.reduce((s, d) => s + d.expectedMWh, 0);
-                  const worstMonth = lpiData.reduce((w, d) => d.lpi > w.lpi ? d : w, lpiData[0]);
-                  const bestMonth = lpiData.reduce((b, d) => d.lpi < b.lpi ? d : b, lpiData[0]);
+                  const avgLPI = filteredLpiData.reduce((s: number, d: any) => s + d.lpi, 0) / filteredLpiData.length;
+                  const totalLostMWh = filteredLpiData.reduce((s: number, d: any) => s + d.energyLostMWh, 0);
+                  const totalExpectedMWh = filteredLpiData.reduce((s: number, d: any) => s + d.expectedMWh, 0);
+                  const worstMonth = filteredLpiData.reduce((w: any, d: any) => d.lpi > w.lpi ? d : w, filteredLpiData[0]);
+                  const bestMonth = filteredLpiData.reduce((b: any, d: any) => d.lpi < b.lpi ? d : b, filteredLpiData[0]);
                   const categories = [
-                    { name: "Grid Outage", avg: lpiData.reduce((s, d) => s + d.gridLoss, 0) / lpiData.length },
-                    { name: "Equipment", avg: lpiData.reduce((s, d) => s + d.equipmentLoss, 0) / lpiData.length },
-                    { name: "Planned", avg: lpiData.reduce((s, d) => s + d.plannedLoss, 0) / lpiData.length },
-                    { name: "Curtailment", avg: lpiData.reduce((s, d) => s + d.curtailmentLoss, 0) / lpiData.length },
+                    { name: "Grid Outage", avg: filteredLpiData.reduce((s: number, d: any) => s + d.gridLoss, 0) / filteredLpiData.length },
+                    { name: "Equipment", avg: filteredLpiData.reduce((s: number, d: any) => s + d.equipmentLoss, 0) / filteredLpiData.length },
+                    { name: "Planned", avg: filteredLpiData.reduce((s: number, d: any) => s + d.plannedLoss, 0) / filteredLpiData.length },
+                    { name: "Curtailment", avg: filteredLpiData.reduce((s: number, d: any) => s + d.curtailmentLoss, 0) / filteredLpiData.length },
                   ];
                   const topCat = categories.reduce((a, b) => b.avg > a.avg ? b : a, categories[0]);
                   const topContributor = topCat.name;
@@ -2174,40 +2413,70 @@ export function Dashboard() {
               </CardHeader>
               <CardContent className="p-4">
                 <div className="space-y-4">
-                  {assetHealthBreakdown.map((component) => {
-                    const score = (component.value / component.target) * 100;
-                    return (
-                      <div key={component.component}>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-900">{component.component}</span>
-                            <Badge variant="outline" className="text-[10px] bg-slate-100 text-slate-700">
-                              {component.weight}%
-                            </Badge>
+                  {(() => {
+                    const filtered = dashboardData.filtered;
+                    const avgCuf = filtered.length > 0 ? filtered.reduce((s: number, p: any) => s + p.cuf, 0) / filtered.length : 0;
+                    const avgAvail = filtered.length > 0 ? filtered.reduce((s: number, p: any) => s + p.availability, 0) / filtered.length : 0;
+                    const actualPR = parseFloat((avgCuf / 25 * 100 * 0.95).toFixed(1));
+                    const compliancePct = filtered.length > 0 ? parseFloat((filtered.filter((p: any) => p.status === "compliant").length / filtered.length * 100).toFixed(1)) : 0;
+                    const computedBreakdown = [
+                      { component: "PR Score", value: actualPR, target: 82.0, weight: 35 },
+                      { component: "Availability Score", value: parseFloat(avgAvail.toFixed(1)), target: 98.0, weight: 30 },
+                      { component: "Downtime Score", value: parseFloat(Math.min(100, 85 + (avgAvail - 95)).toFixed(1)), target: 95.0, weight: 20 },
+                      { component: "Compliance Score", value: parseFloat(compliancePct.toFixed(1)), target: 95.0, weight: 15 },
+                    ];
+                    const compositeScore = computedBreakdown.reduce((s, c) => s + (c.value / c.target * 100) * (c.weight / 100), 0);
+                    return computedBreakdown.map((component) => {
+                      const score = (component.value / component.target) * 100;
+                      return (
+                        <div key={component.component}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-slate-900">{component.component}</span>
+                              <Badge variant="outline" className="text-[10px] bg-slate-100 text-slate-700">
+                                {component.weight}%
+                              </Badge>
+                            </div>
+                            <div className="text-xs">
+                              <span className="font-bold text-slate-900">{component.value}</span>
+                              <span className="text-slate-600"> / {component.target}</span>
+                            </div>
                           </div>
-                          <div className="text-xs">
-                            <span className="font-bold text-slate-900">{component.value}</span>
-                            <span className="text-slate-600"> / {component.target}</span>
+                          <div className="relative">
+                            <Progress value={Math.min(100, score)} className="h-3" />
+                            <div className="absolute top-0 left-0 h-3 flex items-center px-2">
+                              <span className="text-[10px] font-bold text-white">{score.toFixed(0)}%</span>
+                            </div>
                           </div>
                         </div>
-                        <div className="relative">
-                          <Progress value={score} className="h-3" />
-                          <div className="absolute top-0 left-0 h-3 flex items-center px-2">
-                            <span className="text-[10px] font-bold text-white">{score.toFixed(0)}%</span>
-                          </div>
-                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+                {(() => {
+                  const filtered = dashboardData.filtered;
+                  const avgCuf = filtered.length > 0 ? filtered.reduce((s: number, p: any) => s + p.cuf, 0) / filtered.length : 0;
+                  const avgAvail = filtered.length > 0 ? filtered.reduce((s: number, p: any) => s + p.availability, 0) / filtered.length : 0;
+                  const actualPR = avgCuf / 25 * 100 * 0.95;
+                  const compliancePct = filtered.length > 0 ? filtered.filter((p: any) => p.status === "compliant").length / filtered.length * 100 : 0;
+                  const breakdown = [
+                    { value: actualPR, target: 82.0, weight: 35 },
+                    { value: avgAvail, target: 98.0, weight: 30 },
+                    { value: Math.min(100, 85 + (avgAvail - 95)), target: 95.0, weight: 20 },
+                    { value: compliancePct, target: 95.0, weight: 15 },
+                  ];
+                  const compositeScore = parseFloat(breakdown.reduce((s, c) => s + Math.min(100, (c.value / c.target * 100)) * (c.weight / 100), 0).toFixed(1));
+                  return (
+                    <div className="mt-6 p-4 bg-gradient-to-r from-[#2955A0] to-[#2955A0]/80 rounded-lg text-white">
+                      <div className="text-xs font-semibold mb-2">Composite Asset Health Index</div>
+                      <div className="text-4xl font-bold">{compositeScore} <span className="text-xl">/100</span></div>
+                      <div className="text-xs mt-2 flex items-center gap-1">
+                        {compositeScore >= 80 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                        {compositeScore >= 80 ? "Above" : "Below"} target threshold
                       </div>
-                    );
-                  })}
-                </div>
-                <div className="mt-6 p-4 bg-gradient-to-r from-[#2955A0] to-[#2955A0]/80 rounded-lg text-white">
-                  <div className="text-xs font-semibold mb-2">Composite Asset Health Index</div>
-                  <div className="text-4xl font-bold">82.5 <span className="text-xl">/100</span></div>
-                  <div className="text-xs mt-2 flex items-center gap-1">
-                    <ArrowUp className="w-3 h-3" />
-                    +1.2 points this month
-                  </div>
-                </div>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </div>
