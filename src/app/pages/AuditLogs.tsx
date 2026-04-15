@@ -97,7 +97,7 @@ const userActivityLogs = [
 const jmrSubmissions = [
   {
     id: "JMR-2026-02-001",
-    plant: "Sakri Solar Park (10 MW)",
+    plant: "Sakri Solar Park (25 MW)",
     month: "February 2026",
     submittedBy: "Amit Patel",
     submittedDate: "2026-04-07 11:45",
@@ -108,7 +108,7 @@ const jmrSubmissions = [
   },
   {
     id: "JMR-2026-02-002",
-    plant: "Osmanabad Solar Plant (25 MW)",
+    plant: "Osmanabad Solar Plant (30 MW)",
     month: "February 2026",
     submittedBy: "Vikram Desai",
     submittedDate: "2026-04-07 10:30",
@@ -119,7 +119,7 @@ const jmrSubmissions = [
   },
   {
     id: "JMR-2026-02-003",
-    plant: "Latur Solar Station (50 MW)",
+    plant: "Latur Solar Station (20 MW)",
     month: "February 2026",
     submittedBy: "Anjali Verma",
     submittedDate: "2026-04-06 16:20",
@@ -130,7 +130,7 @@ const jmrSubmissions = [
   },
   {
     id: "JMR-2026-02-004",
-    plant: "Plant D - Beed (30 MW)",
+    plant: "Beed Solar Park (30 MW)",
     month: "February 2026",
     submittedBy: "-",
     submittedDate: "-",
@@ -141,7 +141,7 @@ const jmrSubmissions = [
   },
   {
     id: "JMR-2026-02-005",
-    plant: "Ahmednagar Solar Plant (15 MW)",
+    plant: "Ahmednagar Solar Plant (12 MW)",
     month: "February 2026",
     submittedBy: "Rahul Gupta",
     submittedDate: "2026-04-07 14:10",
@@ -158,7 +158,7 @@ const complianceAlerts = [
     id: "ALERT-2026-08",
     priority: "critical",
     type: "Overdue Submission",
-    message: "Plant D - JMR for February 2026 not submitted",
+    message: "Beed Solar Park - JMR for February 2026 not submitted",
     dueDate: "2026-04-07",
     daysOverdue: 1,
     assignedTo: "Suresh Reddy",
@@ -168,7 +168,7 @@ const complianceAlerts = [
     id: "ALERT-2026-07",
     priority: "high",
     type: "Pending Approval",
-    message: "Plant B - JMR awaiting review for 18 hours",
+    message: "Sangli Solar Farm - JMR awaiting review for 18 hours",
     dueDate: "2026-03-01",
     daysOverdue: 0,
     assignedTo: "Priya Sharma",

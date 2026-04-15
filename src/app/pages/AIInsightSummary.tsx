@@ -46,7 +46,7 @@ const topInsights = [
     severity: "high",
     icon: TrendingDown,
     title: "Degradation Trend Alert",
-    subtitle: "Plant D - Beed",
+    subtitle: "Amravati Solar Unit",
     metric: "0.82% annual",
     baseline: "vs. 0.50% industry standard",
     insight: "Accelerated degradation detected over the last 12 months. Module inspection recommended.",
@@ -141,12 +141,12 @@ const degradationData = [
 
 // Site benchmarking data
 const siteBenchmarking = [
-  { site: "Plant A", efficiency: 88, cuf: 21.8, availability: 96.2, pr: 78.8 },
-  { site: "Plant B", efficiency: 82, cuf: 22.1, availability: 93.8, pr: 77.5 },
-  { site: "Plant C", efficiency: 84, cuf: 22.3, availability: 94.5, pr: 78.2 },
-  { site: "Plant D", efficiency: 78, cuf: 20.8, availability: 92.1, pr: 76.1 },
-  { site: "Plant E", efficiency: 92, cuf: 23.5, availability: 97.3, pr: 79.8 },
-  { site: "Portfolio Avg", efficiency: 85, cuf: 22.1, availability: 94.8, pr: 78.1 },
+  { site: "Sakri Solar Park", efficiency: 88, cuf: 23.5, availability: 97.2, pr: 78.8 },
+  { site: "Osmanabad Solar Plant", efficiency: 82, cuf: 24.1, availability: 96.8, pr: 77.5 },
+  { site: "Latur Solar Station", efficiency: 84, cuf: 23.8, availability: 97.5, pr: 78.2 },
+  { site: "Amravati Solar Unit", efficiency: 78, cuf: 18.5, availability: 88.3, pr: 76.1 },
+  { site: "Beed Solar Park", efficiency: 92, cuf: 24.5, availability: 98.1, pr: 80.2 },
+  { site: "Portfolio Avg", efficiency: 85, cuf: 22.5, availability: 95.4, pr: 78.1 },
 ];
 
 // Asset Health Index data
@@ -175,10 +175,10 @@ const modelExplanation = {
 };
 
 // Recommendation summary
-const recommendationSummary = `Based on comprehensive analysis of 36 months of historical data across 5 plants (50 MW capacity), the AI model has identified three priority areas for optimization:
+const recommendationSummary = `Based on comprehensive analysis of 36 months of historical data across 12 plants (220 MW capacity), the AI model has identified three priority areas for optimization:
 
 **1. Degradation Management (High Priority)**
-Plant D shows accelerated degradation at 0.82% annually vs. industry standard of 0.50%. Root cause analysis suggests potential module quality issues or environmental stress factors. Immediate action: Schedule comprehensive IV curve testing and thermal imaging survey.
+Amravati Solar Unit shows accelerated degradation at 0.82% annually vs. industry standard of 0.50%. Root cause analysis suggests potential module quality issues or environmental stress factors. Immediate action: Schedule comprehensive IV curve testing and thermal imaging survey.
 
 **2. Operational Efficiency (Medium Priority)**
 Portfolio-wide cleaning optimization could yield 3.2% generation improvement (1,850 MWh annually). Current cleaning schedules are reactive rather than predictive. Recommended: Implement AI-driven cleaning schedule based on soiling rate predictions and weather forecasts.
@@ -435,7 +435,7 @@ export function AIInsightSummary() {
                   <div className="grid grid-cols-3 gap-3 text-center text-xs">
                     <div>
                       <div className="text-gray-600 mb-1">Top Performer</div>
-                      <div className="text-sm font-bold text-green-600">Plant E (92)</div>
+                      <div className="text-sm font-bold text-green-600">Beed Solar Park (92)</div>
                     </div>
                     <div>
                       <div className="text-gray-600 mb-1">Portfolio Avg</div>
@@ -443,7 +443,7 @@ export function AIInsightSummary() {
                     </div>
                     <div>
                       <div className="text-gray-600 mb-1">Needs Focus</div>
-                      <div className="text-sm font-bold text-red-600">Plant D (78)</div>
+                      <div className="text-sm font-bold text-red-600">Amravati Solar Unit (78)</div>
                     </div>
                   </div>
                 </div>

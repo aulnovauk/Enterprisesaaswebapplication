@@ -51,11 +51,18 @@ const quickActions = [
 ];
 
 const plants = [
-  { id: "plant-a", label: "Sakri Solar Park (10 MW)" },
-  { id: "plant-b", label: "Osmanabad Solar Plant (25 MW)" },
-  { id: "plant-c", label: "Plant C - Jaisalmer (50 MW)" },
-  { id: "plant-d", label: "Sangli Solar Farm (30 MW)" },
-  { id: "plant-e", label: "Ahmednagar Solar Plant (15 MW)" },
+  { id: "plant-sakri", label: "Sakri Solar Park (25 MW)" },
+  { id: "plant-sangli", label: "Sangli Solar Farm (15 MW)" },
+  { id: "plant-osmanabad", label: "Osmanabad Solar Plant (30 MW)" },
+  { id: "plant-latur", label: "Latur Solar Station (20 MW)" },
+  { id: "plant-beed", label: "Beed Solar Park (30 MW)" },
+  { id: "plant-ahmednagar", label: "Ahmednagar Solar Plant (12 MW)" },
+  { id: "plant-devdaithan", label: "Devdaithan Solar Plant (18 MW)" },
+  { id: "plant-amravati", label: "Amravati Solar Unit (14 MW)" },
+  { id: "plant-wardha", label: "Wardha Solar Park (16 MW)" },
+  { id: "plant-buldhana", label: "Buldhana Solar Farm (10 MW)" },
+  { id: "plant-chandrapur", label: "Chandrapur Solar Project (22 MW)" },
+  { id: "plant-bhandara", label: "Bhandara Solar Station (8 MW)" },
 ];
 
 interface CommandPaletteProps {

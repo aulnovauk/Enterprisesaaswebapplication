@@ -89,7 +89,7 @@ const sampleTableData = [
   { plant: "Sakri Solar Park", state: "Maharashtra", generation: "4,105", cuf: "18.6%", pr: "78.8%", availability: "96.2%" },
   { plant: "Osmanabad Solar Plant", state: "Maharashtra", generation: "10,850", cuf: "22.1%", pr: "77.5%", availability: "93.8%" },
   { plant: "Latur Solar Station", state: "Maharashtra", generation: "22,450", cuf: "22.3%", pr: "78.2%", availability: "94.5%" },
-  { plant: "Plant D - Beed", state: "Maharashtra", generation: "12,320", cuf: "20.8%", pr: "76.1%", availability: "92.1%" },
+  { plant: "Beed Solar Park", state: "Maharashtra", generation: "12,320", cuf: "24.5%", pr: "80.2%", availability: "98.1%" },
   { plant: "Ahmednagar Solar Plant", state: "Maharashtra", generation: "6,785", cuf: "23.5%", pr: "79.8%", availability: "97.3%" },
 ];
 

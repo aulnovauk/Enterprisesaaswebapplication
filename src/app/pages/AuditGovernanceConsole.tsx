@@ -176,7 +176,7 @@ const emailDispatchLog = [
   },
   {
     id: "EMAIL-2026-1243",
-    reportName: "JMR Submission Reminder - Plant D",
+    reportName: "JMR Submission Reminder - Beed Solar Park",
     reportType: "System Reminder",
     sentBy: "Workflow Automation",
     sentTo: "suresh.reddy@eesl.in",

@@ -107,7 +107,7 @@ const siteHeatMap = [
   { site: "Sakri Solar Park", generation: 95, availability: 96, ld: 100, jmr: 100, reporting: 95, overall: 96.8 },
   { site: "Osmanabad Solar Plant", generation: 93, availability: 94, ld: 85, jmr: 100, reporting: 90, overall: 91.2 },
   { site: "Latur Solar Station", generation: 88, availability: 92, ld: 65, jmr: 100, reporting: 85, overall: 84.5 },
-  { site: "Plant D - Beed", generation: 85, availability: 89, ld: 60, jmr: 90, reporting: 80, overall: 79.8 },
+  { site: "Beed Solar Park", generation: 85, availability: 89, ld: 60, jmr: 90, reporting: 80, overall: 79.8 },
   { site: "Ahmednagar Solar Plant", generation: 96, availability: 97, ld: 95, jmr: 100, reporting: 92, overall: 95.4 },
 ];
 
@@ -115,7 +115,7 @@ const siteHeatMap = [
 const vendorRiskData = [
   {
     vendor: "SolarCo India",
-    sites: 8,
+    sites: 3,
     avgCompliance: 92.5,
     activeLDs: 2,
     riskScore: "Low",
@@ -123,7 +123,7 @@ const vendorRiskData = [
   },
   {
     vendor: "Green Energy Ltd",
-    sites: 12,
+    sites: 1,
     avgCompliance: 87.3,
     activeLDs: 5,
     riskScore: "Medium",
@@ -131,7 +131,7 @@ const vendorRiskData = [
   },
   {
     vendor: "SunPower Tech",
-    sites: 6,
+    sites: 4,
     avgCompliance: 79.8,
     activeLDs: 8,
     riskScore: "High",
@@ -139,7 +139,7 @@ const vendorRiskData = [
   },
   {
     vendor: "Mega Solar Inc",
-    sites: 10,
+    sites: 3,
     avgCompliance: 94.1,
     activeLDs: 1,
     riskScore: "Low",
@@ -147,7 +147,7 @@ const vendorRiskData = [
   },
   {
     vendor: "TechSolar Pvt",
-    sites: 4,
+    sites: 1,
     avgCompliance: 95.2,
     activeLDs: 0,
     riskScore: "Low",
@@ -159,7 +159,7 @@ const vendorRiskData = [
 const escalationTriggers = [
   {
     id: 1,
-    trigger: "Plant D - LD Exposure Exceeds ₹5L",
+    trigger: "Amravati Solar Unit - LD Exposure Exceeds ₹5L",
     severity: "critical",
     daysOpen: 8,
     owner: "Compliance Team",
@@ -175,7 +175,7 @@ const escalationTriggers = [
   },
   {
     id: 3,
-    trigger: "Plant C - Availability Declining (3 months)",
+    trigger: "Devdaithan Solar Plant - Availability Declining (3 months)",
     severity: "medium",
     daysOpen: 15,
     owner: "O&M Team",
@@ -193,7 +193,7 @@ const escalationTriggers = [
 
 // Top 5 risk sites
 const topRiskSites = [
-  { rank: 1, site: "Plant D - Beed", score: 79.8, issues: "High LD exposure, Low availability", critical: 2 },
+  { rank: 1, site: "Amravati Solar Unit", score: 79.8, issues: "High LD exposure, Low availability", critical: 2 },
   { rank: 2, site: "Latur Solar Station", score: 84.5, issues: "LD exposure, Reporting gaps", critical: 1 },
   { rank: 3, site: "Buldhana Solar Farm", score: 86.2, issues: "Generation underperformance", critical: 0 },
   { rank: 4, site: "Wardha Solar Park", score: 87.5, issues: "Recurring availability issues", critical: 0 },

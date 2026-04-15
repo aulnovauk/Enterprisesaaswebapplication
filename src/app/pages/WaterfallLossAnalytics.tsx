@@ -205,7 +205,7 @@ export function WaterfallLossAnalytics() {
               </SelectContent>
             </Select>
             <Badge className="bg-blue-100 text-blue-800 px-3 py-1">
-              Latur Solar Station (50 MW)
+              Latur Solar Station (20 MW)
             </Badge>
           </div>
         </div>

@@ -167,10 +167,10 @@ const sampleData = [
   { plant: "Sakri Solar Park", state: "Maharashtra", region: "North", generation: 820, availability: 96.2, cuf: 21.8, revenue: 245, ldAmount: 0.36, energyLoss: 12.5, downtime: 8.2 },
   { plant: "Osmanabad Solar Plant", state: "Maharashtra", region: "West", generation: 1980, availability: 93.8, cuf: 22.1, revenue: 592, ldAmount: 1.8, energyLoss: 45.2, downtime: 14.5 },
   { plant: "Latur Solar Station", state: "Maharashtra", region: "Central", generation: 4100, availability: 94.5, cuf: 22.3, revenue: 1225, ldAmount: 1.0, energyLoss: 38.6, downtime: 11.8 },
-  { plant: "Plant D - Bangalore", state: "Maharashtra", region: "South", generation: 2300, availability: 92.1, cuf: 20.8, revenue: 687, ldAmount: 3.6, energyLoss: 62.3, downtime: 18.9 },
-  { plant: "Plant E - Lucknow", state: "Maharashtra", region: "North", generation: 1280, availability: 97.3, cuf: 23.5, revenue: 382, ldAmount: 0, energyLoss: 8.1, downtime: 4.2 },
-  { plant: "Plant F - Pune", state: "Maharashtra", region: "West", generation: 3200, availability: 95.8, cuf: 22.8, revenue: 956, ldAmount: 0.5, energyLoss: 28.4, downtime: 9.6 },
-  { plant: "Plant G - Hyderabad", state: "Telangana", region: "South", generation: 2850, availability: 94.2, cuf: 21.9, revenue: 852, ldAmount: 1.2, energyLoss: 34.7, downtime: 12.3 },
+  { plant: "Beed Solar Park", state: "Maharashtra", region: "Beed", generation: 1920, availability: 98.1, cuf: 24.5, revenue: 574, ldAmount: 0, energyLoss: 12.3, downtime: 4.2 },
+  { plant: "Ahmednagar Solar Plant", state: "Maharashtra", region: "Ahmednagar", generation: 1560, availability: 96.4, cuf: 23.2, revenue: 466, ldAmount: 0, energyLoss: 8.1, downtime: 4.2 },
+  { plant: "Devdaithan Solar Plant", state: "Maharashtra", region: "Ahmednagar", generation: 1310, availability: 91.2, cuf: 19.5, revenue: 392, ldAmount: 4.86, energyLoss: 28.4, downtime: 9.6 },
+  { plant: "Amravati Solar Unit", state: "Maharashtra", region: "Amravati", generation: 1140, availability: 88.3, cuf: 18.5, revenue: 342, ldAmount: 10.8, energyLoss: 62.3, downtime: 18.9 },
 ];
 
 // Report templates (same as before)

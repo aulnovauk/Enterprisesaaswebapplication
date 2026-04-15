@@ -136,7 +136,7 @@ const cleaningRecommendations = [
     soilingRate: "0.08%/day",
   },
   {
-    site: "Plant D - Beed",
+    site: "Amravati Solar Unit",
     lastCleaning: "2026-01-20",
     nextRecommended: "2026-03-01",
     daysUntil: 1,
@@ -148,12 +148,12 @@ const cleaningRecommendations = [
 
 // Site benchmarking — axes = metrics, series = plants
 const siteBenchmarking = [
-  { metric: "CUF",          plantE: 98, portfolioAvg: 85, plantD: 72 },
-  { metric: "Availability", plantE: 97, portfolioAvg: 88, plantD: 79 },
-  { metric: "PR Score",     plantE: 95, portfolioAvg: 83, plantD: 75 },
-  { metric: "Efficiency",   plantE: 92, portfolioAvg: 85, plantD: 78 },
-  { metric: "Compliance",   plantE: 96, portfolioAvg: 80, plantD: 65 },
-  { metric: "LD Safety",    plantE: 99, portfolioAvg: 82, plantD: 60 },
+  { metric: "CUF",          beedBest: 98, portfolioAvg: 85, amravatLow: 72 },
+  { metric: "Availability", beedBest: 97, portfolioAvg: 88, amravatLow: 79 },
+  { metric: "PR Score",     beedBest: 95, portfolioAvg: 83, amravatLow: 75 },
+  { metric: "Efficiency",   beedBest: 92, portfolioAvg: 85, amravatLow: 78 },
+  { metric: "Compliance",   beedBest: 96, portfolioAvg: 80, amravatLow: 65 },
+  { metric: "LD Safety",    beedBest: 99, portfolioAvg: 82, amravatLow: 60 },
 ];
 
 // Asset Health Index components
@@ -173,7 +173,7 @@ const aiInsights = [
     icon: AlertCircle,
     color: "#EF4444",
     title: "Accelerated Degradation Detected",
-    description: "Plant D shows 0.8% annual degradation vs industry standard 0.5%. Recommend immediate module inspection.",
+    description: "Amravati Solar Unit shows 0.8% annual degradation vs industry standard 0.5%. Recommend immediate module inspection.",
     confidence: 94,
     impact: "High",
     actionable: true,
@@ -721,9 +721,9 @@ export function AITrendAnalytics() {
               {/* Inline legend */}
               <div className="flex flex-col gap-1 text-right">
                 {[
-                  { label: "Plant E (Best)", color: "#10B981" },
+                  { label: "Beed Solar Park (Best)", color: "#10B981" },
                   { label: "Portfolio Avg", color: "#3B82F6" },
-                  { label: "Plant D (Lowest)", color: "#EF4444" },
+                  { label: "Amravati Solar Unit (Lowest)", color: "#EF4444" },
                 ].map((s) => (
                   <div key={s.label} className="flex items-center gap-1.5 justify-end">
                     <span className="text-[10px] text-gray-600 font-medium">{s.label}</span>
@@ -749,10 +749,10 @@ export function AITrendAnalytics() {
                   tickCount={4}
                   axisLine={false}
                 />
-                {/* Plant E — top performer */}
+                {/* Beed Solar Park — top performer */}
                 <Radar
-                  name="Plant E (Best)"
-                  dataKey="plantE"
+                  name="Beed Solar Park (Best)"
+                  dataKey="beedBest"
                   stroke="#10B981"
                   fill="#10B981"
                   fillOpacity={0.12}
@@ -770,10 +770,10 @@ export function AITrendAnalytics() {
                   strokeDasharray="5 3"
                   dot={{ r: 3, fill: "#3B82F6", strokeWidth: 0 }}
                 />
-                {/* Plant D — needs attention */}
+                {/* Amravati Solar Unit — needs attention */}
                 <Radar
-                  name="Plant D (Lowest)"
-                  dataKey="plantD"
+                  name="Amravati Solar Unit (Lowest)"
+                  dataKey="amravatLow"
                   stroke="#EF4444"
                   fill="#EF4444"
                   fillOpacity={0.08}
@@ -791,7 +791,7 @@ export function AITrendAnalytics() {
             <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
               <div className="text-center p-2 rounded-lg bg-emerald-50 border border-emerald-100">
                 <div className="text-[10px] text-emerald-600 font-semibold uppercase mb-0.5">Top Performer</div>
-                <div className="text-sm font-bold text-emerald-700">Plant E</div>
+                <div className="text-sm font-bold text-emerald-700">Beed Solar Park</div>
                 <div className="text-xs text-emerald-600">Avg score 96</div>
               </div>
               <div className="text-center p-2 rounded-lg bg-blue-50 border border-blue-100">
@@ -801,7 +801,7 @@ export function AITrendAnalytics() {
               </div>
               <div className="text-center p-2 rounded-lg bg-rose-50 border border-rose-100">
                 <div className="text-[10px] text-rose-600 font-semibold uppercase mb-0.5">Needs Attention</div>
-                <div className="text-sm font-bold text-rose-700">Plant D</div>
+                <div className="text-sm font-bold text-rose-700">Amravati Solar Unit</div>
                 <div className="text-xs text-rose-600">Avg score 72</div>
               </div>
             </div>

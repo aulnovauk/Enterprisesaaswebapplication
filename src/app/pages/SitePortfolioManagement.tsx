@@ -33,48 +33,48 @@ const vendorColors: Record<string, string> = {
 };
 
 const vendorRevenueData = [
-  { vendor: "SolarCo India", plants: "Sakri, Ahmednagar", plantCount: 2, capacity: 35.2, budgeted: 8.40, actual: 7.82, realized: 7.55, collection: 89.9, ldExposure: 0.42, shortfall: 0.85, status: "warning" },
-  { vendor: "SunPower Tech", plants: "Sangli, Wardha, Buldhana, Chandrapur, Amravati", plantCount: 5, capacity: 63.2, budgeted: 12.65, actual: 11.45, realized: 10.92, collection: 86.3, ldExposure: 0.54, shortfall: 1.73, status: "critical" },
-  { vendor: "Mega Solar Inc", plants: "Beed, Devdaithan, Bhandara", plantCount: 3, capacity: 48.0, budgeted: 11.52, actual: 10.88, realized: 10.45, collection: 90.7, ldExposure: 0.55, shortfall: 1.07, status: "warning" },
-  { vendor: "Green Energy Ltd", plants: "Osmanabad", plantCount: 1, capacity: 18.5, budgeted: 4.44, actual: 4.38, realized: 4.30, collection: 96.8, ldExposure: 0.00, shortfall: 0.14, status: "healthy" },
-  { vendor: "TechSolar Pvt", plants: "Latur", plantCount: 1, capacity: 15.0, budgeted: 3.60, actual: 3.52, realized: 3.45, collection: 95.8, ldExposure: 0.00, shortfall: 0.15, status: "healthy" },
+  { vendor: "SolarCo India", plants: "Sakri, Ahmednagar, Amravati", plantCount: 3, capacity: 51, budgeted: 12.17, actual: 10.94, realized: 10.55, collection: 89.9, ldExposure: 0.42, shortfall: 1.23, status: "warning" },
+  { vendor: "SunPower Tech", plants: "Sangli, Wardha, Buldhana, Chandrapur", plantCount: 4, capacity: 63, budgeted: 12.61, actual: 10.89, realized: 10.42, collection: 86.3, ldExposure: 0.54, shortfall: 1.72, status: "critical" },
+  { vendor: "Mega Solar Inc", plants: "Beed, Devdaithan, Bhandara", plantCount: 3, capacity: 56, budgeted: 13.44, actual: 12.19, realized: 11.65, collection: 90.7, ldExposure: 0.55, shortfall: 1.25, status: "warning" },
+  { vendor: "Green Energy Ltd", plants: "Osmanabad", plantCount: 1, capacity: 30, budgeted: 7.20, actual: 6.97, realized: 6.80, collection: 96.8, ldExposure: 0.00, shortfall: 0.23, status: "healthy" },
+  { vendor: "TechSolar Pvt", plants: "Latur", plantCount: 1, capacity: 20, budgeted: 4.80, actual: 4.60, realized: 4.48, collection: 95.8, ldExposure: 0.00, shortfall: 0.20, status: "healthy" },
 ];
 
 const plantRevenueData = [
-  { plant: "Sakri Solar Park", district: "Dhule", vendor: "SolarCo India", capacity: 25.5, tariff: 2.00, budgetedGen: 5520, actualGen: 5180, revenue: 1.04, budgetedRev: 1.10, shortfall: 0.06, collectionPct: 94.2, invoiced: 1.10, collected: 1.04, pending: 0.06, overdue: 0.02, pr: 78.2, cuf: 22.1 },
-  { plant: "Sangli Solar Farm", district: "Sangli", vendor: "SunPower Tech", capacity: 7.9, tariff: 2.00, budgetedGen: 1710, actualGen: 1520, revenue: 0.30, budgetedRev: 0.34, shortfall: 0.04, collectionPct: 88.5, invoiced: 0.34, collected: 0.30, pending: 0.04, overdue: 0.01, pr: 74.8, cuf: 20.8 },
-  { plant: "Osmanabad Solar Plant", district: "Osmanabad", vendor: "Green Energy Ltd", capacity: 18.5, tariff: 2.00, budgetedGen: 4010, actualGen: 3920, revenue: 0.78, budgetedRev: 0.80, shortfall: 0.02, collectionPct: 97.5, invoiced: 0.80, collected: 0.78, pending: 0.02, overdue: 0.00, pr: 82.5, cuf: 24.1 },
-  { plant: "Latur Solar Station", district: "Latur", vendor: "TechSolar Pvt", capacity: 15.0, tariff: 2.00, budgetedGen: 3250, actualGen: 3180, revenue: 0.64, budgetedRev: 0.65, shortfall: 0.01, collectionPct: 98.0, invoiced: 0.65, collected: 0.64, pending: 0.01, overdue: 0.00, pr: 83.1, cuf: 23.8 },
-  { plant: "Beed Solar Park", district: "Beed", vendor: "Mega Solar Inc", capacity: 20.0, tariff: 2.00, budgetedGen: 4340, actualGen: 4120, revenue: 0.82, budgetedRev: 0.87, shortfall: 0.05, collectionPct: 94.8, invoiced: 0.87, collected: 0.82, pending: 0.05, overdue: 0.01, pr: 80.2, cuf: 23.7 },
-  { plant: "Wardha Solar Plant", district: "Wardha", vendor: "SunPower Tech", capacity: 12.0, tariff: 2.00, budgetedGen: 2600, actualGen: 2380, revenue: 0.48, budgetedRev: 0.52, shortfall: 0.04, collectionPct: 91.5, invoiced: 0.52, collected: 0.48, pending: 0.04, overdue: 0.01, pr: 76.5, cuf: 21.5 },
-  { plant: "Devdaithan Solar Park", district: "Jalna", vendor: "Mega Solar Inc", capacity: 16.0, tariff: 2.00, budgetedGen: 3470, actualGen: 3280, revenue: 0.66, budgetedRev: 0.69, shortfall: 0.03, collectionPct: 95.0, invoiced: 0.69, collected: 0.66, pending: 0.03, overdue: 0.01, pr: 79.8, cuf: 22.3 },
-  { plant: "Ahmednagar Solar Farm", district: "Ahmednagar", vendor: "SolarCo India", capacity: 9.7, tariff: 2.00, budgetedGen: 2100, actualGen: 1980, revenue: 0.40, budgetedRev: 0.42, shortfall: 0.02, collectionPct: 94.0, invoiced: 0.42, collected: 0.40, pending: 0.02, overdue: 0.01, pr: 79.0, cuf: 22.2 },
-  { plant: "Buldhana Solar Farm", district: "Buldhana", vendor: "SunPower Tech", capacity: 14.5, tariff: 2.00, budgetedGen: 3140, actualGen: 2880, revenue: 0.58, budgetedRev: 0.63, shortfall: 0.05, collectionPct: 91.8, invoiced: 0.63, collected: 0.58, pending: 0.05, overdue: 0.02, pr: 77.0, cuf: 21.6 },
-  { plant: "Chandrapur Solar Plant", district: "Chandrapur", vendor: "SunPower Tech", capacity: 18.4, tariff: 2.00, budgetedGen: 3990, actualGen: 3650, revenue: 0.73, budgetedRev: 0.80, shortfall: 0.07, collectionPct: 91.5, invoiced: 0.80, collected: 0.73, pending: 0.07, overdue: 0.02, pr: 77.2, cuf: 21.6 },
-  { plant: "Bhandara Solar Farm", district: "Bhandara", vendor: "Mega Solar Inc", capacity: 12.0, tariff: 2.00, budgetedGen: 2600, actualGen: 2450, revenue: 0.49, budgetedRev: 0.52, shortfall: 0.03, collectionPct: 94.2, invoiced: 0.52, collected: 0.49, pending: 0.03, overdue: 0.01, pr: 79.5, cuf: 22.2 },
-  { plant: "Amravati Solar Station", district: "Amravati", vendor: "SunPower Tech", capacity: 10.5, tariff: 2.00, budgetedGen: 2275, actualGen: 2050, revenue: 0.41, budgetedRev: 0.46, shortfall: 0.05, collectionPct: 89.8, invoiced: 0.46, collected: 0.41, pending: 0.05, overdue: 0.02, pr: 75.8, cuf: 21.2 },
+  { plant: "Sakri Solar Park", district: "Dhule", vendor: "SolarCo India", capacity: 25, tariff: 2.00, budgetedGen: 5520, actualGen: 5180, revenue: 1.04, budgetedRev: 1.10, shortfall: 0.06, collectionPct: 94.2, invoiced: 1.10, collected: 1.04, pending: 0.06, overdue: 0.02, pr: 78.2, cuf: 23.5 },
+  { plant: "Sangli Solar Farm", district: "Sangli", vendor: "SunPower Tech", capacity: 15, tariff: 2.00, budgetedGen: 3250, actualGen: 2840, revenue: 0.57, budgetedRev: 0.65, shortfall: 0.08, collectionPct: 88.5, invoiced: 0.65, collected: 0.57, pending: 0.08, overdue: 0.02, pr: 74.8, cuf: 21.2 },
+  { plant: "Osmanabad Solar Plant", district: "Osmanabad", vendor: "Green Energy Ltd", capacity: 30, tariff: 2.00, budgetedGen: 6510, actualGen: 6360, revenue: 1.27, budgetedRev: 1.30, shortfall: 0.03, collectionPct: 97.5, invoiced: 1.30, collected: 1.27, pending: 0.03, overdue: 0.00, pr: 82.5, cuf: 24.1 },
+  { plant: "Latur Solar Station", district: "Latur", vendor: "TechSolar Pvt", capacity: 20, tariff: 2.00, budgetedGen: 4340, actualGen: 4240, revenue: 0.85, budgetedRev: 0.87, shortfall: 0.02, collectionPct: 98.0, invoiced: 0.87, collected: 0.85, pending: 0.02, overdue: 0.00, pr: 83.1, cuf: 23.8 },
+  { plant: "Beed Solar Park", district: "Beed", vendor: "Mega Solar Inc", capacity: 30, tariff: 2.00, budgetedGen: 6510, actualGen: 6180, revenue: 1.24, budgetedRev: 1.30, shortfall: 0.06, collectionPct: 94.8, invoiced: 1.30, collected: 1.24, pending: 0.06, overdue: 0.02, pr: 80.2, cuf: 24.5 },
+  { plant: "Ahmednagar Solar Plant", district: "Ahmednagar", vendor: "SolarCo India", capacity: 12, tariff: 2.00, budgetedGen: 2600, actualGen: 2450, revenue: 0.49, budgetedRev: 0.52, shortfall: 0.03, collectionPct: 94.0, invoiced: 0.52, collected: 0.49, pending: 0.03, overdue: 0.01, pr: 79.0, cuf: 23.2 },
+  { plant: "Devdaithan Solar Plant", district: "Ahmednagar", vendor: "Mega Solar Inc", capacity: 18, tariff: 2.00, budgetedGen: 3905, actualGen: 3690, revenue: 0.74, budgetedRev: 0.78, shortfall: 0.04, collectionPct: 95.0, invoiced: 0.78, collected: 0.74, pending: 0.04, overdue: 0.01, pr: 79.8, cuf: 19.5 },
+  { plant: "Amravati Solar Unit", district: "Amravati", vendor: "SolarCo India", capacity: 14, tariff: 2.00, budgetedGen: 3040, actualGen: 2740, revenue: 0.55, budgetedRev: 0.61, shortfall: 0.06, collectionPct: 89.8, invoiced: 0.61, collected: 0.55, pending: 0.06, overdue: 0.02, pr: 75.8, cuf: 18.5 },
+  { plant: "Wardha Solar Park", district: "Wardha", vendor: "SunPower Tech", capacity: 16, tariff: 2.00, budgetedGen: 3470, actualGen: 3180, revenue: 0.64, budgetedRev: 0.69, shortfall: 0.05, collectionPct: 91.5, invoiced: 0.69, collected: 0.64, pending: 0.05, overdue: 0.02, pr: 76.5, cuf: 20.8 },
+  { plant: "Buldhana Solar Farm", district: "Buldhana", vendor: "SunPower Tech", capacity: 10, tariff: 2.00, budgetedGen: 2170, actualGen: 1990, revenue: 0.40, budgetedRev: 0.43, shortfall: 0.03, collectionPct: 91.8, invoiced: 0.43, collected: 0.40, pending: 0.03, overdue: 0.01, pr: 77.0, cuf: 22.8 },
+  { plant: "Chandrapur Solar Project", district: "Chandrapur", vendor: "SunPower Tech", capacity: 22, tariff: 2.00, budgetedGen: 4770, actualGen: 4360, revenue: 0.87, budgetedRev: 0.95, shortfall: 0.08, collectionPct: 91.5, invoiced: 0.95, collected: 0.87, pending: 0.08, overdue: 0.02, pr: 77.2, cuf: 21.5 },
+  { plant: "Bhandara Solar Station", district: "Bhandara", vendor: "Mega Solar Inc", capacity: 8, tariff: 2.00, budgetedGen: 1740, actualGen: 1640, revenue: 0.33, budgetedRev: 0.35, shortfall: 0.02, collectionPct: 94.2, invoiced: 0.35, collected: 0.33, pending: 0.02, overdue: 0.01, pr: 79.5, cuf: 23.0 },
 ];
 
 const portfolioStats = {
   totalPlants: 12,
-  totalCapacity: 179.9,
+  totalCapacity: 220,
   activeAssets: 1245,
   locations: 10,
 };
 
 const plants = [
-  { id: "PLT-001", name: "Sakri Solar Park", location: "Dhule, Maharashtra", capacity: "25.5 MW", commissionDate: "2020-04-15", technology: "Mono-crystalline", inverters: 10, modules: 73440, status: "operational", contractor: "SolarCo India" },
-  { id: "PLT-002", name: "Sangli Solar Farm", location: "Sangli, Maharashtra", capacity: "7.9 MW", commissionDate: "2019-11-20", technology: "Poly-crystalline", inverters: 3, modules: 22752, status: "operational", contractor: "SunPower Tech" },
-  { id: "PLT-003", name: "Osmanabad Solar Plant", location: "Osmanabad, Maharashtra", capacity: "18.5 MW", commissionDate: "2021-06-10", technology: "Mono-crystalline", inverters: 8, modules: 53280, status: "operational", contractor: "Green Energy Ltd" },
-  { id: "PLT-004", name: "Latur Solar Station", location: "Latur, Maharashtra", capacity: "15.0 MW", commissionDate: "2020-09-05", technology: "Bifacial", inverters: 6, modules: 43200, status: "operational", contractor: "TechSolar Pvt" },
-  { id: "PLT-005", name: "Beed Solar Park", location: "Beed, Maharashtra", capacity: "20.0 MW", commissionDate: "2020-03-12", technology: "Mono-crystalline", inverters: 8, modules: 57600, status: "operational", contractor: "Mega Solar Inc" },
-  { id: "PLT-006", name: "Wardha Solar Plant", location: "Wardha, Maharashtra", capacity: "12.0 MW", commissionDate: "2021-01-18", technology: "Poly-crystalline", inverters: 5, modules: 34560, status: "maintenance", contractor: "SunPower Tech" },
-  { id: "PLT-007", name: "Devdaithan Solar Park", location: "Jalna, Maharashtra", capacity: "16.0 MW", commissionDate: "2020-08-22", technology: "Mono-crystalline", inverters: 6, modules: 46080, status: "operational", contractor: "Mega Solar Inc" },
-  { id: "PLT-008", name: "Ahmednagar Solar Farm", location: "Ahmednagar, Maharashtra", capacity: "9.7 MW", commissionDate: "2021-04-10", technology: "Mono-crystalline", inverters: 4, modules: 27936, status: "operational", contractor: "SolarCo India" },
-  { id: "PLT-009", name: "Buldhana Solar Farm", location: "Buldhana, Maharashtra", capacity: "14.5 MW", commissionDate: "2019-12-05", technology: "Poly-crystalline", inverters: 6, modules: 41760, status: "operational", contractor: "SunPower Tech" },
-  { id: "PLT-010", name: "Chandrapur Solar Plant", location: "Chandrapur, Maharashtra", capacity: "18.4 MW", commissionDate: "2020-06-15", technology: "Mono-crystalline", inverters: 8, modules: 52992, status: "operational", contractor: "SunPower Tech" },
-  { id: "PLT-011", name: "Bhandara Solar Farm", location: "Bhandara, Maharashtra", capacity: "12.0 MW", commissionDate: "2021-02-28", technology: "Bifacial", inverters: 5, modules: 34560, status: "operational", contractor: "Mega Solar Inc" },
-  { id: "PLT-012", name: "Amravati Solar Station", location: "Amravati, Maharashtra", capacity: "10.5 MW", commissionDate: "2020-11-10", technology: "Poly-crystalline", inverters: 4, modules: 30240, status: "maintenance", contractor: "SunPower Tech" },
+  { id: "PLT-001", name: "Sakri Solar Park", location: "Dhule, Maharashtra", capacity: "25 MW", commissionDate: "2020-04-15", technology: "Mono-crystalline", inverters: 10, modules: 73440, status: "operational", contractor: "SolarCo India" },
+  { id: "PLT-002", name: "Sangli Solar Farm", location: "Sangli, Maharashtra", capacity: "15 MW", commissionDate: "2019-11-20", technology: "Poly-crystalline", inverters: 6, modules: 43200, status: "operational", contractor: "SunPower Tech" },
+  { id: "PLT-003", name: "Osmanabad Solar Plant", location: "Osmanabad, Maharashtra", capacity: "30 MW", commissionDate: "2021-06-10", technology: "Mono-crystalline", inverters: 12, modules: 86400, status: "operational", contractor: "Green Energy Ltd" },
+  { id: "PLT-004", name: "Latur Solar Station", location: "Latur, Maharashtra", capacity: "20 MW", commissionDate: "2020-09-05", technology: "Bifacial", inverters: 8, modules: 57600, status: "operational", contractor: "TechSolar Pvt" },
+  { id: "PLT-005", name: "Beed Solar Park", location: "Beed, Maharashtra", capacity: "30 MW", commissionDate: "2020-03-12", technology: "Mono-crystalline", inverters: 12, modules: 86400, status: "operational", contractor: "Mega Solar Inc" },
+  { id: "PLT-006", name: "Ahmednagar Solar Plant", location: "Ahmednagar, Maharashtra", capacity: "12 MW", commissionDate: "2021-04-10", technology: "Mono-crystalline", inverters: 5, modules: 34560, status: "operational", contractor: "SolarCo India" },
+  { id: "PLT-007", name: "Devdaithan Solar Plant", location: "Ahmednagar, Maharashtra", capacity: "18 MW", commissionDate: "2020-08-22", technology: "Mono-crystalline", inverters: 7, modules: 51840, status: "operational", contractor: "Mega Solar Inc" },
+  { id: "PLT-008", name: "Amravati Solar Unit", location: "Amravati, Maharashtra", capacity: "14 MW", commissionDate: "2020-11-10", technology: "Poly-crystalline", inverters: 6, modules: 40320, status: "maintenance", contractor: "SolarCo India" },
+  { id: "PLT-009", name: "Wardha Solar Park", location: "Wardha, Maharashtra", capacity: "16 MW", commissionDate: "2021-01-18", technology: "Poly-crystalline", inverters: 6, modules: 46080, status: "maintenance", contractor: "SunPower Tech" },
+  { id: "PLT-010", name: "Buldhana Solar Farm", location: "Buldhana, Maharashtra", capacity: "10 MW", commissionDate: "2019-12-05", technology: "Poly-crystalline", inverters: 4, modules: 28800, status: "operational", contractor: "SunPower Tech" },
+  { id: "PLT-011", name: "Chandrapur Solar Project", location: "Chandrapur, Maharashtra", capacity: "22 MW", commissionDate: "2020-06-15", technology: "Mono-crystalline", inverters: 9, modules: 63360, status: "operational", contractor: "SunPower Tech" },
+  { id: "PLT-012", name: "Bhandara Solar Station", location: "Bhandara, Maharashtra", capacity: "8 MW", commissionDate: "2021-02-28", technology: "Bifacial", inverters: 3, modules: 23040, status: "operational", contractor: "Mega Solar Inc" },
 ];
 
 const radarData = [

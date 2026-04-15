@@ -206,34 +206,34 @@ const ganttData = [
   { 
     date: "2026-02-22",
     events: [
-      { id: 1, type: "Grid Outage", start: 8, duration: 3, plant: "Plant A" },
-      { id: 2, type: "Equipment Failure", start: 14, duration: 2, plant: "Plant C" },
+      { id: 1, type: "Grid Outage", start: 8, duration: 3, plant: "Sakri Solar Park" },
+      { id: 2, type: "Equipment Failure", start: 14, duration: 2, plant: "Osmanabad Solar Plant" },
     ]
   },
   { 
     date: "2026-02-23",
     events: [
-      { id: 3, type: "Planned Shutdown", start: 10, duration: 6, plant: "Plant B" },
+      { id: 3, type: "Planned Shutdown", start: 10, duration: 6, plant: "Sangli Solar Farm" },
     ]
   },
   { 
     date: "2026-02-24",
     events: [
-      { id: 4, type: "Force Majeure", start: 16, duration: 2, plant: "Plant D" },
-      { id: 5, type: "Grid Outage", start: 6, duration: 4, plant: "Plant A" },
+      { id: 4, type: "Force Majeure", start: 16, duration: 2, plant: "Latur Solar Station" },
+      { id: 5, type: "Grid Outage", start: 6, duration: 4, plant: "Amravati Solar Unit" },
     ]
   },
   { 
     date: "2026-02-25",
     events: [
-      { id: 6, type: "Equipment Failure", start: 12, duration: 5, plant: "Plant C" },
+      { id: 6, type: "Equipment Failure", start: 12, duration: 5, plant: "Devdaithan Solar Plant" },
     ]
   },
   { 
     date: "2026-02-26",
     events: [
-      { id: 7, type: "Grid Outage", start: 8, duration: 2, plant: "Plant A" },
-      { id: 8, type: "Equipment Failure", start: 14, duration: 4, plant: "Plant C" },
+      { id: 7, type: "Grid Outage", start: 8, duration: 2, plant: "Wardha Solar Park" },
+      { id: 8, type: "Equipment Failure", start: 14, duration: 4, plant: "Chandrapur Solar Project" },
     ]
   },
   { 
@@ -243,7 +243,7 @@ const ganttData = [
   { 
     date: "2026-02-28",
     events: [
-      { id: 9, type: "Planned Shutdown", start: 9, duration: 8, plant: "Plant B" },
+      { id: 9, type: "Planned Shutdown", start: 9, duration: 8, plant: "Beed Solar Park" },
     ]
   },
 ];
@@ -295,17 +295,33 @@ const CATEGORY_WATERFALL_MAP: Record<string, string> = {
 
 const PLANT_SCALE: Record<string, { factor: number; label: string }> = {
   "all":     { factor: 1.0,   label: "All Plants" },
-  "plant-a": { factor: 0.087, label: "Plant A - 10MW" },
-  "plant-b": { factor: 0.217, label: "Plant B - 25MW" },
-  "plant-c": { factor: 0.435, label: "Plant C - 50MW" },
-  "plant-d": { factor: 0.261, label: "Plant D - 30MW" },
+  "plant-1": { factor: 0.114, label: "Sakri Solar Park - 25MW" },
+  "plant-2": { factor: 0.068, label: "Sangli Solar Farm - 15MW" },
+  "plant-3": { factor: 0.136, label: "Osmanabad Solar Plant - 30MW" },
+  "plant-4": { factor: 0.091, label: "Latur Solar Station - 20MW" },
+  "plant-5": { factor: 0.136, label: "Beed Solar Park - 30MW" },
+  "plant-6": { factor: 0.055, label: "Ahmednagar Solar Plant - 12MW" },
+  "plant-7": { factor: 0.082, label: "Devdaithan Solar Plant - 18MW" },
+  "plant-8": { factor: 0.064, label: "Amravati Solar Unit - 14MW" },
+  "plant-9": { factor: 0.073, label: "Wardha Solar Park - 16MW" },
+  "plant-10": { factor: 0.045, label: "Buldhana Solar Farm - 10MW" },
+  "plant-11": { factor: 0.100, label: "Chandrapur Solar Project - 22MW" },
+  "plant-12": { factor: 0.036, label: "Bhandara Solar Station - 8MW" },
 };
 
 const PLANT_GANTT_MAP: Record<string, string> = {
-  "plant-a": "Plant A",
-  "plant-b": "Plant B",
-  "plant-c": "Plant C",
-  "plant-d": "Plant D",
+  "plant-1": "Sakri Solar Park",
+  "plant-2": "Sangli Solar Farm",
+  "plant-3": "Osmanabad Solar Plant",
+  "plant-4": "Latur Solar Station",
+  "plant-5": "Beed Solar Park",
+  "plant-6": "Ahmednagar Solar Plant",
+  "plant-7": "Devdaithan Solar Plant",
+  "plant-8": "Amravati Solar Unit",
+  "plant-9": "Wardha Solar Park",
+  "plant-10": "Buldhana Solar Farm",
+  "plant-11": "Chandrapur Solar Project",
+  "plant-12": "Bhandara Solar Station",
 };
 
 export function OutageLossAnalytics() {
@@ -565,10 +581,18 @@ export function OutageLossAnalytics() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Plants</SelectItem>
-                  <SelectItem value="plant-a">Plant A - 10MW</SelectItem>
-                  <SelectItem value="plant-b">Plant B - 25MW</SelectItem>
-                  <SelectItem value="plant-c">Plant C - 50MW</SelectItem>
-                  <SelectItem value="plant-d">Plant D - 30MW</SelectItem>
+                  <SelectItem value="plant-1">Sakri Solar Park - 25MW</SelectItem>
+                  <SelectItem value="plant-2">Sangli Solar Farm - 15MW</SelectItem>
+                  <SelectItem value="plant-3">Osmanabad Solar Plant - 30MW</SelectItem>
+                  <SelectItem value="plant-4">Latur Solar Station - 20MW</SelectItem>
+                  <SelectItem value="plant-5">Beed Solar Park - 30MW</SelectItem>
+                  <SelectItem value="plant-6">Ahmednagar Solar Plant - 12MW</SelectItem>
+                  <SelectItem value="plant-7">Devdaithan Solar Plant - 18MW</SelectItem>
+                  <SelectItem value="plant-8">Amravati Solar Unit - 14MW</SelectItem>
+                  <SelectItem value="plant-9">Wardha Solar Park - 16MW</SelectItem>
+                  <SelectItem value="plant-10">Buldhana Solar Farm - 10MW</SelectItem>
+                  <SelectItem value="plant-11">Chandrapur Solar Project - 22MW</SelectItem>
+                  <SelectItem value="plant-12">Bhandara Solar Station - 8MW</SelectItem>
                 </SelectContent>
               </Select>
             </div>
