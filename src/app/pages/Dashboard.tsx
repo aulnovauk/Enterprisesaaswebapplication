@@ -850,6 +850,7 @@ export function Dashboard() {
   const [month, setMonth] = useState("February");
   const [stateFilter, setStateFilter] = useState("All States");
   const [vendorFilter, setVendorFilter] = useState("All Vendors");
+  const [plantFilter, setPlantFilter] = useState("All Plants");
   const [durationToggle, setDurationToggle] = useState("MTD");
   const [showComparison, setShowComparison] = useState(false);
   const [customizeMode, setCustomizeMode] = useState(false);
@@ -904,7 +905,8 @@ export function Dashboard() {
     // Plant-level filtering
     const filtered = plantMarkers.filter(p =>
       (stateFilter === "All States" || p.state === stateFilter) &&
-      (vendorFilter === "All Vendors" || p.vendor === vendorFilter)
+      (vendorFilter === "All Vendors" || p.vendor === vendorFilter) &&
+      (plantFilter === "All Plants" || String(p.id) === plantFilter)
     );
 
     const filteredCap = filtered.reduce((s, p) => s + p.capacity, 0);
@@ -2229,7 +2231,7 @@ export function Dashboard() {
                 <h1 className="text-base font-bold text-slate-900 leading-none">Portfolio Dashboard</h1>
                 <p className="text-xs text-slate-600 mt-0.5">
                   {dashboardData.filteredPortfolioCap} MW · {dashboardData.filteredPlantCount} Plants · {dashboardData.uniqueStates.length} {dashboardData.uniqueStates.length === 1 ? "State" : "States"}
-                  {(stateFilter !== "All States" || vendorFilter !== "All Vendors") && (
+                  {(stateFilter !== "All States" || vendorFilter !== "All Vendors" || plantFilter !== "All Plants") && (
                     <span className="ml-2 px-1.5 py-0.5 bg-amber-100 text-amber-700 border border-amber-300 rounded text-[10px] font-bold">Filtered View</span>
                   )}
                 </p>
@@ -2298,7 +2300,7 @@ export function Dashboard() {
                 </SelectContent>
               </Select>
 
-              <Select value={stateFilter} onValueChange={setStateFilter}>
+              <Select value={stateFilter} onValueChange={(v) => { setStateFilter(v); setPlantFilter("All Plants"); }}>
                 <SelectTrigger className="w-32 h-7 text-xs">
                   <SelectValue />
                 </SelectTrigger>
@@ -2310,7 +2312,7 @@ export function Dashboard() {
                 </SelectContent>
               </Select>
 
-              <Select value={vendorFilter} onValueChange={setVendorFilter}>
+              <Select value={vendorFilter} onValueChange={(v) => { setVendorFilter(v); setPlantFilter("All Plants"); }}>
                 <SelectTrigger className="w-32 h-7 text-xs">
                   <SelectValue />
                 </SelectTrigger>
@@ -2321,6 +2323,24 @@ export function Dashboard() {
                   <SelectItem value="Mega Solar Inc">Mega Solar Inc</SelectItem>
                   <SelectItem value="Green Energy Ltd">Green Energy Ltd</SelectItem>
                   <SelectItem value="TechSolar Pvt">TechSolar Pvt</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={plantFilter} onValueChange={setPlantFilter}>
+                <SelectTrigger className="w-44 h-7 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All Plants">All Plants</SelectItem>
+                  {plantMarkers
+                    .filter(p =>
+                      (stateFilter === "All States" || p.state === stateFilter) &&
+                      (vendorFilter === "All Vendors" || p.vendor === vendorFilter)
+                    )
+                    .map(p => (
+                      <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                    ))
+                  }
                 </SelectContent>
               </Select>
             </div>
