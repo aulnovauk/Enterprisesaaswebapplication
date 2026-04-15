@@ -1490,12 +1490,26 @@ export function Dashboard() {
   const filteredCufTrend = useMemo(() => {
     const { portfolioCuf } = dashboardData;
     const baseVariance = [-0.9, -0.6, 0.0, -0.3, -1.2, -0.7, -0.2, 0.2, -0.1, -0.4, 0.1, 0.0];
-    return cufTrendData.map((d, i) => ({
+    const allData = cufTrendData.map((d, i) => ({
       ...d,
       portfolio: parseFloat((portfolioCuf + baseVariance[i]).toFixed(1)),
       prevPortfolio: prevYearCufTrendData[i].prevPortfolio,
     }));
-  }, [dashboardData]);
+
+    const cufMonthShort = ["Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb"];
+    const monthShort = month.substring(0, 3);
+    const currentIdx = cufMonthShort.indexOf(monthShort);
+
+    if (durationToggle === "MTD") {
+      return currentIdx >= 0 ? [allData[currentIdx]] : [allData[allData.length - 1]];
+    }
+    if (durationToggle === "YTD") {
+      const aprIdx = 1;
+      const endIdx = currentIdx >= aprIdx ? currentIdx : allData.length - 1;
+      return allData.slice(aprIdx, endIdx + 1);
+    }
+    return allData;
+  }, [dashboardData, durationToggle, month]);
 
   const filteredDowntimeData = useMemo(() => {
     const filtered = dashboardData.filtered;
@@ -2001,8 +2015,12 @@ export function Dashboard() {
               <CardHeader className="border-b border-slate-100 pb-3">
                 <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle className="text-base">Portfolio CUF Trend (12 Months)</CardTitle>
-                    <CardDescription className="text-xs">Monthly performance vs target</CardDescription>
+                    <CardTitle className="text-base">
+                      {durationToggle === "MTD" ? `Portfolio CUF — ${month}` : durationToggle === "YTD" ? `Portfolio CUF Trend (YTD)` : "Portfolio CUF Trend (12 Months)"}
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      {durationToggle === "MTD" ? "Current month performance vs target" : durationToggle === "YTD" ? `Apr to ${month.substring(0, 3)} performance vs target` : "Monthly performance vs target"}
+                    </CardDescription>
                   </div>
                   <button
                     onClick={() => setShowComparison((v) => !v)}
@@ -2019,6 +2037,44 @@ export function Dashboard() {
               </CardHeader>
               <CardContent className="p-4">
                 <div className="h-72">
+                  {filteredCufTrend.length === 1 ? (
+                    <div className="h-full flex flex-col items-center justify-center gap-4">
+                      <div className="relative w-36 h-36">
+                        <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
+                          <circle cx="60" cy="60" r="52" fill="none" stroke="#e2e8f0" strokeWidth="10" />
+                          <circle cx="60" cy="60" r="52" fill="none" stroke="#2955A0" strokeWidth="10"
+                            strokeDasharray={`${(filteredCufTrend[0].portfolio / filteredCufTrend[0].target) * 326.7} 326.7`}
+                            strokeLinecap="round" />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-2xl font-bold text-[#2955A0]">{filteredCufTrend[0].portfolio}%</span>
+                          <span className="text-[10px] text-slate-400">CUF</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6 text-xs">
+                        <div className="text-center">
+                          <p className="font-bold text-[#2955A0]">{filteredCufTrend[0].portfolio}%</p>
+                          <p className="text-slate-400 text-[10px]">Actual</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="font-bold text-emerald-600">{filteredCufTrend[0].target}%</p>
+                          <p className="text-slate-400 text-[10px]">Target</p>
+                        </div>
+                        <div className="text-center">
+                          <p className={`font-bold ${filteredCufTrend[0].portfolio >= filteredCufTrend[0].target ? "text-emerald-600" : "text-rose-600"}`}>
+                            {(filteredCufTrend[0].portfolio - filteredCufTrend[0].target).toFixed(1)}%
+                          </p>
+                          <p className="text-slate-400 text-[10px]">Gap</p>
+                        </div>
+                        {showComparison && (
+                          <div className="text-center">
+                            <p className="font-bold text-slate-500">{filteredCufTrend[0].prevPortfolio}%</p>
+                            <p className="text-slate-400 text-[10px]">PY CUF</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={filteredCufTrend}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -2055,6 +2111,7 @@ export function Dashboard() {
                       />
                     </LineChart>
                   </ResponsiveContainer>
+                  )}
                 </div>
               </CardContent>
             </Card>
