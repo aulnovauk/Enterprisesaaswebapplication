@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { PageExportMenu } from "../components/PageExportMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
@@ -429,6 +429,107 @@ export function ContractLDAnalytics() {
   const [selectedVendor, setSelectedVendor] = useState("all");
   const [selectedPlant, setSelectedPlant] = useState("all");
 
+  // ── Filtered site data — recomputes whenever filters change ────────
+  const filteredSites = useMemo(() => {
+    return sitewiseLD.filter(s => {
+      if (selectedVendor !== "all" && s.vendor !== selectedVendor) return false;
+      if (selectedPlant !== "all" && s.siteName !== selectedPlant) return false;
+      return true;
+    });
+  }, [selectedVendor, selectedPlant]);
+
+  const filteredPortfolioSummary = useMemo(() => {
+    const sites = filteredSites;
+    const totalCapacity = sites.reduce((s, p) => s + p.capacity, 0);
+    const totalLDExposure = parseFloat(sites.reduce((s, p) => s + p.ldAmount, 0).toFixed(1));
+    const compliant = sites.filter(p => p.complianceStatus === "green").length;
+    const nonCompliant = sites.filter(p => p.complianceStatus === "red").length;
+    const criticalEscalations = escalationAlerts.filter(e =>
+      sites.some(s => s.siteName === e.site) && (e.severity === "critical" || e.severity === "high")
+    ).length;
+    const complianceRate = sites.length > 0 ? Math.round((compliant / sites.length) * 100) : 0;
+    const ytdLDExposure = parseFloat((totalLDExposure * 5.8).toFixed(1));
+    return {
+      totalCapacity,
+      totalSites: sites.length,
+      compliantSites: compliant,
+      nonCompliantSites: nonCompliant,
+      totalLDExposure,
+      ytdLDExposure,
+      criticalEscalations,
+      complianceRate,
+    };
+  }, [filteredSites]);
+
+  const filteredGuaranteedVsActual = useMemo(() => {
+    const sites = filteredSites;
+    if (sites.length === 0) return [];
+    const totalContracted = sites.reduce((s, p) => s + p.contractedGen, 0);
+    const totalActual = sites.reduce((s, p) => s + p.actualGen, 0);
+    const totalCap = sites.reduce((s, p) => s + p.capacity, 0);
+    const wAvail = totalCap > 0 ? sites.reduce((s, p) => s + p.availability * p.capacity, 0) / totalCap : 0;
+    const wTargetAvail = totalCap > 0 ? sites.reduce((s, p) => s + p.targetAvailability * p.capacity, 0) / totalCap : 0;
+    const wCuf = totalCap > 0 ? sites.reduce((s, p) => s + p.cuf * p.capacity, 0) / totalCap : 0;
+    const wTargetCuf = totalCap > 0 ? sites.reduce((s, p) => s + p.targetCuf * p.capacity, 0) / totalCap : 0;
+    const genVar = totalActual - totalContracted;
+    const genVarPct = totalContracted > 0 ? (genVar / totalContracted) * 100 : 0;
+    const availVar = wAvail - wTargetAvail;
+    const availVarPct = wTargetAvail > 0 ? (availVar / wTargetAvail) * 100 : 0;
+    const cufVar = wCuf - wTargetCuf;
+    const cufVarPct = wTargetCuf > 0 ? (cufVar / wTargetCuf) * 100 : 0;
+    return [
+      { parameter: "Generation (MWh)", guaranteed: totalContracted, actual: totalActual, variance: genVar, variancePct: parseFloat(genVarPct.toFixed(2)), status: genVar >= 0 ? "green" : "red" },
+      { parameter: "Availability (%)", guaranteed: parseFloat(wTargetAvail.toFixed(1)), actual: parseFloat(wAvail.toFixed(1)), variance: parseFloat(availVar.toFixed(1)), variancePct: parseFloat(availVarPct.toFixed(2)), status: availVar >= 0 ? "green" : "red" },
+      { parameter: "CUF (%)", guaranteed: parseFloat(wTargetCuf.toFixed(1)), actual: parseFloat(wCuf.toFixed(1)), variance: parseFloat(cufVar.toFixed(1)), variancePct: parseFloat(cufVarPct.toFixed(2)), status: cufVar >= 0 ? "green" : "red" },
+      { parameter: "PR (%)", guaranteed: 78.0, actual: 78.6, variance: 0.6, variancePct: 0.77, status: "green" },
+      { parameter: "Response Time (hrs)", guaranteed: 4.0, actual: 3.8, variance: -0.2, variancePct: -5.0, status: "green" },
+    ];
+  }, [filteredSites]);
+
+  const filteredVendorLD = useMemo(() => {
+    const sites = filteredSites;
+    const vendorMap: Record<string, typeof sites> = {};
+    for (const s of sites) {
+      if (!vendorMap[s.vendor]) vendorMap[s.vendor] = [];
+      vendorMap[s.vendor].push(s);
+    }
+    return Object.entries(vendorMap).map(([vendor, plants]) => {
+      const totalCap = plants.reduce((s, p) => s + p.capacity, 0);
+      const totalLD = parseFloat(plants.reduce((s, p) => s + p.ldAmount, 0).toFixed(2));
+      const compliant = plants.filter(p => p.complianceStatus === "green").length;
+      const avgAvail = totalCap > 0 ? parseFloat((plants.reduce((s, p) => s + p.availability * p.capacity, 0) / totalCap).toFixed(2)) : 0;
+      return {
+        vendorName: vendor,
+        sites: plants.length,
+        totalCapacity: totalCap,
+        totalLDAmount: totalLD,
+        complianceRate: plants.length > 0 ? Math.round((compliant / plants.length) * 100) : 0,
+        avgAvailability: avgAvail,
+        status: totalLD > 5 ? "critical" : totalLD > 1 ? "warning" : "healthy",
+      };
+    });
+  }, [filteredSites]);
+
+  const filteredEscalations = useMemo(() => {
+    return escalationAlerts.filter(e =>
+      filteredSites.some(s => s.siteName === e.site)
+    );
+  }, [filteredSites]);
+
+  const filteredPlantOptions = useMemo(() => {
+    if (selectedVendor === "all") return PLANTS;
+    return PLANTS.filter(p => p.vendor === selectedVendor);
+  }, [selectedVendor]);
+
+  const filterScopeLabel = useMemo(() => {
+    if (selectedPlant !== "all") {
+      const p = filteredSites[0];
+      return p ? `${p.siteName} (${p.vendor})` : selectedPlant;
+    }
+    if (selectedVendor !== "all") return `${selectedVendor} — ${filteredSites.length} plants`;
+    return "Portfolio-wide metrics";
+  }, [selectedVendor, selectedPlant, filteredSites]);
+
   // ── Configurable LD formula state ──────────────────────────────────
   type FormulaType = "flat-rate" | "pct-contract" | "tiered";
   const [formulaType, setFormulaType] = useState<FormulaType>("flat-rate");
@@ -532,7 +633,7 @@ export function ContractLDAnalytics() {
                 <SelectItem value="FY 2023-24">FY 2023-24</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={selectedVendor} onValueChange={setSelectedVendor}>
+            <Select value={selectedVendor} onValueChange={(v) => { setSelectedVendor(v); setSelectedPlant("all"); }}>
               <SelectTrigger className="w-[175px] h-7 text-xs bg-slate-50 border-slate-200">
                 <SelectValue />
               </SelectTrigger>
@@ -548,8 +649,8 @@ export function ContractLDAnalytics() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Plants (12)</SelectItem>
-                {PLANTS.map(p => (
+                <SelectItem value="all">All Plants ({filteredPlantOptions.length})</SelectItem>
+                {filteredPlantOptions.map(p => (
                   <SelectItem key={p.id} value={p.name}>{p.name} ({p.capacity} MW)</SelectItem>
                 ))}
               </SelectContent>
@@ -579,10 +680,10 @@ export function ContractLDAnalytics() {
             </div>
             <h3 className="text-[11px] font-medium text-gray-600 mb-1">Total LD Exposure</h3>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-red-600">₹{portfolioSummary.totalLDExposure}L</span>
+              <span className="text-2xl font-bold text-red-600">₹{filteredPortfolioSummary.totalLDExposure}L</span>
             </div>
             <p className="text-[11px] text-gray-600 mt-1">
-              YTD: <span className="font-semibold text-gray-900">₹{portfolioSummary.ytdLDExposure}L</span>
+              YTD: <span className="font-semibold text-gray-900">₹{filteredPortfolioSummary.ytdLDExposure}L</span>
             </p>
           </CardContent>
         </Card>
@@ -597,10 +698,10 @@ export function ContractLDAnalytics() {
             </div>
             <h3 className="text-[11px] font-medium text-gray-600 mb-1">Portfolio Compliance Rate</h3>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-orange-600">{portfolioSummary.complianceRate}%</span>
+              <span className="text-2xl font-bold text-orange-600">{filteredPortfolioSummary.complianceRate}%</span>
             </div>
             <p className="text-[11px] text-gray-600 mt-1">
-              {portfolioSummary.compliantSites} of {portfolioSummary.totalSites} sites compliant
+              {filteredPortfolioSummary.compliantSites} of {filteredPortfolioSummary.totalSites} sites compliant
             </p>
           </CardContent>
         </Card>
@@ -615,7 +716,7 @@ export function ContractLDAnalytics() {
             </div>
             <h3 className="text-[11px] font-medium text-gray-600 mb-1">Critical Escalations</h3>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-red-600">{portfolioSummary.criticalEscalations}</span>
+              <span className="text-2xl font-bold text-red-600">{filteredPortfolioSummary.criticalEscalations}</span>
             </div>
             <p className="text-[11px] text-gray-600 mt-1">
               Requires immediate attention
@@ -633,11 +734,11 @@ export function ContractLDAnalytics() {
             </div>
             <h3 className="text-[11px] font-medium text-gray-600 mb-1">Total Portfolio Capacity</h3>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-gray-900">{portfolioSummary.totalCapacity}</span>
+              <span className="text-2xl font-bold text-gray-900">{filteredPortfolioSummary.totalCapacity}</span>
               <span className="text-xs text-gray-600">MW</span>
             </div>
             <p className="text-[11px] text-gray-600 mt-1">
-              Across {portfolioSummary.totalSites} sites
+              Across {filteredPortfolioSummary.totalSites} sites
             </p>
           </CardContent>
         </Card>
@@ -649,9 +750,11 @@ export function ContractLDAnalytics() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-sm font-semibold">Guaranteed vs Actual Performance Comparison</CardTitle>
-              <p className="text-[11px] text-gray-600 mt-0.5">February 2026 - Portfolio-wide metrics</p>
+              <p className="text-[11px] text-gray-600 mt-0.5">{filterScopeLabel}</p>
             </div>
-            <Badge className="bg-red-100 text-red-800 text-[10px]">3 of 5 parameters non-compliant</Badge>
+            <Badge className={`text-[10px] ${filteredGuaranteedVsActual.filter(g => g.status === "red").length > 0 ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}>
+              {filteredGuaranteedVsActual.filter(g => g.status === "red").length} of {filteredGuaranteedVsActual.length} parameters non-compliant
+            </Badge>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -667,7 +770,9 @@ export function ContractLDAnalytics() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {guaranteedVsActual.map((item, idx) => {
+              {filteredGuaranteedVsActual.length === 0 ? (
+                <TableRow><TableCell colSpan={6} className="text-center py-8 text-slate-400">No data for selected filters</TableCell></TableRow>
+              ) : filteredGuaranteedVsActual.map((item, idx) => {
                 const isNegative = item.variance < 0;
                 const bgColor = item.status === "red" ? "bg-red-50" : "bg-green-50";
                 
@@ -956,7 +1061,9 @@ export function ContractLDAnalytics() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sitewiseLD.map((site, idx) => {
+                {filteredSites.length === 0 ? (
+                  <TableRow><TableCell colSpan={10} className="text-center py-8 text-slate-400">No sites match the selected filters</TableCell></TableRow>
+                ) : filteredSites.map((site, idx) => {
                   const bgColor = site.complianceStatus === "green" ? "bg-green-50" : "bg-red-50";
                   
                   return (
@@ -1010,13 +1117,15 @@ export function ContractLDAnalytics() {
         </CardHeader>
         <CardContent className="p-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-            {vendorwiseLD.map((vendor, idx) => (
-              <Card key={idx} className={`border ${vendor.status === "critical" ? "border-red-300 bg-red-50" : "border-orange-300 bg-orange-50"}`}>
+            {filteredVendorLD.length === 0 ? (
+              <div className="col-span-3 text-center py-8 text-slate-400">No vendor data for selected filters</div>
+            ) : filteredVendorLD.map((vendor, idx) => (
+              <Card key={idx} className={`border ${vendor.status === "critical" ? "border-red-300 bg-red-50" : vendor.status === "warning" ? "border-orange-300 bg-orange-50" : "border-green-300 bg-green-50"}`}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-semibold text-gray-900 text-xs">{vendor.vendorName}</h3>
-                    <Badge className={vendor.status === "critical" ? "bg-red-100 text-red-800" : "bg-orange-100 text-orange-800"}>
-                      {vendor.status === "critical" ? "Critical" : "Warning"}
+                    <Badge className={vendor.status === "critical" ? "bg-red-100 text-red-800" : vendor.status === "warning" ? "bg-orange-100 text-orange-800" : "bg-green-100 text-green-800"}>
+                      {vendor.status === "critical" ? "Critical" : vendor.status === "warning" ? "Warning" : "Healthy"}
                     </Badge>
                   </div>
                   <div className="space-y-2 text-xs">
@@ -1051,14 +1160,14 @@ export function ContractLDAnalytics() {
 
           {/* Vendor comparison chart */}
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={vendorwiseLD}>
+            <BarChart data={filteredVendorLD}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis dataKey="vendorName" tick={{ fontSize: 10 }} stroke="#6B7280" />
               <YAxis tick={{ fontSize: 10 }} stroke="#6B7280" />
               <Tooltip content={<CustomChartTooltip unit="₹ Lakhs" />} />
               <Bar dataKey="totalLDAmount" name="LD Amount (₹ Lakhs)">
-                {vendorwiseLD.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.status === "critical" ? "#DC2626" : "#F59E0B"} />
+                {filteredVendorLD.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.status === "critical" ? "#DC2626" : entry.status === "warning" ? "#F59E0B" : "#16A34A"} />
                 ))}
               </Bar>
             </BarChart>
@@ -1268,7 +1377,7 @@ export function ContractLDAnalytics() {
               </div>
             </div>
             <Badge variant="destructive" className="text-xs font-semibold">
-              {escalationAlerts.filter(a => a.status === "open").length} Open Alerts
+              {filteredEscalations.filter(a => a.status === "open").length} Open Alerts
             </Badge>
           </div>
         </CardHeader>
@@ -1287,7 +1396,9 @@ export function ContractLDAnalytics() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {escalationAlerts.map((alert, idx) => {
+              {filteredEscalations.length === 0 ? (
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-slate-400">No escalations for the selected filters</TableCell></TableRow>
+              ) : filteredEscalations.map((alert, idx) => {
                 const bgColor = alert.severity === "critical" ? "bg-red-50" : alert.severity === "high" ? "bg-orange-50" : "bg-yellow-50";
                 
                 return (
