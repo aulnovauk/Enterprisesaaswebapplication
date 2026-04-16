@@ -88,38 +88,38 @@ const vendorInvoiceData = [
   {
     vendor: "SolarCo India", color: "#2955A0",
     plants: [
-      { name: "Sakri", district: "Dhule", capacity: 25.0, invoices: 5, paid: 3, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 1.62, collected: 1.38 },
-      { name: "Ahmednagar", district: "Ahmednagar", capacity: 12.0, invoices: 4, paid: 2, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 1.24, collected: 1.02 },
-      { name: "Amravati", district: "Amravati", capacity: 14.0, invoices: 3, paid: 1, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 0.88, collected: 0.58 },
+      { name: "Sakri Solar Park", district: "Dhule", capacity: 25.0, invoices: 5, paid: 3, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 1.62, collected: 1.38 },
+      { name: "Ahmednagar Solar Plant", district: "Ahmednagar", capacity: 12.0, invoices: 4, paid: 2, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 1.24, collected: 1.02 },
+      { name: "Amravati Solar Unit", district: "Amravati", capacity: 14.0, invoices: 3, paid: 1, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 0.88, collected: 0.58 },
     ],
   },
   {
     vendor: "SunPower Tech", color: "#ef4444",
     plants: [
-      { name: "Sangli", district: "Sangli", capacity: 15.0, invoices: 5, paid: 2, partiallyPaid: 1, pending: 1, overdue: 1, disputed: 0, amount: 1.52, collected: 1.08 },
-      { name: "Wardha", district: "Wardha", capacity: 16.0, invoices: 4, paid: 2, partiallyPaid: 0, pending: 1, overdue: 1, disputed: 0, amount: 1.18, collected: 0.82 },
-      { name: "Buldhana", district: "Buldhana", capacity: 10.0, invoices: 4, paid: 2, partiallyPaid: 1, pending: 0, overdue: 0, disputed: 1, amount: 1.15, collected: 0.88 },
-      { name: "Chandrapur", district: "Chandrapur", capacity: 22.0, invoices: 4, paid: 2, partiallyPaid: 0, pending: 1, overdue: 1, disputed: 0, amount: 0.98, collected: 0.68 },
+      { name: "Sangli Solar Farm", district: "Sangli", capacity: 15.0, invoices: 5, paid: 2, partiallyPaid: 1, pending: 1, overdue: 1, disputed: 0, amount: 1.52, collected: 1.08 },
+      { name: "Wardha Solar Park", district: "Wardha", capacity: 16.0, invoices: 4, paid: 2, partiallyPaid: 0, pending: 1, overdue: 1, disputed: 0, amount: 1.18, collected: 0.82 },
+      { name: "Buldhana Solar Farm", district: "Buldhana", capacity: 10.0, invoices: 4, paid: 2, partiallyPaid: 1, pending: 0, overdue: 0, disputed: 1, amount: 1.15, collected: 0.88 },
+      { name: "Chandrapur Solar Project", district: "Chandrapur", capacity: 22.0, invoices: 4, paid: 2, partiallyPaid: 0, pending: 1, overdue: 1, disputed: 0, amount: 0.98, collected: 0.68 },
     ],
   },
   {
     vendor: "Mega Solar Inc", color: "#f59e0b",
     plants: [
-      { name: "Beed", district: "Beed", capacity: 30.0, invoices: 5, paid: 3, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 1.72, collected: 1.45 },
-      { name: "Devdaithan", district: "Ahmednagar", capacity: 18.0, invoices: 5, paid: 3, partiallyPaid: 0, pending: 1, overdue: 1, disputed: 0, amount: 1.48, collected: 1.18 },
-      { name: "Bhandara", district: "Bhandara", capacity: 8.0, invoices: 4, paid: 2, partiallyPaid: 1, pending: 0, overdue: 0, disputed: 1, amount: 1.25, collected: 0.92 },
+      { name: "Beed Solar Park", district: "Beed", capacity: 30.0, invoices: 5, paid: 3, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 1.72, collected: 1.45 },
+      { name: "Devdaithan Solar Plant", district: "Ahmednagar", capacity: 18.0, invoices: 5, paid: 3, partiallyPaid: 0, pending: 1, overdue: 1, disputed: 0, amount: 1.48, collected: 1.18 },
+      { name: "Bhandara Solar Station", district: "Bhandara", capacity: 8.0, invoices: 4, paid: 2, partiallyPaid: 1, pending: 0, overdue: 0, disputed: 1, amount: 1.25, collected: 0.92 },
     ],
   },
   {
     vendor: "Green Energy Ltd", color: "#10b981",
     plants: [
-      { name: "Osmanabad", district: "Osmanabad", capacity: 30.0, invoices: 5, paid: 4, partiallyPaid: 0, pending: 1, overdue: 0, disputed: 0, amount: 1.55, collected: 1.42 },
+      { name: "Osmanabad Solar Plant", district: "Osmanabad", capacity: 30.0, invoices: 5, paid: 4, partiallyPaid: 0, pending: 1, overdue: 0, disputed: 0, amount: 1.55, collected: 1.42 },
     ],
   },
   {
     vendor: "TechSolar Pvt", color: "#8b5cf6",
     plants: [
-      { name: "Latur", district: "Latur", capacity: 20.0, invoices: 6, paid: 4, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 1.78, collected: 1.58 },
+      { name: "Latur Solar Station", district: "Latur", capacity: 20.0, invoices: 6, paid: 4, partiallyPaid: 1, pending: 1, overdue: 0, disputed: 0, amount: 1.78, collected: 1.58 },
     ],
   },
 ];
