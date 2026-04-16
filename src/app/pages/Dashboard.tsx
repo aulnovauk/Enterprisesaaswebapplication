@@ -719,6 +719,165 @@ function VendorCardWithPreview({ children, vendor }: { children: React.ReactNode
   );
 }
 
+function PlantCardWithPreview({ children, plant }: { children: React.ReactNode; plant: PlantHealthEntry }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState<{ horizontal: "right" | "left"; vertical: "below" | "above" }>(
+    { horizontal: "right", vertical: "below" }
+  );
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoveringRef = useRef(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
+  const cancelClose = () => {
+    if (closeTimerRef.current) { clearTimeout(closeTimerRef.current); closeTimerRef.current = null; }
+  };
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimerRef.current = setTimeout(() => { if (!hoveringRef.current) setIsOpen(false); }, 200);
+  };
+  const handleEnter = () => {
+    hoveringRef.current = true;
+    cancelClose();
+    timerRef.current = setTimeout(() => {
+      if (hoveringRef.current && cardRef.current) {
+        const rect = cardRef.current.getBoundingClientRect();
+        setPosition({
+          horizontal: (window.innerWidth - rect.right) >= 380 ? "right" : rect.left >= 380 ? "left" : "right",
+          vertical: (window.innerHeight - rect.bottom) >= 320 ? "below" : rect.top >= 320 ? "above" : "below",
+        });
+        setIsOpen(true);
+      }
+    }, 1500);
+  };
+  const handleLeave = () => { hoveringRef.current = false; if (timerRef.current) clearTimeout(timerRef.current); scheduleClose(); };
+  const handlePreviewEnter = () => { hoveringRef.current = true; cancelClose(); };
+  const handlePreviewLeave = () => { hoveringRef.current = false; scheduleClose(); };
+
+  const posStyle: React.CSSProperties = {};
+  if (position.horizontal === "right") { posStyle.left = "100%"; posStyle.marginLeft = 10; }
+  else { posStyle.right = "100%"; posStyle.marginRight = 10; }
+  if (position.vertical === "below") { posStyle.top = 0; }
+  else { posStyle.bottom = 0; }
+
+  const realizationPct = plant.budgeted > 0 ? (plant.realized / plant.budgeted) * 100 : 0;
+  const genPct = plant.target > 0 ? (plant.generation / plant.target) * 100 : 0;
+
+  return (
+    <div ref={cardRef} className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      {children}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: position.vertical === "below" ? 6 : -6 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: position.vertical === "below" ? 6 : -6 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="absolute z-50"
+              style={posStyle}
+              onMouseEnter={handlePreviewEnter}
+              onMouseLeave={handlePreviewLeave}
+            >
+              <div className="w-[360px] bg-white rounded-xl shadow-2xl border border-slate-200 ring-1 ring-black/5 flex flex-col overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-1.5 shrink-0" style={{ background: `linear-gradient(135deg, ${plant.color}, ${plant.color}cc)` }}>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" />
+                    <span className="text-[10px] font-semibold text-white/90 uppercase tracking-wider">Plant Detail View</span>
+                  </div>
+                  <button onClick={() => setIsOpen(false)} className="p-0.5 rounded hover:bg-white/10 transition-colors">
+                    <span className="text-white/60 text-xs">✕</span>
+                  </button>
+                </div>
+
+                <div className="px-3 pt-2.5 pb-2 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                  <h3 className="text-xs font-bold text-slate-800">{plant.name}</h3>
+                  <p className="text-[9px] text-slate-400 mt-0.5">{plant.district}, Maharashtra · {plant.vendor} · {plant.capacity} MW</p>
+                </div>
+
+                <div className="p-3 space-y-3">
+                  <div>
+                    <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Revenue Performance</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { label: "Budgeted", value: `₹${plant.budgeted.toFixed(2)} Cr`, cls: "text-slate-700" },
+                        { label: "Realized", value: `₹${plant.realized.toFixed(2)} Cr`, cls: "" },
+                        { label: "Shortfall", value: `₹${plant.shortfall.toFixed(2)} Cr`, cls: plant.shortfall > 0.3 ? "text-rose-600" : "text-amber-600" },
+                        { label: "Collection", value: `${plant.collection}%`, cls: plant.collection >= 93 ? "text-emerald-600" : plant.collection >= 88 ? "text-amber-600" : "text-rose-600" },
+                      ].map(m => (
+                        <div key={m.label}>
+                          <p className="text-[8px] text-slate-400 uppercase">{m.label}</p>
+                          <p className={`text-[10px] font-bold ${m.cls}`} style={m.label === "Realized" ? { color: plant.color } : undefined}>{m.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <div className="flex-1 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(realizationPct, 100)}%`, backgroundColor: realizationPct >= 93 ? "#10b981" : realizationPct >= 88 ? "#f59e0b" : "#ef4444" }} />
+                      </div>
+                      <span className="text-[8px] font-bold text-slate-500">{realizationPct.toFixed(0)}% realized</span>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-2">
+                    <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Technical Performance</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { label: "CUF", value: `${plant.cuf}%`, cls: plant.cuf >= 22 ? "text-emerald-600" : plant.cuf >= 20 ? "text-amber-600" : "text-rose-600" },
+                        { label: "PR", value: `${plant.pr}%`, cls: plant.pr >= 78 ? "text-emerald-600" : plant.pr >= 75 ? "text-amber-600" : "text-rose-600" },
+                        { label: "Availability", value: `${plant.availability}%`, cls: plant.availability >= 95 ? "text-emerald-600" : plant.availability >= 90 ? "text-amber-600" : "text-rose-600" },
+                        { label: "LD Risk", value: plant.ldRisk === "none" ? "None" : plant.ldRisk.charAt(0).toUpperCase() + plant.ldRisk.slice(1), cls: plant.ldRisk === "none" ? "text-emerald-600" : plant.ldRisk === "high" ? "text-rose-600" : "text-amber-600" },
+                      ].map(m => (
+                        <div key={m.label}>
+                          <p className="text-[8px] text-slate-400 uppercase">{m.label}</p>
+                          <p className={`text-[10px] font-bold ${m.cls}`}>{m.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-2">
+                    <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Generation (MWh)</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <p className="text-[8px] text-slate-400 uppercase">Target</p>
+                        <p className="text-[10px] font-bold text-slate-700">{plant.target.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-[8px] text-slate-400 uppercase">Actual</p>
+                        <p className="text-[10px] font-bold" style={{ color: plant.color }}>{plant.generation.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-[8px] text-slate-400 uppercase">Achievement</p>
+                        <p className={`text-[10px] font-bold ${genPct >= 95 ? "text-emerald-600" : genPct >= 85 ? "text-amber-600" : "text-rose-600"}`}>{genPct.toFixed(1)}%</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {plant.ldExposure > 0 && (
+                    <div className="border-t border-slate-100 pt-2 flex items-center justify-between">
+                      <span className="text-[9px] text-slate-500">LD Exposure</span>
+                      <span className="text-[10px] font-bold text-orange-600">₹{plant.ldExposure.toFixed(2)} Cr</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ── Filter Engine: month seasonal generation factors (India solar profile) ────
 const MONTH_ORDER = [
   "April","May","June","July","August","September",
@@ -741,27 +900,62 @@ const BASE_KPI = {
 
 const vendorPlantDetails: Record<string, { name: string; district: string; capacity: number; budgeted: number; realized: number; shortfall: number; collection: number; pr: number; cuf: number; status: "green" | "yellow" | "red" }[]> = {
   "SolarCo India": [
-    { name: "Sakri", district: "Dhule", capacity: 20.0, budgeted: 4.80, realized: 4.38, shortfall: 0.42, collection: 91.3, pr: 78.2, cuf: 22.1, status: "yellow" },
-    { name: "Ahmednagar", district: "Ahmednagar", capacity: 15.2, budgeted: 3.60, realized: 3.17, shortfall: 0.43, collection: 88.1, pr: 76.5, cuf: 21.4, status: "yellow" },
+    { name: "Sakri Solar Park", district: "Dhule", capacity: 25.0, budgeted: 4.80, realized: 4.38, shortfall: 0.42, collection: 91.3, pr: 78.2, cuf: 22.1, status: "yellow" },
+    { name: "Ahmednagar Solar Plant", district: "Ahmednagar", capacity: 12.0, budgeted: 3.60, realized: 3.17, shortfall: 0.43, collection: 88.1, pr: 76.5, cuf: 21.4, status: "yellow" },
+    { name: "Amravati Solar Unit", district: "Amravati", capacity: 14.0, budgeted: 2.45, realized: 2.16, shortfall: 0.29, collection: 88.2, pr: 76.8, cuf: 21.2, status: "yellow" },
   ],
   "SunPower Tech": [
-    { name: "Sangli", district: "Sangli", capacity: 14.5, budgeted: 2.90, realized: 2.48, shortfall: 0.42, collection: 85.5, pr: 74.8, cuf: 20.2, status: "red" },
-    { name: "Wardha", district: "Wardha", capacity: 12.8, budgeted: 2.56, realized: 2.18, shortfall: 0.38, collection: 85.2, pr: 75.1, cuf: 20.5, status: "red" },
-    { name: "Buldhana", district: "Buldhana", capacity: 13.2, budgeted: 2.64, realized: 2.32, shortfall: 0.32, collection: 87.9, pr: 76.0, cuf: 21.0, status: "yellow" },
-    { name: "Chandrapur", district: "Chandrapur", capacity: 10.5, budgeted: 2.10, realized: 1.78, shortfall: 0.32, collection: 84.8, pr: 73.5, cuf: 19.8, status: "red" },
-    { name: "Amravati", district: "Amravati", capacity: 12.2, budgeted: 2.45, realized: 2.16, shortfall: 0.29, collection: 88.2, pr: 76.8, cuf: 21.2, status: "yellow" },
+    { name: "Sangli Solar Farm", district: "Sangli", capacity: 15.0, budgeted: 2.90, realized: 2.48, shortfall: 0.42, collection: 85.5, pr: 74.8, cuf: 20.2, status: "red" },
+    { name: "Wardha Solar Park", district: "Wardha", capacity: 16.0, budgeted: 2.56, realized: 2.18, shortfall: 0.38, collection: 85.2, pr: 75.1, cuf: 20.5, status: "red" },
+    { name: "Buldhana Solar Farm", district: "Buldhana", capacity: 10.0, budgeted: 2.64, realized: 2.32, shortfall: 0.32, collection: 87.9, pr: 76.0, cuf: 21.0, status: "yellow" },
+    { name: "Chandrapur Solar Project", district: "Chandrapur", capacity: 22.0, budgeted: 2.10, realized: 1.78, shortfall: 0.32, collection: 84.8, pr: 73.5, cuf: 19.8, status: "red" },
   ],
   "Mega Solar Inc": [
-    { name: "Beed", district: "Beed", capacity: 18.0, budgeted: 4.32, realized: 3.95, shortfall: 0.37, collection: 91.4, pr: 78.5, cuf: 22.3, status: "yellow" },
-    { name: "Devdaithan", district: "Jalgaon", capacity: 15.0, budgeted: 3.60, realized: 3.22, shortfall: 0.38, collection: 89.4, pr: 77.2, cuf: 21.6, status: "yellow" },
-    { name: "Bhandara", district: "Bhandara", capacity: 15.0, budgeted: 3.60, realized: 3.28, shortfall: 0.32, collection: 91.1, pr: 78.0, cuf: 22.0, status: "yellow" },
+    { name: "Beed Solar Park", district: "Beed", capacity: 30.0, budgeted: 4.32, realized: 3.95, shortfall: 0.37, collection: 91.4, pr: 78.5, cuf: 22.3, status: "yellow" },
+    { name: "Devdaithan Solar Plant", district: "Ahmednagar", capacity: 18.0, budgeted: 3.60, realized: 3.22, shortfall: 0.38, collection: 89.4, pr: 77.2, cuf: 21.6, status: "yellow" },
+    { name: "Bhandara Solar Station", district: "Bhandara", capacity: 8.0, budgeted: 3.60, realized: 3.28, shortfall: 0.32, collection: 91.1, pr: 78.0, cuf: 22.0, status: "yellow" },
   ],
   "Green Energy Ltd": [
-    { name: "Osmanabad", district: "Osmanabad", capacity: 18.5, budgeted: 4.44, realized: 4.30, shortfall: 0.14, collection: 96.8, pr: 82.4, cuf: 24.1, status: "green" },
+    { name: "Osmanabad Solar Plant", district: "Osmanabad", capacity: 30.0, budgeted: 4.44, realized: 4.30, shortfall: 0.14, collection: 96.8, pr: 82.4, cuf: 24.1, status: "green" },
   ],
   "TechSolar Pvt": [
-    { name: "Latur", district: "Latur", capacity: 15.0, budgeted: 3.60, realized: 3.45, shortfall: 0.15, collection: 95.8, pr: 81.2, cuf: 23.5, status: "green" },
+    { name: "Latur Solar Station", district: "Latur", capacity: 20.0, budgeted: 3.60, realized: 3.45, shortfall: 0.15, collection: 95.8, pr: 81.2, cuf: 23.5, status: "green" },
   ],
+};
+
+type PlantHealthEntry = {
+  name: string;
+  district: string;
+  capacity: number;
+  vendor: string;
+  budgeted: number;
+  realized: number;
+  shortfall: number;
+  collection: number;
+  pr: number;
+  cuf: number;
+  availability: number;
+  generation: number;
+  target: number;
+  ldRisk: string;
+  ldExposure: number;
+  status: "healthy" | "warning" | "critical";
+  color: string;
+};
+
+const PLANT_STATUS_COLORS: Record<string, string> = {
+  "Sakri Solar Park": "#2563eb",
+  "Sangli Solar Farm": "#f59e0b",
+  "Osmanabad Solar Plant": "#10b981",
+  "Latur Solar Station": "#8b5cf6",
+  "Beed Solar Park": "#ef4444",
+  "Ahmednagar Solar Plant": "#0ea5e9",
+  "Devdaithan Solar Plant": "#f97316",
+  "Amravati Solar Unit": "#6366f1",
+  "Wardha Solar Park": "#14b8a6",
+  "Buldhana Solar Farm": "#a855f7",
+  "Chandrapur Solar Project": "#e11d48",
+  "Bhandara Solar Station": "#84cc16",
 };
 
 const vendorHealthData = [
@@ -773,7 +967,7 @@ const vendorHealthData = [
 ];
 
 const WIDGET_ORDER_KEY = "dashboard-widget-order";
-const DEFAULT_WIDGET_ORDER = ["kpi-cards", "vendor-health", "geo-risk", "generation", "commercial", "benchmarking", "advanced"];
+const DEFAULT_WIDGET_ORDER = ["kpi-cards", "vendor-health", "plant-health", "geo-risk", "generation", "commercial", "benchmarking", "advanced"];
 const WIDGET_TYPE = "DASHBOARD_WIDGET";
 
 function DraggableWidget({
@@ -1337,6 +1531,40 @@ export function Dashboard() {
     });
   }, [dashboardData]);
 
+  const filteredPlantHealthData = useMemo((): PlantHealthEntry[] => {
+    const filtered = dashboardData.filtered;
+    const allPlantDetails = Object.entries(vendorPlantDetails).flatMap(([vendor, plants]) =>
+      plants.map(p => ({ ...p, vendor }))
+    );
+    return filtered.map((pm: any) => {
+      const detail = allPlantDetails.find(d => d.name === pm.name);
+      const realizationPct = detail && detail.budgeted > 0 ? (detail.realized / detail.budgeted) * 100 : 0;
+      const ldExposure = pm.ldRisk === "high" ? 0.55 : pm.ldRisk === "medium" ? 0.14 : pm.ldRisk === "low" ? 0.06 : 0;
+      const status: "healthy" | "warning" | "critical" =
+        realizationPct >= 95 || (realizationPct === 0 && pm.status === "compliant") ? "healthy"
+        : realizationPct >= 88 ? "warning" : "critical";
+      return {
+        name: pm.name,
+        district: pm.district,
+        capacity: pm.capacity,
+        vendor: pm.vendor,
+        budgeted: detail?.budgeted ?? 0,
+        realized: detail?.realized ?? 0,
+        shortfall: detail?.shortfall ?? 0,
+        collection: detail?.collection ?? 0,
+        pr: detail?.pr ?? 0,
+        cuf: pm.cuf,
+        availability: pm.availability,
+        generation: pm.generation,
+        target: pm.target,
+        ldRisk: pm.ldRisk,
+        ldExposure,
+        status,
+        color: PLANT_STATUS_COLORS[pm.name] || "#64748b",
+      };
+    }).sort((a, b) => b.capacity - a.capacity);
+  }, [dashboardData]);
+
   const filteredRiskData = useMemo(() => {
     const filtered = dashboardData.filtered;
     const nonCompliantPlants = filtered.filter((p: any) => p.status === "non-compliant" || p.status === "curtailment").length;
@@ -1702,6 +1930,93 @@ export function Dashboard() {
                     </CardContent>
                   </Card>
                 </VendorCardWithPreview>
+              );
+            })}
+          </div>
+        </div>
+      ),
+    },
+    "plant-health": {
+      title: "Plant Health",
+      render: () => (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <Factory className="w-4 h-4 text-[#2955A0]" />
+                Plant Revenue Health
+              </h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Revenue realization by plant — hover for detailed breakdown</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {[
+                { label: "Critical", count: filteredPlantHealthData.filter(p => p.status === "critical").length, cls: "bg-rose-100 text-rose-700" },
+                { label: "At Risk", count: filteredPlantHealthData.filter(p => p.status === "warning").length, cls: "bg-amber-100 text-amber-700" },
+                { label: "Healthy", count: filteredPlantHealthData.filter(p => p.status === "healthy").length, cls: "bg-emerald-100 text-emerald-700" },
+              ].filter(s => s.count > 0).map(s => (
+                <Badge key={s.label} className={`text-[9px] ${s.cls}`}>{s.count} {s.label}</Badge>
+              ))}
+            </div>
+          </div>
+          <div className={`grid gap-3 ${filteredPlantHealthData.length >= 8 ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : filteredPlantHealthData.length >= 4 ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : filteredPlantHealthData.length >= 2 ? "grid-cols-2" : "grid-cols-1 max-w-xs"}`}>
+            {filteredPlantHealthData.map((plant) => {
+              const pct = plant.budgeted > 0 ? (plant.realized / plant.budgeted) * 100 : 0;
+              const circumference = 2 * Math.PI * 36;
+              const offset = circumference - (circumference * Math.min(pct, 100)) / 100;
+              return (
+                <PlantCardWithPreview key={plant.name} plant={plant}>
+                  <Card className={`border-2 ${plant.status === "critical" ? "border-rose-200 bg-rose-50/30" : plant.status === "warning" ? "border-amber-200 bg-amber-50/30" : "border-emerald-200 bg-emerald-50/30"} relative overflow-hidden cursor-pointer`}>
+                    <CardContent className="p-4 flex flex-col items-center">
+                      <Badge className={`absolute top-2 right-2 text-[8px] ${plant.status === "healthy" ? "bg-emerald-100 text-emerald-700" : plant.status === "warning" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
+                        {plant.status === "healthy" ? "Healthy" : plant.status === "warning" ? "At Risk" : "Critical"}
+                      </Badge>
+                      <div className="relative w-20 h-20 mb-2">
+                        <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+                          <circle cx="40" cy="40" r="36" fill="none" stroke="#e2e8f0" strokeWidth="5" />
+                          <circle cx="40" cy="40" r="36" fill="none" stroke={plant.color} strokeWidth="5" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-1000" />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-sm font-bold" style={{ color: plant.color }}>{pct.toFixed(0)}%</span>
+                          <span className="text-[7px] text-slate-400">realized</span>
+                        </div>
+                      </div>
+                      <div className="text-xs font-bold text-slate-800 text-center leading-tight">{plant.name}</div>
+                      <div className="text-[9px] text-slate-400 mt-0.5">{plant.district}, MH · {plant.vendor}</div>
+                      <div className="text-[9px] text-slate-400">{plant.capacity} MW · CUF {plant.cuf}%</div>
+                      <div className="w-full mt-3 space-y-1">
+                        <div className="flex justify-between text-[9px]">
+                          <span className="text-slate-400">Budgeted</span>
+                          <span className="font-semibold text-slate-600">₹{plant.budgeted.toFixed(2)} Cr</span>
+                        </div>
+                        <div className="flex justify-between text-[9px]">
+                          <span className="text-slate-400">Realized</span>
+                          <span className="font-bold" style={{ color: plant.color }}>₹{plant.realized.toFixed(2)} Cr</span>
+                        </div>
+                        <div className="flex justify-between text-[9px]">
+                          <span className="text-slate-400">Shortfall</span>
+                          <span className={`font-bold ${plant.shortfall > 0.3 ? "text-rose-600" : "text-amber-600"}`}>₹{plant.shortfall.toFixed(2)} Cr</span>
+                        </div>
+                        {plant.ldExposure > 0 && (
+                          <div className="flex justify-between text-[9px]">
+                            <span className="text-slate-400">LD Exposure</span>
+                            <span className="font-bold text-orange-600">₹{plant.ldExposure.toFixed(2)} Cr</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="w-full mt-2 pt-2 border-t border-slate-200">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[8px] text-slate-400">Collection</span>
+                          <Badge className={`text-[8px] px-1.5 ${plant.collection >= 93 ? "bg-emerald-100 text-emerald-700" : plant.collection >= 88 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
+                            {plant.collection}%
+                          </Badge>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-slate-200 mt-1 overflow-hidden">
+                          <div className="h-full rounded-full transition-all" style={{ width: `${plant.collection}%`, backgroundColor: plant.collection >= 93 ? "#10b981" : plant.collection >= 88 ? "#f59e0b" : "#ef4444" }} />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </PlantCardWithPreview>
               );
             })}
           </div>
